@@ -1,8 +1,8 @@
-import {bd} from './baseDeDatos.js';
-import {CODIGOS, ErrorParaElUsuario, texto} from './http.js';
+import {bd} from '../basedatos/baseDeDatos.js';
+import {CODIGOS, ErrorParaElUsuario, texto} from '../comun/http.js';
 import {ADMINISTRADOR, ROLES} from './roles.js';
 import {protegerClave} from './seguridad.js';
-import {transaccion} from './transaccion.js';
+import {transaccion} from '../basedatos/transaccion.js';
 const LARGO_MINIMO_DE_CLAVE = 4;
 const SELECCIONAR_USUARIOS = `
   SELECT u.id, u.usuario, u.nombre, u.rol, r.nombre AS rol_nombre, u.activo, u.creado,

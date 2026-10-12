@@ -1,7 +1,7 @@
-import {bd} from './baseDeDatos.js';
+import {bd} from '../basedatos/baseDeDatos.js';
 import {existeCategoria} from './categorias.js';
-import {CODIGOS, ErrorParaElUsuario, texto} from './http.js';
-import {ADMINISTRADOR, VENDEDOR} from './roles.js';
+import {CODIGOS, ErrorParaElUsuario, texto} from '../comun/http.js';
+import {ADMINISTRADOR, VENDEDOR} from '../acceso/roles.js';
 const SELECCIONAR_PRODUCTOS = `
   SELECT p.*, c.nombre AS categoria
   FROM productos p JOIN categorias c ON c.id = p.categoria_id`;

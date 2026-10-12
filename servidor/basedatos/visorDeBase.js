@@ -1,5 +1,5 @@
 import { consultar } from './baseDeDatos.js'
-import { CODIGOS, ErrorParaElUsuario } from './http.js'
+import { CODIGOS, ErrorParaElUsuario } from '../comun/http.js'
 import { VISTAS } from './vistasConsulta.js'
 const TABLAS = ['categorias', 'productos', 'movimientos', 'ventas', 'usuarios', 'roles', 'negocio']
 const OCULTAS = ['clave_hash', 'clave_sal']

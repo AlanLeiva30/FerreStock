@@ -1,9 +1,9 @@
-import {bd, consultar} from './baseDeDatos.js';
-import {CODIGOS, ErrorParaElUsuario, texto} from './http.js';
+import {bd, consultar} from '../basedatos/baseDeDatos.js';
+import {CODIGOS, ErrorParaElUsuario, texto} from '../comun/http.js';
 import {datosDelNegocio} from './negocio.js';
-import {buscarProducto} from './productos.js';
-import {ADMINISTRADOR} from './roles.js';
-import {transaccion} from './transaccion.js';
+import {buscarProducto} from '../inventario/productos.js';
+import {ADMINISTRADOR} from '../acceso/roles.js';
+import {transaccion} from '../basedatos/transaccion.js';
 const MOTIVO_DE_VENTA = 'Venta al Contado';
 const CLIENTE_SIN_NOMBRE = 'Consumidor Final';
 const SELECCIONAR_VENTAS = `

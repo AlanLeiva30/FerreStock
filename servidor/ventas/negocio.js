@@ -1,5 +1,5 @@
-import {bd} from './baseDeDatos.js';
-import {CODIGOS, ErrorParaElUsuario, texto} from './http.js';
+import {bd} from '../basedatos/baseDeDatos.js';
+import {CODIGOS, ErrorParaElUsuario, texto} from '../comun/http.js';
 const consultas = {
   ver: bd.prepare('SELECT nombre, direccion, telefono, documento, mensaje FROM negocio WHERE id = 1'),
   guardar: bd.prepare(`

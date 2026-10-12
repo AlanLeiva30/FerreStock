@@ -1,25 +1,149 @@
-# FerreStock
+<div align="center">
 
-Sistema de inventario y ventas para ferretería, construido con React y Vite. La base activa está en Supabase (PostgreSQL).
+# 🔩 FerreStock
 
-## Abrir el programa
+### Controla tu inventario, tus ventas y tu equipo desde un solo lugar.
 
-Doble clic en `ABRIR_FERRESTOCK.cmd`. Requiere Internet. Inicia sesión con el mismo usuario y contraseña de FerreStock que utilizabas antes de la migración. Si el puerto 5173 está ocupado por FerreStock, abre `http://127.0.0.1:5173/` sin iniciar otra instancia.
+Sistema de gestión para ferreterías: factura en segundos, sabe cuándo reponer y nunca vende lo que no tienes.
 
-## Configuración
+![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.13-339933?logo=nodedotjs&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase&logoColor=white)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-1.5.0-orange)
 
-La conexión privada se configura en `.env.local`. No compartas ese archivo. Si cambias la contraseña de la base en Supabase, actualiza `PGPASSWORD` y reinicia FerreStock. Las contraseñas de ingreso de los usuarios se administran dentro del programa.
+</div>
 
-El servidor conserva la validación de permisos: el administrador administra todo; el vendedor cobra y consulta sus facturas; el trabajador consulta existencias sin precios ni costos.
+---
 
-## Datos y respaldo
+## ¿Por qué FerreStock?
 
-Los cambios nuevos se guardan en Supabase. `data/ferrestock.db` es una copia histórica anterior a la migración: copiarla ya no respalda los nuevos datos. Los respaldos actuales deben hacerse desde PostgreSQL/Supabase. No ejecutes la versión anterior para registrar operaciones nuevas.
+Una ferretería maneja cientos de productos, entradas y salidas todos los días. Con cuadernos u hojas de cálculo es fácil perder el control. FerreStock reemplaza eso por un sistema pensado para el mostrador y la bodega:
 
-Se conservó un respaldo del código y la base local antes de instalar esta actualización. `LEEME_SUPABASE.md` contiene detalles y verificaciones. `GUIA_DEL_CODIGO.md` describe la estructura original y puede contener referencias antiguas a SQLite.
+| Antes | Con FerreStock |
+|---|---|
+| No sabes cuánto queda de cada producto | Stock actualizado al instante, por categoría |
+| Te enteras tarde de que algo se agotó | **Alertas** de stock mínimo con el costo de reponer |
+| Las facturas se hacen a mano | **Cobra, factura e imprime** en pocos clics |
+| Cualquiera ve costos y precios | Cada persona ve **solo lo que le corresponde** |
+| Datos en una sola computadora | Datos en la **nube**, seguros y accesibles |
 
-## Desarrollo
+---
 
-`npm run dev` abre el programa localmente. `npm run build` compila la interfaz; `npm run preview` la sirve junto al servidor local. No basta con publicar la carpeta `dist`: las rutas de servidor siguen siendo necesarias.
+## ✨ Qué incluye
 
-Las operaciones de escritura son transaccionales. La conexión usa TLS con validación del certificado de Supabase. El programa no arranca otra base local si pierde Internet.
+### 🛒 Caja y facturación
+- Agrega productos con un clic o escribiendo el código.
+- Cálculo automático del total y del cambio.
+- Factura lista para **imprimir o guardar en PDF**, con los datos de tu negocio.
+- Reimpresión de las facturas del día.
+- Consumidor final o cliente con DUI/NIT.
+
+### 📦 Inventario
+- Catálogo por categorías, con íconos y colores para ubicar todo de un vistazo.
+- Registro de **entradas y salidas** con motivo (venta, merma, compra…).
+- Historial completo de movimientos, con filtros y buscador.
+- Búsqueda rápida de productos para el mostrador.
+
+### 🔔 Alertas y reportes
+- Productos por debajo del mínimo, con lo que falta y lo que costaría reponerlo.
+- Ventas por día en gráficas de 7, 30 o hasta 90 días.
+- Reparto del inventario por categoría y valor del stock.
+- Panel principal con los indicadores clave.
+
+### 👥 Equipo y permisos
+Tres roles, cada uno con su propia vista:
+
+| | 👷 Trabajador | 💵 Vendedor | 🛡️ Administrador |
+|---|:---:|:---:|:---:|
+| Ver existencias | ✅ | ✅ | ✅ |
+| Ver precios | ❌ | ✅ | ✅ |
+| Ver costos | ❌ | ❌ | ✅ |
+| Cobrar y facturar | ❌ | ✅ | ✅ |
+| Inventario, reportes y alertas | ❌ | ❌ | ✅ |
+| Gestionar usuarios y roles | ❌ | ❌ | ✅ |
+
+---
+
+## 🔒 Seguridad y confianza
+
+- **Datos en la nube:** se guardan en PostgreSQL (Supabase), no en una sola computadora.
+- **Contraseñas cifradas:** nadie puede leerlas, ni siquiera abriendo la base de datos.
+- **Permisos validados en el servidor:** un botón oculto no es una puerta abierta.
+- **Sin ventas dobles:** las operaciones son transaccionales y bloquean el stock afectado, así dos cajas no venden la misma pieza.
+- **Conexión cifrada** con verificación del certificado oficial.
+- **Bloqueo temporal** tras varios intentos fallidos de ingreso y sesiones que vencen solas.
+
+---
+
+## 🚀 Puesta en marcha
+
+**Necesitas:** Node.js 22.13 o superior, conexión a Internet y el archivo `.env.local` con los datos de tu base en Supabase.
+
+```bash
+npm install     # una sola vez
+npm run dev     # abre FerreStock en http://127.0.0.1:5173
+```
+
+En VS Code también puedes pulsar **⇧⌘B** (Mac) para abrirlo.
+
+La primera vez que se abre sin usuarios, el sistema te guía para crear al **administrador**. Después, inicia sesión con tu usuario y contraseña de FerreStock.
+
+### Configuración (`.env.local`)
+
+```
+PGHOST=
+PGPORT=5432
+PGDATABASE=postgres
+PGUSER=
+PGPASSWORD=
+```
+
+> ⚠️ Este archivo contiene la contraseña de tu base de datos. No lo compartas ni lo publiques.
+
+### Comandos
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Abre el programa en modo desarrollo |
+| `npm run build` | Compila la interfaz |
+| `npm run preview` | Sirve la versión compilada junto con el servidor |
+
+---
+
+## 🧱 Tecnología
+
+| Capa | Herramienta |
+|---|---|
+| Interfaz | React 19 + Vite 8 |
+| Servidor | Node.js (integrado en Vite) |
+| Base de datos | PostgreSQL en Supabase |
+
+---
+
+## 📁 Estructura
+
+```
+FerreStock/
+├── src/          Pantallas: pantallas/ · ventanas/ · componentes/ · utilidades/
+├── servidor/     Lógica: acceso/ · inventario/ · ventas/ · basedatos/ · comun/ · api.js
+├── index.html    Página donde se dibuja la aplicación
+└── vite.config.js
+```
+
+📖 ¿Quieres entender o modificar el código? Lee la [**Guía técnica**](GUIA_DEL_CODIGO.md): explica cada archivo, el modelo de datos, la API y dónde hacer cada cambio.
+
+---
+
+## ℹ️ Notas
+
+- Las facturas son un **comprobante interno**. No son Documentos Tributarios Electrónicos (DTE) certificados por Hacienda.
+- Los respaldos deben hacerse desde PostgreSQL/Supabase.
+- No uses dos versiones del programa a la vez para registrar operaciones.
+- Para detener el programa, pulsa **Ctrl + C** en la terminal; cerrar la pestaña del navegador no lo detiene.
+
+<div align="center">
+
+**FerreStock** · Hecho para ferreterías · v1.5.0
+
+</div>

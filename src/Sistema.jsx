@@ -37,7 +37,7 @@ import FormularioMovimiento from './ventanas/FormularioMovimiento.jsx'
 import FormularioProducto from './ventanas/FormularioProducto.jsx'
 import AdministrarCategorias from './ventanas/AdministrarCategorias.jsx'
 
-// Los roles (deben ser iguales a los de servidor/roles.js).
+// Los roles (deben ser iguales a los de servidor/acceso/roles.js).
 const ADMINISTRADOR = 'administrador'
 const VENDEDOR = 'vendedor'
 const TRABAJADOR = 'trabajador'
@@ -218,7 +218,7 @@ export default function Sistema({ usuario, tema, cambiarTema, alSalir, actualiza
               </button>
             ))}
           </nav>
-          {/* Qué puede hacer este rol (el texto viene de servidor/roles.js) */}
+          {/* Qué puede hacer este rol (el texto viene de servidor/acceso/roles.js) */}
           <div className="permission"><b>✓ {usuario.rol_nombre}</b><small>{usuario.rol_descripcion}</small></div>
         </aside>
 

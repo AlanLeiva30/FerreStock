@@ -1,8 +1,8 @@
-import {bd, consultar} from './baseDeDatos.js';
-import {CODIGOS, ErrorParaElUsuario, texto} from './http.js';
+import {bd, consultar} from '../basedatos/baseDeDatos.js';
+import {CODIGOS, ErrorParaElUsuario, texto} from '../comun/http.js';
 import {MOTIVOS} from './motivos.js';
 import {buscarProducto} from './productos.js';
-import {transaccion} from './transaccion.js';
+import {transaccion} from '../basedatos/transaccion.js';
 const SELECCIONAR_MOVIMIENTOS = `
   SELECT m.*, p.codigo, p.nombre, p.unidad, c.nombre AS categoria
   FROM movimientos m

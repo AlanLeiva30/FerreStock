@@ -1,5 +1,5 @@
-import {bd} from './baseDeDatos.js';
-import {CODIGOS, ErrorParaElUsuario, leerCookie, ponerCookie, texto} from './http.js';
+import {bd} from '../basedatos/baseDeDatos.js';
+import {CODIGOS, ErrorParaElUsuario, leerCookie, ponerCookie, texto} from '../comun/http.js';
 import {ADMINISTRADOR} from './roles.js';
 import {claveCorrecta, huellaDeLaLlave, nuevaLlaveDeSesion, protegerClave} from './seguridad.js';
 import {buscarParaIngresar, crearUsuario, hayUsuarios} from './usuarios.js';

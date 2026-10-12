@@ -8,7 +8,7 @@
 // elegir entre las dos cosas (ver ventanas/QuitarUsuario.jsx).
 //
 // Abajo se muestran los roles y qué puede hacer cada uno (vienen de la tabla
-// "roles" de la base de datos; se definen en servidor/roles.js).
+// "roles" de la base de datos; se definen en servidor/acceso/roles.js).
 
 import { useCallback, useEffect, useState } from 'react'
 import FilaVacia from '../componentes/FilaVacia.jsx'

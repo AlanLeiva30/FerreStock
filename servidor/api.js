@@ -1,4 +1,4 @@
-import { cambioAtomico } from './baseDeDatos.js'
+import { cambioAtomico } from './basedatos/baseDeDatos.js'
 // ─────────────────────────────────────────────────────────────
 // API: LA "RECEPCIÓN" DEL SERVIDOR
 // ─────────────────────────────────────────────────────────────
@@ -17,17 +17,17 @@ import { cambioAtomico } from './baseDeDatos.js'
 //   GET = pedir datos · POST = crear · PUT = modificar · PATCH = cambiar un detalle · DELETE = borrar
 // ":id" es el número del producto, categoría, usuario o venta (por ejemplo /productos/5).
 
-import { borrarCategoria, crearCategoria, listarCategorias, moverCategoria, renombrarCategoria } from './categorias.js'
-import { CODIGOS, ErrorParaElUsuario, leerDatosEnviados, responder, responderError } from './http.js'
-import { MOTIVOS } from './motivos.js'
-import { listarMovimientos, registrarMovimiento } from './movimientos.js'
-import { datosDelNegocio, guardarDatosDelNegocio } from './negocio.js'
-import { activarODesactivarProducto, crearProducto, editarProducto, listarProductos } from './productos.js'
-import { ADMINISTRADOR, TRABAJADOR, VENDEDOR } from './roles.js'
-import { cerrarSesion, configurarPrimerAdministrador, estadoDeSesion, iniciarSesion, usuarioDeLaPeticion } from './sesiones.js'
-import { crearUsuario, editarUsuario, eliminarUsuario, listarRoles, listarUsuarios } from './usuarios.js'
-import { cobrarVenta, ventasDeHoy, ventasPorDia, verFactura } from './ventas.js'
-import { listarTablasYVistas, verContenido } from './visorDeBase.js'
+import { borrarCategoria, crearCategoria, listarCategorias, moverCategoria, renombrarCategoria } from './inventario/categorias.js'
+import { CODIGOS, ErrorParaElUsuario, leerDatosEnviados, responder, responderError } from './comun/http.js'
+import { MOTIVOS } from './inventario/motivos.js'
+import { listarMovimientos, registrarMovimiento } from './inventario/movimientos.js'
+import { datosDelNegocio, guardarDatosDelNegocio } from './ventas/negocio.js'
+import { activarODesactivarProducto, crearProducto, editarProducto, listarProductos } from './inventario/productos.js'
+import { ADMINISTRADOR, TRABAJADOR, VENDEDOR } from './acceso/roles.js'
+import { cerrarSesion, configurarPrimerAdministrador, estadoDeSesion, iniciarSesion, usuarioDeLaPeticion } from './acceso/sesiones.js'
+import { crearUsuario, editarUsuario, eliminarUsuario, listarRoles, listarUsuarios } from './acceso/usuarios.js'
+import { cobrarVenta, ventasDeHoy, ventasPorDia, verFactura } from './ventas/ventas.js'
+import { listarTablasYVistas, verContenido } from './basedatos/visorDeBase.js'
 
 const PUBLICO = 'publico'
 const TODOS = [ADMINISTRADOR, VENDEDOR, TRABAJADOR]
@@ -42,7 +42,7 @@ const RUTAS = [
   ['POST',   '/sesion/configurar',        PUBLICO,           ({ datos, respuesta }) => configurarPrimerAdministrador(datos, respuesta)],
   ['POST',   '/sesion/cerrar',            PUBLICO,           ({ peticion, respuesta }) => cerrarSesion(peticion, respuesta)],
 
-  // Todos: la lista de productos (cada rol recibe solo los datos que le tocan, ver productos.js)
+  // Todos: la lista de productos (cada rol recibe solo los datos que le tocan, ver inventario/productos.js)
   ['GET',    '/productos',                TODOS,             ({ usuario }) => listarProductos(usuario)],
 
   // Vendedor y administrador: cobrar y ver o reimprimir facturas

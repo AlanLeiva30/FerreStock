@@ -1,6 +1,6 @@
-import {bd} from './baseDeDatos.js';
-import {CODIGOS, ErrorParaElUsuario, texto} from './http.js';
-import {transaccion} from './transaccion.js';
+import {bd} from '../basedatos/baseDeDatos.js';
+import {CODIGOS, ErrorParaElUsuario, texto} from '../comun/http.js';
+import {transaccion} from '../basedatos/transaccion.js';
 const consultas = {
   todas: bd.prepare(`
     SELECT c.id, c.nombre, c.orden, COUNT(p.id) AS productos

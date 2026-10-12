@@ -4,7 +4,7 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import { readFileSync } from 'node:fs'
 import { parseEnv } from 'node:util'
 
-const config = { ...parseEnv(readFileSync(new URL('../.env.local', import.meta.url), 'utf8')), ...process.env }
+const config = { ...parseEnv(readFileSync(new URL('../../.env.local', import.meta.url), 'utf8')), ...process.env }
 if (!config.PGPASSWORD || config.PGPASSWORD === 'ESCRIBE_AQUI_TU_CONTRASENA') throw new Error('Falta configurar la contraseña de Supabase en .env.local')
 const contexto = new AsyncLocalStorage()
 pg.types.setTypeParser(20, value => {

@@ -9,7 +9,7 @@
 //        ◔ Reparto del inventario (círculo): qué parte del valor está en cada categoría.
 //   3. La tabla con el valor de cada categoría y los 5 productos más vendidos.
 //
-// Las ventas de cada día las calcula el servidor (servidor/ventas.js → ventasPorDia).
+// Las ventas de cada día las calcula el servidor (servidor/ventas/ventas.js → ventasPorDia).
 
 import { useEffect, useMemo, useState } from 'react'
 import GraficaDeBarras from '../componentes/GraficaDeBarras.jsx'
