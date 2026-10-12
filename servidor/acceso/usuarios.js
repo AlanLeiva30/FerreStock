@@ -106,7 +106,7 @@ async function revisarDatos(datos, actual) {
     rol
   };
 }
-function claveValida(clave) {
+export function claveValida(clave) {
   const valor = String(clave ?? '');
   if (valor.length < LARGO_MINIMO_DE_CLAVE) {
     throw new ErrorParaElUsuario(CODIGOS.DATOS_INCORRECTOS, `La contraseña debe tener al menos ${LARGO_MINIMO_DE_CLAVE} caracteres`);

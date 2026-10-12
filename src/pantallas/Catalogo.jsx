@@ -10,6 +10,7 @@ import EtiquetaEstado from '../componentes/EtiquetaEstado.jsx'
 import FilaVacia from '../componentes/FilaVacia.jsx'
 import FilasPorCategoria from '../componentes/FilasPorCategoria.jsx'
 import { formato } from '../utilidades/formato.js'
+import Icono from '../componentes/Icono.jsx'
 
 export default function Catalogo({ productosFiltrados, configuracion, categoria, elegirCategoria, abrirProducto, abrirMovimiento, abrirCategorias, activarODesactivar }) {
   const [mostrarInactivos, setMostrarInactivos] = useState(false)
@@ -19,7 +20,7 @@ export default function Catalogo({ productosFiltrados, configuracion, categoria,
   return (
     <section className="panel view">
       <div className="panelhead">
-        <h2>◇ Catálogo de Productos ({filas.length})</h2>
+        <h2><Icono nombre="catalogo" className="antes" />Catálogo de Productos ({filas.length})</h2>
 
         {/* Barra de herramientas: filtro de categoría, mostrar inactivos y botones */}
         <div className="toolbar">
@@ -31,7 +32,7 @@ export default function Catalogo({ productosFiltrados, configuracion, categoria,
             <input type="checkbox" checked={mostrarInactivos} onChange={(evento) => setMostrarInactivos(evento.target.checked)} />
             {' '}Mostrar inactivos{cantidadDeInactivos > 0 && ` (${cantidadDeInactivos})`}
           </label>
-          <button onClick={abrirCategorias}>▤ Categorías</button>
+          <button onClick={abrirCategorias}><Icono nombre="agrupar" tamano={16} className="antes" />Categorías</button>
           <button className="primary" onClick={() => abrirProducto()}>＋ Nuevo producto</button>
         </div>
       </div>

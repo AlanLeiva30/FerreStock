@@ -27,16 +27,18 @@
 // El precio y el stock se vuelven a revisar en el servidor al cobrar.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import EtiquetaEstado from '../componentes/EtiquetaEstado.jsx'
 import FilaVacia from '../componentes/FilaVacia.jsx'
 import FilasPorCategoria from '../componentes/FilasPorCategoria.jsx'
 import IconoDeArea from '../componentes/IconoDeArea.jsx'
 import Ventana from '../componentes/Ventana.jsx'
 import { areaDeLaCategoria } from '../utilidades/areas.js'
-import { agruparPorCategoria, coincideConBusqueda } from '../utilidades/calculos.js'
+import { agruparPorCategoria, coincideConBusqueda, estadoDelProducto } from '../utilidades/calculos.js'
 import { formato } from '../utilidades/formato.js'
 import { servidor } from '../utilidades/servidor.js'
 import FormularioNegocio from '../ventanas/FormularioNegocio.jsx'
 import VerFactura from '../ventanas/VerFactura.jsx'
+import Icono from '../componentes/Icono.jsx'
 
 export default function Vender({ productos, esAdmin, recargar, avisar }) {
   const [buscado, setBuscado] = useState('')
@@ -199,7 +201,7 @@ export default function Vender({ productos, esAdmin, recargar, avisar }) {
                     onClick={() => agregar(producto)}>
                     <td className="yellow">{producto.codigo}</td>
                     <td>{producto.nombre}</td>
-                    <td className="big">{formato.cantidad(quedan, producto.unidad)}</td>
+                    <td className="big">{formato.cantidad(quedan, producto.unidad)}{estadoDelProducto(producto).texto !== 'OK' && <> <EtiquetaEstado producto={producto} /></>}</td>
                     <td>{formato.dinero(producto.precio)}</td>
                     <td className="row-actions">
                       <button disabled={quedan < 1} onClick={(evento) => { evento.stopPropagation(); agregar(producto) }}>
@@ -275,8 +277,8 @@ export default function Vender({ productos, esAdmin, recargar, avisar }) {
 
         <section className="panel moves">
           <div className="panelhead">
-            <h2>↗ {esAdmin ? 'Ventas de hoy' : 'Mis ventas de hoy'}</h2>
-            {esAdmin && <button onClick={() => setEditandoNegocio(true)}>✎ Datos de la factura</button>}
+            <h2><Icono nombre="tendencia" className="antes" />{esAdmin ? 'Ventas de hoy' : 'Mis ventas de hoy'}</h2>
+            {esAdmin && <button onClick={() => setEditandoNegocio(true)}><Icono nombre="lapiz" tamano={15} className="antes" />Datos de la factura</button>}
           </div>
           <div className="ventas-hoy-resumen">
             <span>{ventasDeHoy.cantidad} venta{ventasDeHoy.cantidad === 1 ? '' : 's'}</span>
@@ -286,7 +288,7 @@ export default function Vender({ productos, esAdmin, recargar, avisar }) {
           {ventasDeHoy.ventas.slice(0, 8).map((venta) => (
             <button className="venta-hoy" key={venta.id} onClick={() => abrirFactura(venta.id)} title="Ver o reimprimir la factura">
               <div>
-                <b>🧾 Factura {formato.factura(venta.id)}</b>
+                <b><Icono nombre="factura" tamano={15} className="antes" />Factura {formato.factura(venta.id)}</b>
                 <span>{venta.cliente} · {venta.productos} producto{venta.productos === 1 ? '' : 's'}{esAdmin ? ` · ${venta.vendedor}` : ''}</span>
               </div>
               <div className="plus"><b>{formato.dinero(venta.total)}</b><span>{formato.hora(venta.fecha)}</span></div>

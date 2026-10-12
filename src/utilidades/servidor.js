@@ -33,6 +33,11 @@ export const servidor = {
   crearPrimerAdministrador: (datos) => pedir('/sesion/configurar', { metodo: 'POST', datos }),
   cerrarSesion: () => pedir('/sesion/cerrar', { metodo: 'POST' }),
 
+  // Mi perfil (cualquier usuario con sesión): foto, ajustes y contraseña propios
+  // cambios = { foto: 'data:image/jpeg;base64,…' | null, preferencias: { tema, saludo, menuCompacto, inicio } }
+  guardarPerfil: (cambios) => pedir('/perfil', { metodo: 'PUT', datos: cambios }),
+  cambiarMiClave: (actual, nueva) => pedir('/perfil/clave', { metodo: 'POST', datos: { actual, nueva } }),
+
   // Ventas y facturas (vendedor y administrador)
   // venta = { productos: [{ productoId, cantidad }], recibido, cliente, clienteDocumento }
   cobrarVenta: (venta) => pedir('/ventas', { metodo: 'POST', datos: venta }), // devuelve la factura

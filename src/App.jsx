@@ -9,10 +9,15 @@
 // Justo después de escribir usuario y contraseña, el programa saluda ("¡Hola, Alan!").
 // Si solo se recarga la página con la sesión ya abierta, no vuelve a saludar.
 //
-// También maneja el tema (claro u oscuro), para que se vea igual en el ingreso.
+// También maneja el tema (claro u oscuro):
+//   - En el ingreso se ve el último tema usado en este navegador, y se puede cambiar ahí mismo.
+//   - Al iniciar sesión se MANTIENE el que se estaba viendo (y se guarda en la cuenta de esa persona).
+//   - Si la persona recarga la página con la sesión ya abierta, se usa el guardado en su cuenta.
+//   - Si cambia el tema dentro del programa, también se guarda en su cuenta.
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Sistema from './Sistema.jsx'
+import Icono from './componentes/Icono.jsx'
 import Ingreso from './pantallas/Ingreso.jsx'
 import { SESION_VENCIDA, servidor } from './utilidades/servidor.js'
 
@@ -27,10 +32,17 @@ export default function App() {
     guardarTema(tema)
   }, [tema])
 
+  // Solo la primera vez que se abre la página con una sesión ya iniciada se usa el tema guardado en la cuenta.
+  const temaDeLaCuentaAplicado = useRef(false)
+
   // Preguntar al servidor quién está conectado.
   const revisarSesion = useCallback(async () => {
     try {
       const estado = await servidor.estadoDeSesion()
+      if (!temaDeLaCuentaAplicado.current) {
+        temaDeLaCuentaAplicado.current = true
+        if (estado.usuario?.preferencias?.tema) setTema(estado.usuario.preferencias.tema)
+      }
       setSesion({ revisando: false, usuario: estado.usuario, necesitaConfiguracion: estado.necesitaConfiguracion, error: '' })
     } catch (error) {
       setSesion({ revisando: false, usuario: null, necesitaConfiguracion: false, error: error.message })
@@ -47,8 +59,14 @@ export default function App() {
   }, [])
 
   const entrar = (usuario) => {
+    temaDeLaCuentaAplicado.current = true
+    // Se conserva el tema que se veía en el ingreso; si es distinto al de la cuenta, se actualiza la cuenta.
+    if (usuario.preferencias?.tema !== tema) {
+      usuario = { ...usuario, preferencias: { ...usuario.preferencias, tema } }
+      servidor.guardarPerfil({ preferencias: { tema } }).catch(() => {})
+    }
     setSesion({ revisando: false, usuario, necesitaConfiguracion: false, error: '' })
-    setDarBienvenida(true)
+    setDarBienvenida(usuario.preferencias?.saludo !== false) // cada persona puede apagar la bienvenida en sus ajustes
   }
 
   // Se llama después de que la persona confirma "¿Seguro que quieres cerrar sesión?" (en Sistema.jsx).
@@ -58,13 +76,20 @@ export default function App() {
     setSesion({ revisando: false, usuario: null, necesitaConfiguracion: false, error: '' })
   }
 
-  const cambiarTema = () => setTema(tema === 'dark' ? 'light' : 'dark')
+  // Cambia el tema y, si hay una persona con sesión, lo guarda en su cuenta.
+  const fijarTema = (nuevo) => {
+    setTema(nuevo)
+    if (!sesion.usuario) return
+    setSesion((actual) => ({ ...actual, usuario: { ...actual.usuario, preferencias: { ...actual.usuario.preferencias, tema: nuevo } } }))
+    servidor.guardarPerfil({ preferencias: { tema: nuevo } }).catch(() => {}) // si falla, el tema igual cambia en esta pantalla
+  }
+  const cambiarTema = () => fijarTema(tema === 'dark' ? 'light' : 'dark')
 
   // Mientras se pregunta al servidor: el logo "latiendo".
   if (sesion.revisando) {
     return (
       <div className="pantalla-cargando" role="status">
-        <div className="ingreso-logo" aria-hidden="true">⬡</div>
+        <div className="ingreso-logo" aria-hidden="true"><Icono nombre="llaveInglesa" tamano={30} /></div>
         <p>Cargando FerreStock…</p>
       </div>
     )
@@ -80,7 +105,7 @@ export default function App() {
   // "key" hace que el programa empiece de cero si entra otra persona o le cambian el rol.
   return (
     <Sistema key={`${sesion.usuario.id}-${sesion.usuario.rol}`} usuario={sesion.usuario}
-      tema={tema} cambiarTema={cambiarTema}
+      tema={tema} cambiarTema={cambiarTema} fijarTema={fijarTema}
       alSalir={salir} actualizarSesion={revisarSesion}
       darBienvenida={darBienvenida} alCerrarBienvenida={() => setDarBienvenida(false)} />
   )

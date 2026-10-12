@@ -12,6 +12,7 @@
 import { createPortal } from 'react-dom'
 import Factura from '../componentes/Factura.jsx'
 import { formato } from '../utilidades/formato.js'
+import Icono from '../componentes/Icono.jsx'
 
 export default function VerFactura({ venta, alCerrar }) {
   return (
@@ -22,7 +23,7 @@ export default function VerFactura({ venta, alCerrar }) {
       <Factura venta={venta} />
 
       <div className="factura-botones">
-        <button onClick={() => window.print()} autoFocus>🖨 Imprimir</button>
+        <button onClick={() => window.print()} autoFocus><Icono nombre="impresora" tamano={16} className="antes" />Imprimir</button>
         <button className="secundario" onClick={alCerrar}>Listo</button>
       </div>
 

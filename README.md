@@ -10,7 +10,7 @@ Sistema de gestión para ferreterías: factura en segundos, sabe cuándo reponer
 ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.13-339933?logo=nodedotjs&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase&logoColor=white)
-![Versión](https://img.shields.io/badge/versi%C3%B3n-1.5.0-orange)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-1.7.0-orange)
 
 </div>
 
@@ -52,12 +52,16 @@ Una ferretería maneja cientos de productos, entradas y salidas todos los días.
 - Panel principal con los indicadores clave.
 
 ### 👥 Equipo y permisos
+Cada persona personaliza su cuenta: **foto de perfil**, tema claro u oscuro, menú compacto, pantalla de inicio y su propia contraseña, desde el menú de su nombre.
+
 Tres roles, cada uno con su propia vista:
 
 | | 👷 Trabajador | 💵 Vendedor | 🛡️ Administrador |
 |---|:---:|:---:|:---:|
 | Ver existencias | ✅ | ✅ | ✅ |
 | Ver precios | ❌ | ✅ | ✅ |
+| Consultar el inventario y ver las alertas de poco stock | ✅ | ✅ (solo lectura) | ✅ |
+| Notificación al entrar cuando hay productos acabándose | ❌ | ✅ | ✅ |
 | Ver costos | ❌ | ❌ | ✅ |
 | Cobrar y facturar | ❌ | ✅ | ✅ |
 | Inventario, reportes y alertas | ❌ | ❌ | ✅ |
@@ -144,6 +148,6 @@ FerreStock/
 
 <div align="center">
 
-**FerreStock** · Hecho para ferreterías · v1.5.0
+**FerreStock** · Hecho para ferreterías · v1.7.0
 
 </div>

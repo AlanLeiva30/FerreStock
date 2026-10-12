@@ -14,10 +14,12 @@
 //   - saludar al entrar ("¡Hola, Alan!") y preguntar antes de cerrar sesión
 //   - abrir y cerrar las ventanas emergentes (carpeta "ventanas")
 //   - guardar los cambios pidiéndoselo al servidor
-//   - mostrar el aviso verde "✓ …" de abajo a la derecha
+//   - mostrar el aviso verde con una palomita de abajo a la derecha
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Alerta from './componentes/Alerta.jsx'
+import Icono from './componentes/Icono.jsx'
+import MenuDeUsuario from './componentes/MenuDeUsuario.jsx'
 import Ventana from './componentes/Ventana.jsx'
 import { coincideConBusqueda, listaDeAlertas } from './utilidades/calculos.js'
 import { formato } from './utilidades/formato.js'
@@ -36,6 +38,7 @@ import BaseDeDatos from './pantallas/BaseDeDatos.jsx'
 import FormularioMovimiento from './ventanas/FormularioMovimiento.jsx'
 import FormularioProducto from './ventanas/FormularioProducto.jsx'
 import AdministrarCategorias from './ventanas/AdministrarCategorias.jsx'
+import AjustesDeUsuario from './ventanas/AjustesDeUsuario.jsx'
 
 // Los roles (deben ser iguales a los de servidor/acceso/roles.js).
 const ADMINISTRADOR = 'administrador'
@@ -47,33 +50,41 @@ const TRABAJADOR = 'trabajador'
 //   buscador → si se muestra el buscador general arriba de la pantalla
 //   Pantalla → lo que se muestra al elegirla
 const MENU = [
-  { id: 'panel', icono: '▦', titulo: 'Panel Principal', descripcion: 'Resumen e indicadores clave', roles: [ADMINISTRADOR], buscador: true, Pantalla: PanelPrincipal },
-  { id: 'vender', icono: '$', titulo: 'Vender', descripcion: 'Agregar productos, cobrar y facturar', roles: [ADMINISTRADOR, VENDEDOR], buscador: false, Pantalla: Vender },
-  { id: 'almacen', icono: '▤', titulo: 'Stock del Almacén', descripcion: 'Cuánto hay de cada producto', roles: [TRABAJADOR], buscador: true, Pantalla: Almacen },
-  { id: 'catalogo', icono: '◇', titulo: 'Catálogo de Productos', descripcion: 'Alta, modificación y estados', roles: [ADMINISTRADOR], buscador: true, Pantalla: Catalogo },
-  { id: 'movimientos', icono: '⇅', titulo: 'Entradas y Salidas', descripcion: 'Registro de flujo de mercadería', roles: [ADMINISTRADOR], buscador: true, Pantalla: EntradasYSalidas },
-  { id: 'consulta', icono: '⌕', titulo: 'Consulta de Inventario', descripcion: 'Búsqueda veloz para mostrador', roles: [ADMINISTRADOR], buscador: true, Pantalla: Consulta },
-  { id: 'alertas', icono: '△', titulo: 'Alertas de Stock Mínimo', descripcion: 'Productos para reabastecer', roles: [ADMINISTRADOR], buscador: true, Pantalla: Alertas },
-  { id: 'reportes', icono: '▥', titulo: 'Reportes y Estadísticas', descripcion: 'Informes detallados del estado', roles: [ADMINISTRADOR], buscador: false, Pantalla: Reportes },
-  { id: 'usuarios', icono: '◉', titulo: 'Usuarios y Roles', descripcion: 'Crear usuarios y asignar su rol', roles: [ADMINISTRADOR], buscador: false, Pantalla: Usuarios },
-  { id: 'base', icono: '▣', titulo: 'Base de Datos', descripcion: 'Ver las tablas guardadas (solo lectura)', roles: [ADMINISTRADOR], buscador: false, Pantalla: BaseDeDatos },
+  { id: 'panel', icono: 'panel', titulo: 'Panel Principal', descripcion: 'Resumen e indicadores clave', roles: [ADMINISTRADOR], buscador: true, Pantalla: PanelPrincipal },
+  { id: 'vender', icono: 'vender', titulo: 'Vender', descripcion: 'Agregar productos, cobrar y facturar', roles: [ADMINISTRADOR, VENDEDOR], buscador: false, Pantalla: Vender },
+  { id: 'almacen', icono: 'almacen', titulo: 'Stock del Almacén', descripcion: 'Cuánto hay de cada producto', roles: [TRABAJADOR], buscador: true, Pantalla: Almacen },
+  { id: 'catalogo', icono: 'catalogo', titulo: 'Catálogo de Productos', descripcion: 'Alta, modificación y estados', roles: [ADMINISTRADOR], buscador: true, Pantalla: Catalogo },
+  { id: 'movimientos', icono: 'movimientos', titulo: 'Entradas y Salidas', descripcion: 'Registro de flujo de mercadería', roles: [ADMINISTRADOR], buscador: true, Pantalla: EntradasYSalidas },
+  { id: 'consulta', icono: 'buscar', titulo: 'Consulta de Inventario', descripcion: 'Búsqueda veloz para mostrador', roles: [ADMINISTRADOR, VENDEDOR], buscador: true, Pantalla: Consulta },
+  { id: 'alertas', icono: 'alerta', titulo: 'Alertas de Stock Mínimo', descripcion: 'Productos para reabastecer', roles: [ADMINISTRADOR, VENDEDOR], buscador: true, Pantalla: Alertas },
+  { id: 'reportes', icono: 'reportes', titulo: 'Reportes y Estadísticas', descripcion: 'Informes detallados del estado', roles: [ADMINISTRADOR], buscador: false, Pantalla: Reportes },
+  { id: 'usuarios', icono: 'usuarios', titulo: 'Usuarios y Roles', descripcion: 'Crear usuarios y asignar su rol', roles: [ADMINISTRADOR], buscador: false, Pantalla: Usuarios },
+  { id: 'base', icono: 'baseDeDatos', titulo: 'Base de Datos', descripcion: 'Ver las tablas guardadas (solo lectura)', roles: [ADMINISTRADOR], buscador: false, Pantalla: BaseDeDatos },
 ]
 
-export default function Sistema({ usuario, tema, cambiarTema, alSalir, actualizarSesion, darBienvenida, alCerrarBienvenida }) {
+export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir, actualizarSesion, darBienvenida, alCerrarBienvenida }) {
   const esAdmin = usuario.rol === ADMINISTRADOR
+  const esVendedor = usuario.rol === VENDEDOR
+  // Reciben los avisos de stock bajo y agotados: el administrador y el vendedor (este último solo para consultar).
+  const pantallaDeAlertas = esAdmin || esVendedor ? 'alertas' : null
   const menuDelUsuario = MENU.filter((opcion) => opcion.roles.includes(usuario.rol))
 
   // ── 1. Datos que vienen de la base (productos, movimientos, categorías) ──
   const { configuracion, productos, movimientos, cargando, errorDeCarga, recargar } = useInventario(esAdmin)
 
   // ── 2. Lo que el usuario está viendo o haciendo en este momento ──
-  const [pantallaActual, setPantallaActual] = useState(menuDelUsuario[0].id)
+  // La pantalla con la que abre es la que la persona eligió en sus ajustes (si su rol aún la puede ver).
+  const [pantallaActual, setPantallaActual] = useState(() => (menuDelUsuario.find((opcion) => opcion.id === usuario.preferencias?.inicio) ?? menuDelUsuario[0]).id)
   const [busqueda, setBusqueda] = useState('') //   texto escrito en el buscador
   const [categoria, setCategoria] = useState('') // filtro de categoría ('' = todas)
   const [ventana, setVentana] = useState(null) //    ventana emergente abierta (null = ninguna)
   const [aviso, setAviso] = useState('') //          mensaje verde de abajo a la derecha
   const [preguntandoSalir, setPreguntandoSalir] = useState(false) // aviso "¿Seguro que quieres cerrar sesión?"
   const buscador = useRef(null)
+  const [avisoInicialDeStock, setAvisoInicialDeStock] = useState(false) // notificación al entrar: "hay productos acabándose"
+  const [avisoDeStock, setAvisoDeStock] = useState('') //                  aviso ámbar de abajo: "se agotó / quedan pocos"
+  const alertasYaRevisadas = useRef(false)
+  const estadoAnteriorDelStock = useRef(null)
 
   // El aviso verde desaparece solo después de 3 segundos.
   useEffect(() => {
@@ -82,8 +93,39 @@ export default function Sistema({ usuario, tema, cambiarTema, alSalir, actualiza
     return () => clearTimeout(temporizador)
   }, [aviso])
 
+  // El aviso ámbar desaparece solo después de 7 segundos.
+  useEffect(() => {
+    if (!avisoDeStock) return
+    const temporizador = setTimeout(() => setAvisoDeStock(''), 7000)
+    return () => clearTimeout(temporizador)
+  }, [avisoDeStock])
+
   // ── 3. Cálculos a partir de los datos ──
-  const alertas = useMemo(() => (esAdmin ? listaDeAlertas(productos) : []), [productos, esAdmin])
+  const alertas = useMemo(() => (pantallaDeAlertas ? listaDeAlertas(productos) : []), [productos, pantallaDeAlertas])
+  const agotados = alertas.filter((producto) => producto.stock <= 0)
+
+  // Al entrar: si hay productos acabándose (y la persona no lo apagó en sus ajustes), mostrar una notificación.
+  useEffect(() => {
+    if (cargando || alertasYaRevisadas.current) return
+    alertasYaRevisadas.current = true
+    if (alertas.length > 0 && usuario.preferencias?.avisoStock !== false) setAvisoInicialDeStock(true)
+  }, [cargando, alertas, usuario.preferencias?.avisoStock])
+
+  // Durante el trabajo: si después de una venta o un movimiento un producto pasa a "poco stock" o "agotado", avisar.
+  useEffect(() => {
+    if (cargando || !pantallaDeAlertas) return
+    const nivel = (producto) => (producto.stock <= 0 ? 2 : producto.stock < producto.minimo ? 1 : 0)
+    const ahora = new Map(productos.filter((producto) => producto.activo).map((producto) => [producto.id, nivel(producto)]))
+    const antes = estadoAnteriorDelStock.current
+    estadoAnteriorDelStock.current = ahora
+    if (!antes) return
+    const empeoraron = productos.filter((producto) => ahora.has(producto.id) && antes.has(producto.id) && ahora.get(producto.id) > antes.get(producto.id))
+    if (!empeoraron.length) return
+    const peor = empeoraron.sort((a, b) => ahora.get(b.id) - ahora.get(a.id))[0]
+    setAvisoDeStock(empeoraron.length > 1
+      ? `${empeoraron.length} productos se están acabando (${peor.nombre} y otros)`
+      : `${peor.nombre}: ${peor.stock <= 0 ? 'se agotó' : `quedan solo ${formato.cantidad(peor.stock, peor.unidad)}`}`)
+  }, [productos, cargando, pantallaDeAlertas])
 
   // Productos que coinciden con el buscador y con el filtro de categoría.
   const productosFiltrados = useMemo(() => productos.filter((producto) =>
@@ -181,45 +223,42 @@ export default function Sistema({ usuario, tema, cambiarTema, alSalir, actualiza
       {/* Barra superior */}
       <header className="top">
         <div className="topin">
-          <div className="logo">⬡</div>
+          <div className="logo"><Icono nombre="llaveInglesa" tamano={22} /></div>
           <div className="brand"><b>FerreStock</b><small>Ferretería Medrano • Control de Inventarios</small></div>
-          <i>v1.5</i>
+          <i>v1.7</i>
           <div className="actions">
-            {esAdmin && <button className="registrar" onClick={() => abrirMovimiento()} aria-label="Registrar movimiento">⊕ Registrar Movimiento</button>}
+            {esAdmin && <button className="registrar" onClick={() => abrirMovimiento()} aria-label="Registrar movimiento"><Icono nombre="mas" tamano={16} className="antes" />Registrar Movimiento</button>}
             <button className="theme-toggle" onClick={cambiarTema} aria-label="Cambiar modo">
-              {tema === 'dark' ? '☀ Claro' : '☾ Oscuro'}
+              {tema === 'dark' ? <><Icono nombre="sol" tamano={16} className="antes" />Claro</> : <><Icono nombre="luna" tamano={16} className="antes" />Oscuro</>}
             </button>
-            {esAdmin && (
-              <button className="bell" onClick={() => irA('alertas')} aria-label={`${alertas.length} alertas de stock`}>
-                ♧{alertas.length > 0 && <em>{alertas.length}</em>}
+            {pantallaDeAlertas && (
+              <button className="bell" onClick={() => irA(pantallaDeAlertas)} aria-label={`${alertas.length} alertas de stock`}>
+                <Icono nombre="campana" tamano={19} />{alertas.length > 0 && <em>{alertas.length}</em>}
               </button>
             )}
-            {esAdmin && <button className="scope" onClick={() => setVentana({ tipo: 'alcance' })}>ⓘ Alcance del Proyecto</button>}
-            <span className="user" title={`Usuario: ${usuario.usuario}`}>
-              <strong>{usuario.nombre[0]}</strong>
-              <span className="user-datos"><b>{usuario.nombre}</b><small>{usuario.rol_nombre}</small></span>
-            </span>
-            <button className="salir" onClick={() => setPreguntandoSalir(true)} aria-label="Cerrar sesión">⎋ Salir</button>
+            {esAdmin && <button className="scope" onClick={() => setVentana({ tipo: 'alcance' })}><Icono nombre="info" tamano={16} className="antes" />Alcance del Proyecto</button>}
+            <MenuDeUsuario usuario={usuario} alAjustes={() => setVentana({ tipo: 'ajustes' })} alSalir={() => setPreguntandoSalir(true)}
+              avisar={setAviso} actualizarSesion={actualizarSesion} />
           </div>
         </div>
       </header>
 
       <div className="body">
         {/* Menú de la izquierda (solo las opciones de su rol) */}
-        <aside>
+        <aside className={usuario.preferencias?.menuCompacto ? 'compacto' : undefined}>
           <nav>
             {menuDelUsuario.map((opcion) => (
-              <button key={opcion.id} className={opcionActual.id === opcion.id ? 'active' : ''} onClick={() => irA(opcion.id)}
+              <button key={opcion.id} className={[opcionActual.id === opcion.id && 'active', opcion.id === pantallaDeAlertas && alertas.length > 0 && 'con-aviso'].filter(Boolean).join(' ')} onClick={() => irA(opcion.id)}
                 aria-current={opcionActual.id === opcion.id ? 'page' : undefined}>
-                <span>{opcion.icono}</span>
+                <span><Icono nombre={opcion.icono} tamano={19} /></span>
                 <b>{opcion.titulo}</b>
-                {opcion.id === 'alertas' && alertas.length > 0 && <em>{alertas.length}</em>}
+                {opcion.id === pantallaDeAlertas && alertas.length > 0 && <em>{alertas.length}</em>}
                 <small>{opcion.descripcion}</small>
               </button>
             ))}
           </nav>
           {/* Qué puede hacer este rol (el texto viene de servidor/acceso/roles.js) */}
-          <div className="permission"><b>✓ {usuario.rol_nombre}</b><small>{usuario.rol_descripcion}</small></div>
+          <div className="permission"><b><Icono nombre="check" tamano={15} className="antes" />{usuario.rol_nombre}</b><small>{usuario.rol_descripcion}</small></div>
         </aside>
 
         {/* Zona central */}
@@ -227,7 +266,7 @@ export default function Sistema({ usuario, tema, cambiarTema, alSalir, actualiza
           <section className="section-indicator">Vista actual: <strong>{opcionActual.titulo}</strong></section>
 
           {opcionActual.buscador && (
-            <div className="search">⌕
+            <div className="search"><Icono nombre="buscar" tamano={20} />
               <input ref={buscador} value={busqueda} onChange={(evento) => setBusqueda(evento.target.value)}
                 placeholder="Búsqueda rápida por nombre, código o categoría..." aria-label="Buscar productos" />
               {categoria && <button className="chip" onClick={() => setCategoria('')} aria-label={`Quitar filtro ${categoria}`}>{categoria} ×</button>}
@@ -242,20 +281,41 @@ export default function Sistema({ usuario, tema, cambiarTema, alSalir, actualiza
         </main>
       </div>
 
-      {/* Aviso verde */}
-      {aviso && <div className="toast" role="status">✓ {aviso}</div>}
+      {/* Aviso ámbar de stock (se acabó o quedan pocos) */}
+      {avisoDeStock && <div className="toast toast-stock" role="status"><Icono nombre="alerta" tamano={16} className="antes" />{avisoDeStock}</div>}
 
-      {/* Bienvenida: solo justo después de iniciar sesión. Se cierra sola a los 30 segundos
+      {/* Aviso verde */}
+      {aviso && <div className="toast" role="status"><Icono nombre="check" tamano={15} className="antes" />{aviso}</div>}
+
+      {/* Bienvenida: solo justo después de iniciar sesión. Se cierra sola a los 15 segundos
           (o antes, con "¡Empecemos!", la tecla Escape o un clic fuera del aviso). */}
       {darBienvenida && (
         <Alerta icono="saludo" titulo={`¡Hola, ${primerNombre(usuario.nombre)}!`} textoAceptar="¡Empecemos!"
-          cerrarEnSegundos={30} alAceptar={alCerrarBienvenida}>
+          cerrarEnSegundos={15} alAceptar={alCerrarBienvenida}>
           <p>{formato.saludo()}. Te damos la bienvenida a <b>FerreStock</b>.</p>
           <p className="alerta-rol">Entraste como <b>{usuario.rol_nombre}</b></p>
         </Alerta>
       )}
 
-      {/* Confirmación antes de cerrar sesión (botón "⎋ Salir") */}
+      {/* Notificación de stock al entrar (aparece después de la bienvenida) */}
+      {avisoInicialDeStock && !darBienvenida && (
+        <Alerta icono="stock" titulo={agotados.length ? 'Hay productos agotados' : 'Hay productos con poco stock'} textoAceptar="Ver alertas" textoCancelar="Ahora no"
+          alAceptar={() => { setAvisoInicialDeStock(false); irA('alertas') }} alCancelar={() => setAvisoInicialDeStock(false)}>
+          <p>
+            {agotados.length > 0 && <><b>{agotados.length}</b> agotado{agotados.length === 1 ? '' : 's'}</>}
+            {agotados.length > 0 && alertas.length > agotados.length && ' y '}
+            {alertas.length > agotados.length && <><b>{alertas.length - agotados.length}</b> con poco stock</>}.
+          </p>
+          <ul className="alerta-lista">
+            {alertas.slice(0, 4).map((producto) => (
+              <li key={producto.id}><b>{producto.nombre}</b><span>{producto.stock <= 0 ? 'agotado' : `quedan ${formato.cantidad(producto.stock, producto.unidad)}`}</span></li>
+            ))}
+            {alertas.length > 4 && <li className="alerta-mas">y {alertas.length - 4} más…</li>}
+          </ul>
+        </Alerta>
+      )}
+
+      {/* Confirmación antes de cerrar sesión (menú del usuario → "Cerrar sesión") */}
       {preguntandoSalir && (
         <Alerta icono="pregunta" titulo="¿Seguro que quieres cerrar sesión?" textoAceptar="Sí, cerrar sesión" textoCancelar="Cancelar"
           alAceptar={alSalir} alCancelar={() => setPreguntandoSalir(false)}>
@@ -263,9 +323,9 @@ export default function Sistema({ usuario, tema, cambiarTema, alSalir, actualiza
         </Alerta>
       )}
 
-      {/* Ventanas emergentes (solo las usa el administrador) */}
+      {/* Ventanas emergentes (casi todas son del administrador; los ajustes de cuenta son de todos) */}
       {ventana && (
-        <Ventana alCerrar={cerrarVentana}>
+        <Ventana alCerrar={cerrarVentana} ancha={ventana.tipo === 'ajustes'}>
           {ventana.tipo === 'movimiento' && (
             <FormularioMovimiento productos={productos} motivos={configuracion.motivos} valoresIniciales={ventana.valoresIniciales} alGuardar={guardarMovimiento} />
           )}
@@ -274,6 +334,10 @@ export default function Sistema({ usuario, tema, cambiarTema, alSalir, actualiza
           )}
           {ventana.tipo === 'categorias' && (
             <AdministrarCategorias categorias={configuracion.categorias} acciones={accionesDeCategorias} />
+          )}
+          {ventana.tipo === 'ajustes' && (
+            <AjustesDeUsuario usuario={usuario} tema={tema} fijarTema={fijarTema} actualizarSesion={actualizarSesion} avisar={setAviso} recibeAvisosDeStock={!!pantallaDeAlertas}
+              menu={menuDelUsuario.map(({ id, titulo }) => ({ id, titulo }))} />
           )}
           {ventana.tipo === 'alcance' && (
             <>

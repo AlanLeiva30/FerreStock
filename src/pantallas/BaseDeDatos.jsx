@@ -19,6 +19,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { servidor } from '../utilidades/servidor.js'
+import Icono from '../componentes/Icono.jsx'
 
 export default function BaseDeDatos() {
   const [lista, setLista] = useState([]) //                   tablas y vistas disponibles
@@ -136,13 +137,13 @@ function Celda({ valor }) {
   return <td title={String(valor)}>{String(valor)}</td>
 }
 
-// Ícono de cada columna: 🔑 clave principal, # número, abc texto.
+// Ícono de cada columna: llave = clave principal, # número, abc texto.
 function iconoDelTipo(columna, filas) {
   const tipo = columna.tipo.toUpperCase()
   // Las columnas de las vistas no siempre traen tipo: se deduce del primer valor.
   const esNumero = /INT|REAL|NUM|DEC|FLOAT|DOUBLE/.test(tipo) ||
     (!tipo && typeof filas.find((fila) => fila[columna.nombre] != null)?.[columna.nombre] === 'number')
-  return `${columna.esClave ? '🔑 ' : ''}${esNumero ? '#' : 'abc'}`
+  return <>{columna.esClave && <Icono nombre="llavePrincipal" tamano={12} className="antes" />}{esNumero ? '#' : 'abc'}</>
 }
 
 // ¿El valor contiene el texto buscado? (sin importar mayúsculas; si no se buscó nada, sí)

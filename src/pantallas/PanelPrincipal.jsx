@@ -15,6 +15,7 @@ import TarjetaMovimiento from '../componentes/TarjetaMovimiento.jsx'
 import { areaDeLaCategoria } from '../utilidades/areas.js'
 import { coincideConBusqueda, resumenDelInventario, resumenPorCategoria } from '../utilidades/calculos.js'
 import { formato } from '../utilidades/formato.js'
+import Icono from '../componentes/Icono.jsx'
 
 export default function PanelPrincipal({ productos, movimientos, alertas, configuracion, busqueda, irA, abrirMovimiento, verCategoria }) {
   const [verMasMovimientos, setVerMasMovimientos] = useState(false)
@@ -24,10 +25,10 @@ export default function PanelPrincipal({ productos, movimientos, alertas, config
 
   // Las 4 tarjetas de arriba. Al hacer clic en una, se abre la pantalla indicada en "abre".
   const tarjetas = [
-    { titulo: 'CATÁLOGO DE PRODUCTOS', valor: totales.activos.length, detalle: 'Artículos activos en sistema', icono: '▧', abre: 'catalogo' },
-    { titulo: 'ALERTAS DE STOCK MÍNIMO', valor: alertas.length, detalle: 'Requieren reabastecimiento', icono: '△', abre: 'alertas' },
-    { titulo: 'VALOR INVENTARIO (COSTO)', valor: formato.dinero(totales.valorCosto), detalle: 'Costo total acumulado en bodega', icono: '$', abre: 'reportes' },
-    { titulo: 'PROYECCIÓN VENTA TOTAL', valor: formato.dinero(totales.valorVenta), detalle: `Margen estimado: +${totales.margen.toFixed(1)}%`, icono: '↗', abre: 'reportes' },
+    { titulo: 'CATÁLOGO DE PRODUCTOS', valor: totales.activos.length, detalle: 'Artículos activos en sistema', icono: 'caja', abre: 'catalogo' },
+    { titulo: 'ALERTAS DE STOCK MÍNIMO', valor: alertas.length, detalle: 'Requieren reabastecimiento', icono: 'alerta', abre: 'alertas' },
+    { titulo: 'VALOR INVENTARIO (COSTO)', valor: formato.dinero(totales.valorCosto), detalle: 'Costo total acumulado en bodega', icono: 'dinero', abre: 'reportes' },
+    { titulo: 'PROYECCIÓN VENTA TOTAL', valor: formato.dinero(totales.valorVenta), detalle: `Margen estimado: +${totales.margen.toFixed(1)}%`, icono: 'tendencia', abre: 'reportes' },
   ]
 
   return (
@@ -40,8 +41,8 @@ export default function PanelPrincipal({ productos, movimientos, alertas, config
           <p>Supervisión en tiempo real de las existencias, alertas automáticas de reabastecimiento e historial completo de entradas y salidas.</p>
         </div>
         <div>
-          <button onClick={() => abrirMovimiento()}>⊕ Nuevo Movimiento</button>
-          <button className="dark" onClick={() => irA('consulta')}>⌕ Consulta Mostrador</button>
+          <button onClick={() => abrirMovimiento()}><Icono nombre="mas" tamano={16} className="antes" />Nuevo Movimiento</button>
+          <button className="dark" onClick={() => irA('consulta')}><Icono nombre="buscar" tamano={16} className="antes" />Consulta Mostrador</button>
         </div>
       </section>
 
@@ -50,7 +51,7 @@ export default function PanelPrincipal({ productos, movimientos, alertas, config
         {tarjetas.map((tarjeta) => (
           <button key={tarjeta.titulo} className={tarjeta.abre === 'alertas' && alertas.length ? 'warn' : ''} onClick={() => irA(tarjeta.abre)}>
             <div><p>{tarjeta.titulo}</p><strong>{tarjeta.valor}</strong><small>{tarjeta.detalle}</small></div>
-            <span>{tarjeta.icono}</span>
+            <span><Icono nombre={tarjeta.icono} tamano={26} /></span>
           </button>
         ))}
       </section>
@@ -59,8 +60,8 @@ export default function PanelPrincipal({ productos, movimientos, alertas, config
         {/* 3a. Productos con poco stock (máximo 6). Al hacer clic se abre el reabastecimiento. */}
         <section className="panel">
           <div className="panelhead">
-            <h2>△ Productos en Nivel Crítico o Bajo Stock</h2>
-            <button onClick={() => irA('alertas')}>Ver Módulo Alertas ↗</button>
+            <h2><Icono nombre="alerta" className="antes" />Productos en Nivel Crítico o Bajo Stock</h2>
+            <button onClick={() => irA('alertas')}>Ver Módulo Alertas<Icono nombre="flechaDiagonal" tamano={14} className="despues" /></button>
           </div>
           <div className="tablewrap">
             <table>
@@ -96,7 +97,7 @@ export default function PanelPrincipal({ productos, movimientos, alertas, config
         {/* 3b. Últimos movimientos (5, o 15 con "Ver más") */}
         <section className="panel moves">
           <div className="panelhead">
-            <h2>↗ Últimos Movimientos</h2>
+            <h2><Icono nombre="movimientos" className="antes" />Últimos Movimientos</h2>
             <button onClick={() => setVerMasMovimientos(!verMasMovimientos)}>{verMasMovimientos ? 'Ver menos' : 'Ver más'}</button>
           </div>
           {movimientos.slice(0, verMasMovimientos ? 15 : 5).map((movimiento) => (
@@ -108,7 +109,7 @@ export default function PanelPrincipal({ productos, movimientos, alertas, config
 
       {/* 4. Resumen por categoría. Al hacer clic se abre el Catálogo filtrado. */}
       <section className="cats">
-        <h3>▱ RESUMEN DE PRODUCTOS POR CATEGORÍA</h3>
+        <h3><Icono nombre="agrupar" tamano={16} className="antes" />RESUMEN DE PRODUCTOS POR CATEGORÍA</h3>
         <div>
           {categorias.map((categoria) => (
             <button key={categoria.nombre} onClick={() => verCategoria(categoria.nombre)} style={{ '--color-area': areaDeLaCategoria(categoria.nombre).color }}>

@@ -24,7 +24,8 @@ import { listarMovimientos, registrarMovimiento } from './inventario/movimientos
 import { datosDelNegocio, guardarDatosDelNegocio } from './ventas/negocio.js'
 import { activarODesactivarProducto, crearProducto, editarProducto, listarProductos } from './inventario/productos.js'
 import { ADMINISTRADOR, TRABAJADOR, VENDEDOR } from './acceso/roles.js'
-import { cerrarSesion, configurarPrimerAdministrador, estadoDeSesion, iniciarSesion, usuarioDeLaPeticion } from './acceso/sesiones.js'
+import { cerrarSesion, configurarPrimerAdministrador, estadoDeSesion, huellaDeLaSesion, iniciarSesion, usuarioDeLaPeticion } from './acceso/sesiones.js'
+import { cambiarMiClave, guardarPerfil } from './acceso/perfil.js'
 import { crearUsuario, editarUsuario, eliminarUsuario, listarRoles, listarUsuarios } from './acceso/usuarios.js'
 import { cobrarVenta, ventasDeHoy, ventasPorDia, verFactura } from './ventas/ventas.js'
 import { listarTablasYVistas, verContenido } from './basedatos/visorDeBase.js'
@@ -41,6 +42,10 @@ const RUTAS = [
   ['POST',   '/sesion/iniciar',           PUBLICO,           ({ datos, respuesta }) => iniciarSesion(datos, respuesta)],
   ['POST',   '/sesion/configurar',        PUBLICO,           ({ datos, respuesta }) => configurarPrimerAdministrador(datos, respuesta)],
   ['POST',   '/sesion/cerrar',            PUBLICO,           ({ peticion, respuesta }) => cerrarSesion(peticion, respuesta)],
+
+  // Todos: cada persona cambia su propia foto, sus ajustes y su contraseña
+  ['PUT',    '/perfil',                   TODOS,             ({ datos, usuario }) => guardarPerfil(usuario, datos)],
+  ['POST',   '/perfil/clave',             TODOS,             ({ datos, usuario, peticion }) => cambiarMiClave(usuario, datos, huellaDeLaSesion(peticion))],
 
   // Todos: la lista de productos (cada rol recibe solo los datos que le tocan, ver inventario/productos.js)
   ['GET',    '/productos',                TODOS,             ({ usuario }) => listarProductos(usuario)],

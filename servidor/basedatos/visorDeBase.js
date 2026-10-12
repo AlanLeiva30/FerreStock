@@ -2,7 +2,7 @@ import { consultar } from './baseDeDatos.js'
 import { CODIGOS, ErrorParaElUsuario } from '../comun/http.js'
 import { VISTAS } from './vistasConsulta.js'
 const TABLAS = ['categorias', 'productos', 'movimientos', 'ventas', 'usuarios', 'roles', 'negocio']
-const OCULTAS = ['clave_hash', 'clave_sal']
+const OCULTAS = ['clave_hash', 'clave_sal', 'foto'] // la foto pesa y no sirve en una tabla
 const MAXIMO = 1000
 async function vistasDisponibles() {
   const vistas = { ...VISTAS }

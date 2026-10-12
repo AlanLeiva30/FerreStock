@@ -19,6 +19,7 @@ import { areaDeLaCategoria } from '../utilidades/areas.js'
 import { actividadReciente, resumenDelInventario, resumenPorCategoria } from '../utilidades/calculos.js'
 import { formato } from '../utilidades/formato.js'
 import { servidor } from '../utilidades/servidor.js'
+import Icono from '../componentes/Icono.jsx'
 
 // Botones para elegir cuántos días muestra la gráfica de barras.
 const PERIODOS = [
@@ -110,7 +111,7 @@ export default function Reportes({ productos, movimientos, configuracion }) {
       <div className="grid">
         {/* Valor de cada categoría, con una barra para comparar */}
         <section className="panel">
-          <div className="panelhead"><h2>▥ Inventario por Categoría</h2></div>
+          <div className="panelhead"><h2><Icono nombre="reportes" className="antes" />Inventario por Categoría</h2></div>
           <div className="tablewrap">
             <table>
               <thead><tr><th>Categoría</th><th>Productos</th><th>Unidades</th><th>Valor costo</th><th>Valor venta</th><th></th></tr></thead>
@@ -132,7 +133,7 @@ export default function Reportes({ productos, movimientos, configuracion }) {
 
         {/* Los 5 productos más vendidos */}
         <section className="panel moves">
-          <div className="panelhead"><h2>↗ Más Vendidos (30 días)</h2></div>
+          <div className="panelhead"><h2><Icono nombre="tendencia" className="antes" />Más Vendidos (30 días)</h2></div>
           {actividad.masVendidos.map((producto, posicion) => (
             <article key={producto.nombre}>
               <div><b>{posicion + 1}. {producto.nombre}</b></div>
@@ -178,8 +179,8 @@ function porcionesDelInventario(categorias) {
     .filter((categoria) => categoria.valorCosto > 0)
     .sort((a, b) => b.valorCosto - a.valorCosto)
     .map((categoria) => {
-      const { icono, color } = areaDeLaCategoria(categoria.nombre) // el mismo ícono y color que en Vender
-      return { clave: categoria.nombre, etiqueta: `${icono} ${categoria.nombre}`, valor: categoria.valorCosto, color }
+      const { color } = areaDeLaCategoria(categoria.nombre) // el mismo color que en Vender
+      return { clave: categoria.nombre, etiqueta: categoria.nombre, valor: categoria.valorCosto, color }
     })
   if (porciones.length <= MAXIMO_DE_PORCIONES) return porciones
 

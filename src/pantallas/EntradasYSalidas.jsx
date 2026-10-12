@@ -8,6 +8,7 @@ import { useState } from 'react'
 import FilaVacia from '../componentes/FilaVacia.jsx'
 import { coincideConBusqueda } from '../utilidades/calculos.js'
 import { formato } from '../utilidades/formato.js'
+import Icono from '../componentes/Icono.jsx'
 
 export default function EntradasYSalidas({ movimientos, busqueda, abrirMovimiento }) {
   const [tipo, setTipo] = useState('') // '' = todos, 'entrada' o 'salida'
@@ -18,14 +19,14 @@ export default function EntradasYSalidas({ movimientos, busqueda, abrirMovimient
   return (
     <section className="panel view">
       <div className="panelhead">
-        <h2>⇅ Entradas y Salidas ({filas.length})</h2>
+        <h2><Icono nombre="movimientos" className="antes" />Entradas y Salidas ({filas.length})</h2>
         <div className="toolbar">
           <select value={tipo} onChange={(evento) => setTipo(evento.target.value)} aria-label="Filtrar por tipo">
             <option value="">Todos</option>
             <option value="entrada">Entradas</option>
             <option value="salida">Salidas</option>
           </select>
-          <button className="primary" onClick={() => abrirMovimiento()}>⊕ Registrar movimiento</button>
+          <button className="primary" onClick={() => abrirMovimiento()}><Icono nombre="mas" tamano={16} className="antes" />Registrar movimiento</button>
         </div>
       </div>
 

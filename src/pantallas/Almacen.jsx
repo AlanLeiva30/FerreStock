@@ -13,6 +13,7 @@ import EtiquetaEstado from '../componentes/EtiquetaEstado.jsx'
 import FilaVacia from '../componentes/FilaVacia.jsx'
 import FilasPorCategoria from '../componentes/FilasPorCategoria.jsx'
 import { formato } from '../utilidades/formato.js'
+import Icono from '../componentes/Icono.jsx'
 
 // Cada filtro dice qué productos deja pasar.
 const FILTROS = [
@@ -31,7 +32,7 @@ export default function Almacen({ productosFiltrados, busqueda, recargar }) {
   return (
     <section className="panel view solo-lectura">
       <div className="panelhead">
-        <h2>▤ Stock del Almacén ({filas.length})</h2>
+        <h2><Icono nombre="almacen" className="antes" />Stock del Almacén ({filas.length})</h2>
         <div className="toolbar">
           <div className="filtros" role="group" aria-label="Filtrar por estado">
             {FILTROS.map((opcion) => (

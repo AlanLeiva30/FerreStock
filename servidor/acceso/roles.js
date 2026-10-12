@@ -24,7 +24,7 @@ export const ROLES = [
   {
     clave: VENDEDOR,
     nombre: 'Vendedor',
-    descripcion: 'Ve los productos disponibles, arma la venta, cobra e imprime la factura.',
+    descripcion: 'Consulta el inventario (solo lectura y sin costos), arma la venta, cobra e imprime la factura. Recibe avisos de poco stock y agotados.',
   },
   {
     clave: TRABAJADOR,

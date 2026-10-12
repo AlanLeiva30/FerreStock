@@ -26,15 +26,16 @@ import { useState } from 'react'
 import CampoClave from '../componentes/CampoClave.jsx'
 import { formato } from '../utilidades/formato.js'
 import { servidor } from '../utilidades/servidor.js'
+import Icono from '../componentes/Icono.jsx'
 
 // Lo que se muestra en el panel de la izquierda.
 const VENTAJAS = [
-  { icono: '📦', titulo: 'Inventario al día', texto: 'Sabe cuánto hay de cada producto y qué hace falta.' },
-  { icono: '🧾', titulo: 'Vende y factura', texto: 'Cobra, da el cambio e imprime la factura al momento.' },
-  { icono: '👥', titulo: 'Todo tu equipo', texto: 'Cada quien entra con su usuario y ve lo que le toca.' },
+  { icono: 'caja', titulo: 'Inventario al día', texto: 'Sabe cuánto hay de cada producto y qué hace falta.' },
+  { icono: 'factura', titulo: 'Vende y factura', texto: 'Cobra, da el cambio e imprime la factura al momento.' },
+  { icono: 'usuarios', titulo: 'Todo tu equipo', texto: 'Cada quien entra con su usuario y ve lo que le toca.' },
 ]
 
-const ICONO_DEL_SALUDO = { 'Buenos días': '☀️', 'Buenas tardes': '🌤️', 'Buenas noches': '🌙' }
+const ICONO_DEL_SALUDO = { 'Buenos días': 'sol', 'Buenas tardes': 'solYNube', 'Buenas noches': 'luna' }
 
 export default function Ingreso({ necesitaConfiguracion, errorDeConexion, alEntrar, alReintentar, tema, cambiarTema }) {
   const [nombre, setNombre] = useState('')
@@ -78,7 +79,7 @@ export default function Ingreso({ necesitaConfiguracion, errorDeConexion, alEntr
         {/* ── Izquierda: la marca y lo que hace FerreStock ── */}
         <div className="ingreso-panel">
           <div className="ingreso-marca">
-            <div className="ingreso-logo" aria-hidden="true">⬡</div>
+            <div className="ingreso-logo" aria-hidden="true"><Icono nombre="llaveInglesa" tamano={30} /></div>
             <div><b>FerreStock</b><small>Ferretería Medrano</small></div>
           </div>
 
@@ -90,32 +91,32 @@ export default function Ingreso({ necesitaConfiguracion, errorDeConexion, alEntr
           <ul className="ingreso-ventajas">
             {VENTAJAS.map((ventaja) => (
               <li key={ventaja.titulo}>
-                <span aria-hidden="true">{ventaja.icono}</span>
+                <span aria-hidden="true"><Icono nombre={ventaja.icono} tamano={22} /></span>
                 <div><b>{ventaja.titulo}</b><small>{ventaja.texto}</small></div>
               </li>
             ))}
           </ul>
 
-          <small className="ingreso-pie">🔒 Tus datos se guardan solo en esta computadora</small>
+          <small className="ingreso-pie"><Icono nombre="candado" tamano={13} className="antes" />Tus datos se guardan de forma segura en la nube</small>
         </div>
 
         {/* ── Derecha: el formulario ── */}
         <form className="ingreso-tarjeta" onSubmit={enviar}>
           <div className="ingreso-arriba">
-            <span className="ingreso-saludo">{ICONO_DEL_SALUDO[saludo]} {saludo} · {formato.hoy()}</span>
+            <span className="ingreso-saludo"><Icono nombre={ICONO_DEL_SALUDO[saludo]} tamano={16} className="antes" />{saludo} · {formato.hoy()}</span>
             <button type="button" className="ingreso-tema" onClick={cambiarTema}
               aria-label={tema === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'} title={tema === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
-              {tema === 'dark' ? '☀' : '☾'}
+              <Icono nombre={tema === 'dark' ? 'sol' : 'luna'} tamano={18} />
             </button>
           </div>
 
           {errorDeConexion ? (
             <div className="ingreso-sin-conexion">
-              <div className="ingreso-icono-grande" aria-hidden="true">🔌</div>
+              <div className="ingreso-icono-grande" aria-hidden="true"><Icono nombre="enchufe" tamano={46} /></div>
               <h1>No hay conexión</h1>
               <p className="ingreso-texto">
                 No se pudo conectar con FerreStock. Revisa que el programa esté abierto
-                (<b>ABRIR_FERRESTOCK.cmd</b>) y vuelve a intentarlo.
+                (<b>npm run dev</b>) y vuelve a intentarlo.
               </p>
               <small className="ingreso-detalle">Detalle: {errorDeConexion}</small>
               <button type="button" className="ingreso-entrar" onClick={alReintentar}>↻ Reintentar</button>
@@ -123,7 +124,7 @@ export default function Ingreso({ necesitaConfiguracion, errorDeConexion, alEntr
           ) : (
             <>
               <div>
-                <h1>{necesitaConfiguracion ? '¡Empecemos! 🚀' : '¡Hola de nuevo! 👋'}</h1>
+                <h1>{necesitaConfiguracion ? '¡Empecemos!' : '¡Hola de nuevo!'}</h1>
                 <p className="ingreso-texto">
                   {necesitaConfiguracion
                     ? 'Es la primera vez que se abre FerreStock. Crea tu usuario de administrador: podrás hacer todo y crear las cuentas de tu equipo.'
@@ -135,14 +136,14 @@ export default function Ingreso({ necesitaConfiguracion, errorDeConexion, alEntr
               {necesitaConfiguracion && (
                 <label>Nombre completo
                   <span className="campo-con-icono">
-                    <span className="icono-campo" aria-hidden="true">🙂</span>
+                    <span className="icono-campo" aria-hidden="true"><Icono nombre="tarjetaDeNombre" tamano={17} /></span>
                     <input value={nombre} onChange={(evento) => setNombre(evento.target.value)} placeholder="Ej. Carlos Medrano" required autoFocus maxLength="60" />
                   </span>
                 </label>
               )}
               <label>Usuario
                 <span className="campo-con-icono">
-                  <span className="icono-campo" aria-hidden="true">👤</span>
+                  <span className="icono-campo" aria-hidden="true"><Icono nombre="usuario" tamano={17} /></span>
                   <input value={usuario} onChange={(evento) => setUsuario(evento.target.value)} placeholder={necesitaConfiguracion ? 'Ej. admin (sin espacios)' : 'Tu usuario'}
                     required autoFocus={!necesitaConfiguracion} autoComplete="username" autoCapitalize="none" spellCheck="false" />
                 </span>
@@ -150,7 +151,7 @@ export default function Ingreso({ necesitaConfiguracion, errorDeConexion, alEntr
               {/* El botón 👁 dentro de la casilla muestra u oculta la contraseña. */}
               <label>Contraseña
                 <span className="campo-con-icono">
-                  <span className="icono-campo" aria-hidden="true">🔒</span>
+                  <span className="icono-campo" aria-hidden="true"><Icono nombre="candado" tamano={17} /></span>
                   <CampoClave valor={clave} alCambiar={setClave} required onKeyDown={revisarMayusculas} onKeyUp={revisarMayusculas}
                     autoComplete={necesitaConfiguracion ? 'new-password' : 'current-password'} placeholder={necesitaConfiguracion ? 'Mínimo 4 caracteres' : 'Tu contraseña'} />
                 </span>
@@ -158,7 +159,7 @@ export default function Ingreso({ necesitaConfiguracion, errorDeConexion, alEntr
               {necesitaConfiguracion && (
                 <label>Repetir contraseña
                   <span className="campo-con-icono">
-                    <span className="icono-campo" aria-hidden="true">🔒</span>
+                    <span className="icono-campo" aria-hidden="true"><Icono nombre="candado" tamano={17} /></span>
                     <CampoClave valor={repetirClave} alCambiar={setRepetirClave} required onKeyDown={revisarMayusculas} onKeyUp={revisarMayusculas}
                       autoComplete="new-password" placeholder="Escríbela otra vez" />
                   </span>
@@ -166,7 +167,7 @@ export default function Ingreso({ necesitaConfiguracion, errorDeConexion, alEntr
               )}
 
               {mayusculas && <p className="ingreso-aviso">⇪ Bloq Mayús está activado</p>}
-              {error && <p key={intentos} className="ingreso-error" role="alert">⚠ {error}</p>}
+              {error && <p key={intentos} className="ingreso-error" role="alert"><Icono nombre="alerta" tamano={16} className="antes" />{error}</p>}
 
               <button type="submit" className="ingreso-entrar" disabled={enviando}>
                 {enviando

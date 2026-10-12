@@ -1,4 +1,4 @@
-// Casilla de CONTRASEÑA con un botón 👁 a la derecha para mostrar u ocultar lo
+// Casilla de CONTRASEÑA con un botón de ojo a la derecha para mostrar u ocultar lo
 // que se escribió. Sirve para revisar que la contraseña esté bien escrita antes
 // de entrar o de guardarla.
 //
@@ -6,6 +6,7 @@
 //   <CampoClave valor={clave} alCambiar={setClave} required />
 
 import { useState } from 'react'
+import Icono from './Icono.jsx'
 
 export default function CampoClave({ valor, alCambiar, ...otrasOpciones }) {
   const [visible, setVisible] = useState(false) // false = puntitos ••••, true = se lee la contraseña
@@ -17,7 +18,7 @@ export default function CampoClave({ valor, alCambiar, ...otrasOpciones }) {
         autoCapitalize="none" spellCheck="false" {...otrasOpciones} />
       <button type="button" className={visible ? 'ver-clave on' : 'ver-clave'} onClick={() => setVisible(!visible)}
         aria-label={texto} aria-pressed={visible} title={texto}>
-        {visible ? '🙈' : '👁'}
+        <Icono nombre={visible ? 'ojoCerrado' : 'ojo'} tamano={18} />
       </button>
     </span>
   )

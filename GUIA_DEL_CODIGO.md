@@ -4,7 +4,7 @@ Sistema de inventario y ventas para ferretería. Esta guía documenta su arquite
 
 | | |
 |---|---|
-| **Versión** | 1.5.0 |
+| **Versión** | 1.7.0 |
 | **Interfaz** | React 19 + Vite 8 |
 | **Servidor** | Node.js ≥ 22.13 (middleware de Vite, sin framework adicional) |
 | **Base de datos** | PostgreSQL alojado en Supabase (`pg` 8) |
@@ -100,7 +100,7 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 | `package.json` · `package-lock.json` | Dependencias, versiones exactas y comandos `npm run …`. |
 | `vite.config.js` | Conecta la interfaz con el servidor: las rutas `/api` se atienden con `servidor/api.js`. |
 | `index.html` | Página vacía donde React dibuja la aplicación. |
-| `README.md` · `GUIA_DEL_CODIGO.md` | Documentación (uso y técnica). |
+| `README.md` · `GUIA_DEL_CODIGO.md` · `CHANGELOG.md` | Documentación (uso, técnica e historial de versiones). |
 | `.gitignore` · `.gitattributes` | Reglas de git: qué no se sube y cómo se normalizan los saltos de línea. |
 | `.vscode/tasks.json` | Tarea `FerreStock` para VS Code. |
 | `node_modules/` | Dependencias descargadas; se regenera con `npm install`. No se edita. |
@@ -114,6 +114,7 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 | | `sesiones.js` | Iniciar y cerrar sesión, identificar al usuario de cada petición, primer administrador. |
 | | `usuarios.js` | Crear, editar, desactivar y eliminar usuarios; asignar rol. |
 | | `seguridad.js` | Cifrado de contraseñas (scrypt) y llaves de sesión. |
+| | `perfil.js` | Foto de perfil, ajustes personales y cambio de la propia contraseña. Crea las columnas `foto` y `preferencias` si faltan. |
 | `inventario/` | `productos.js` | Crear, editar, activar y desactivar productos; filtra datos según el rol. |
 | | `categorias.js` | Crear, renombrar, ordenar y borrar categorías. |
 | | `movimientos.js` | Registrar entradas y salidas y actualizar el stock. |
@@ -136,7 +137,7 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 | `Sistema.jsx` ★ | Marco general: barra superior, menú según el rol, buscador y bienvenida. |
 | `estilos.css` ★ | Colores, tamaños y posiciones de toda la interfaz. |
 | **`pantallas/`** | Una por cada opción del menú (ver tabla siguiente). |
-| **`ventanas/`** | Ventanas emergentes y formularios. |
+| **`ventanas/`** | Ventanas emergentes y formularios (incluye `AjustesDeUsuario.jsx`, los ajustes de cuenta de cada persona). |
 | **`componentes/`** | Piezas reutilizables sin lógica de negocio. |
 | **`utilidades/`** | Funciones compartidas: comunicación con el servidor, cálculos y formato. |
 
@@ -150,17 +151,17 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 | `Almacen.jsx` | Trabajador | Stock por categoría, sin precios ni costos. |
 | `Catalogo.jsx` | Admin | Alta, edición y estado de productos; administración de categorías. |
 | `EntradasYSalidas.jsx` | Admin | Historial de movimientos con filtros. |
-| `Consulta.jsx` | Admin | Búsqueda rápida de productos para el mostrador. |
-| `Alertas.jsx` | Admin | Productos bajo el mínimo y costo de reposición. |
+| `Consulta.jsx` | Admin · Vendedor | Búsqueda rápida de productos. El vendedor la ve en solo lectura, sin costos y con aviso de poco stock y agotados. |
+| `Alertas.jsx` | Admin · Vendedor | Productos bajo el mínimo. El administrador ve el costo de reposición y puede reabastecer; el vendedor solo consulta (sin costos). |
 | `Reportes.jsx` | Admin | Estadísticas, ventas por día y reparto del inventario. |
 | `Usuarios.jsx` | Admin | Gestión de usuarios y roles. |
 | `BaseDeDatos.jsx` | Admin | Visor de tablas y resúmenes (solo lectura). |
 
 **Ventanas:** `FormularioProducto`, `FormularioMovimiento`, `FormularioUsuario`, `FormularioNegocio`, `AdministrarCategorias`, `QuitarUsuario`, `VerFactura` y el ayudante `useGuardar.js` (estado "Guardando…" y errores en los formularios).
 
-**Componentes:** `Ventana`, `Alerta`, `CampoClave`, `Factura`, `GraficaDeBarras`, `GraficaDeCirculo`, `IconoDeArea`, `EtiquetaEstado`, `FilasPorCategoria`, `FilaVacia`, `TarjetaMovimiento`.
+**Componentes:** `MenuDeUsuario` (foto + nombre arriba a la derecha, con cambiar foto, ajustes y cerrar sesión), `Avatar`, `Icono`, `Ventana`, `Alerta`, `CampoClave`, `Factura`, `GraficaDeBarras`, `GraficaDeCirculo`, `IconoDeArea`, `EtiquetaEstado`, `FilasPorCategoria`, `FilaVacia`, `TarjetaMovimiento`.
 
-**Utilidades:** `servidor.js` (peticiones a `/api`), `useInventario.js` (carga y refresca productos y movimientos), `calculos.js` (alertas, totales, búsquedas), `areas.js` ★ (ícono y color por categoría), `formato.js` (moneda, cantidades y fechas).
+**Utilidades:** `foto.js` (recorta y reduce la foto de perfil a 256 × 256 px), `servidor.js` (peticiones a `/api`), `useInventario.js` (carga y refresca productos y movimientos), `calculos.js` (alertas, totales, búsquedas), `areas.js` ★ (ícono y color por categoría), `formato.js` (moneda, cantidades y fechas).
 
 ---
 
@@ -174,7 +175,7 @@ La base tiene **8 tablas**. Las relaciones se indican con `→`.
 | `productos` | Catálogo con stock, costo y precio. | `id`, `codigo`, `nombre`, `categoria_id → categorias`, `unidad`, `stock`, `minimo`, `costo`, `precio`, `activo` |
 | `movimientos` | Cada entrada o salida de mercadería. | `id`, `producto_id → productos`, `tipo`, `motivo`, `cantidad`, `usuario`, `nota`, `fecha`, `venta_id → ventas`, `precio_unitario` |
 | `ventas` | Una fila por cobro (cada una es una factura). | `id`, `usuario_id → usuarios`, `total`, `recibido`, `cambio`, `fecha`, `cliente`, `cliente_documento` |
-| `usuarios` | Personas que pueden entrar al sistema. | `id`, `usuario`, `nombre`, `rol → roles`, `clave_hash`, `clave_sal`, `activo`, `creado`, `eliminado` |
+| `usuarios` | Personas que pueden entrar al sistema. | `id`, `usuario`, `nombre`, `rol → roles`, `clave_hash`, `clave_sal`, `activo`, `creado`, `eliminado`, `foto`, `preferencias` |
 | `roles` | Tipos de usuario y su descripción. | `clave`, `nombre`, `descripcion`, `orden` |
 | `sesiones` | Sesiones abiertas; guarda solo el *hash* de la llave. | `token_hash`, `usuario_id → usuarios`, `expira` |
 | `negocio` | Datos de la ferretería para la factura (una sola fila). | `nombre`, `direccion`, `telefono`, `documento`, `mensaje` |
@@ -201,6 +202,8 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | POST | `/sesion/iniciar` | Público | Iniciar sesión. |
 | POST | `/sesion/configurar` | Público | Crear el primer administrador (solo si no hay usuarios). |
 | POST | `/sesion/cerrar` | Público | Cerrar sesión. |
+| PUT | `/perfil` | Todos | Cambiar la propia foto y los propios ajustes. |
+| POST | `/perfil/clave` | Todos | Cambiar la propia contraseña (pide la actual). |
 | GET | `/productos` | Todos | Listar productos; cada rol recibe solo los datos que le corresponden. |
 | POST | `/ventas` | Admin + Vendedor | Cobrar una venta y generar la factura. |
 | GET | `/ventas/hoy` | Admin + Vendedor | Ventas del día (el vendedor ve solo las suyas). |
@@ -225,6 +228,8 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 |---|:---:|:---:|:---:|
 | Ver stock de cada producto | ✅ (*Stock del Almacén*) | ✅ (en *Vender*) | ✅ |
 | Ver precio de venta | ❌ | ✅ | ✅ |
+| Consultar el inventario con avisos de poco stock y agotados | ✅ (*Stock del Almacén*) | ✅ (*Consulta* y *Alertas*, solo lectura) | ✅ (*Alertas*) |
+| Recibir la notificación de stock al entrar y el aviso cuando algo se agota | ❌ | ✅ | ✅ |
 | Ver costo de los productos | ❌ | ❌ | ✅ |
 | Cobrar e imprimir facturas | ❌ | ✅ | ✅ |
 | Ver o reimprimir facturas del día | ❌ | ✅ (las suyas) | ✅ (todas) |
@@ -232,6 +237,13 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | Alertas, reportes, historial y base de datos | ❌ | ❌ | ✅ |
 | Crear usuarios, asignar roles, cambiar contraseñas, desactivar o eliminar | ❌ | ❌ | ✅ |
 | Cambiar los datos de la factura | ❌ | ❌ | ✅ |
+
+**Perfil y ajustes personales (todos los roles)**
+- Al pulsar el nombre arriba a la derecha se abre un menú con **Cambiar foto de perfil**, **Ajustes de mi cuenta** y **Cerrar sesión**.
+- La foto se recorta y se reduce en el navegador (256 × 256 px) y se guarda en la columna `usuarios.foto`.
+- Los ajustes se guardan en `usuarios.preferencias` y acompañan a la persona en cualquier computadora: **tema** claro u oscuro, **menú compacto**, **pantalla de inicio**, **mostrar la bienvenida** y (administrador y vendedor) **avisarme del stock al entrar**.
+- Cada persona puede cambiar **su propia contraseña** (pide la actual y cierra sus otras sesiones).
+- Nadie puede modificar el perfil de otra persona desde ahí: el servidor siempre usa el usuario de la sesión.
 
 **Gestión de usuarios**
 - La primera vez que se abre el programa no hay usuarios: aparece *Configuración inicial* para crear al administrador.
@@ -284,6 +296,7 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 
 | Quiero… | Dónde |
 |---|---|
+| Cambiar mi foto, mi tema, mi pantalla de inicio o mi contraseña | Nombre de usuario (arriba a la derecha) → **Ajustes de mi cuenta** |
 | Crear usuarios, asignar roles, cambiar contraseñas, desactivar o eliminar | Menú **Usuarios y Roles** |
 | Cambiar nombre, dirección, teléfono o NIT de la factura | **Vender → Datos de la factura** (administrador) |
 | Crear, renombrar u ordenar categorías | **Catálogo → Categorías** |
@@ -295,11 +308,14 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | Dar a un rol otra pantalla del menú | `src/Sistema.jsx` (`MENU`, columna `roles`) **y** `servidor/api.js` (columna "quién") | Agregar el rol a ambas listas |
 | Cambiar el texto u orden del menú | `src/Sistema.jsx` | `MENU` |
 | Cambiar la descripción de un rol | `servidor/acceso/roles.js` | `descripcion` |
+| Agregar un ajuste personal nuevo | `servidor/acceso/perfil.js` (`normalizarPreferencias`) y `src/ventanas/AjustesDeUsuario.jsx` | Añadir la clave en ambos |
 | Cambiar la duración de la sesión | `servidor/acceso/sesiones.js` | `HORAS_DE_SESION` |
 | Agregar o quitar un motivo de entrada o salida | `servidor/inventario/motivos.js` | Listas `entrada` y `salida` |
 | Cambiar el criterio de "STOCK BAJO" | `src/utilidades/calculos.js` | `estadoDelProducto` |
 | Cambiar el formato de dinero o fechas | `src/utilidades/formato.js` | `es-SV`, `USD` |
 | Cambiar colores generales | `src/estilos.css` | Lista de colores al inicio |
+| Retocar el tema oscuro o el claro | `src/estilos.css` | El oscuro (marino con naranja) está en las secciones 1 a 12 y 16. El claro (crema con el mismo naranja, en tonos suaves) está en la sección 13 y 16, todas con `[data-theme="light"]` |
+| Retocar la pantalla de ingreso en modo claro | `src/estilos.css` | Sección 17 (el ingreso oscuro es la sección 12c) |
 | Cambiar ícono o color de una categoría | `src/utilidades/areas.js` | `AREAS` |
 | Cambiar colores de reserva de la gráfica de círculo | `src/componentes/GraficaDeCirculo.jsx` | `COLORES` |
 | Cambiar los períodos de la gráfica de barras | `src/pantallas/Reportes.jsx` | `PERIODOS` (hasta 90 días) |

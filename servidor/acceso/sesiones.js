@@ -3,13 +3,14 @@ import {CODIGOS, ErrorParaElUsuario, leerCookie, ponerCookie, texto} from '../co
 import {ADMINISTRADOR} from './roles.js';
 import {claveCorrecta, huellaDeLaLlave, nuevaLlaveDeSesion, protegerClave} from './seguridad.js';
 import {buscarParaIngresar, crearUsuario, hayUsuarios} from './usuarios.js';
+import {columnasListas, conPreferencias, datosCompletosDelUsuario} from './perfil.js';
 const NOMBRE_DE_LA_COOKIE = 'ferrestock_sesion';
 const HORAS_DE_SESION = 12;
 const INTENTOS_PERMITIDOS = 5;
 const SEGUNDOS_DE_BLOQUEO = 60;
 const RELLENO = protegerClave('relleno');
 const intentosFallidos = new Map();
-const DATOS_DE_LA_SESION = 'u.id, u.usuario, u.nombre, u.rol, r.nombre AS rol_nombre, r.descripcion AS rol_descripcion';
+const DATOS_DE_LA_SESION = 'u.id, u.usuario, u.nombre, u.rol, r.nombre AS rol_nombre, r.descripcion AS rol_descripcion, u.preferencias';
 const consultas = {
   crear: bd.prepare(`INSERT INTO sesiones (token_hash, usuario_id, expira)
     VALUES (?, ?, now() + interval '${HORAS_DE_SESION} hours')`),
@@ -17,17 +18,25 @@ const consultas = {
     SELECT ${DATOS_DE_LA_SESION}
     FROM sesiones s JOIN usuarios u ON u.id = s.usuario_id JOIN roles r ON r.clave = u.rol
     WHERE s.token_hash = ? AND s.expira > now() AND u.activo = 1`),
-  datosDeUsuario: bd.prepare(`SELECT ${DATOS_DE_LA_SESION} FROM usuarios u JOIN roles r ON r.clave = u.rol WHERE u.id = ?`),
   borrar: bd.prepare('DELETE FROM sesiones WHERE token_hash = ?'),
   borrarVencidas: bd.prepare("DELETE FROM sesiones WHERE expira <= now()")
 };
+// Quién hace la petición. No incluye la foto (pesa) porque esto se consulta en cada petición.
 export async function usuarioDeLaPeticion(peticion) {
   const llave = leerCookie(peticion, NOMBRE_DE_LA_COOKIE);
-  return llave ? await consultas.buscar.get(huellaDeLaLlave(llave)) ?? null : null;
+  if (!llave) return null;
+  await columnasListas;
+  return conPreferencias(await consultas.buscar.get(huellaDeLaLlave(llave)) ?? null);
+}
+// La "huella" de la sesión actual (para cerrar las demás sesiones al cambiar la contraseña).
+export function huellaDeLaSesion(peticion) {
+  const llave = leerCookie(peticion, NOMBRE_DE_LA_COOKIE);
+  return llave ? huellaDeLaLlave(llave) : null;
 }
 export async function estadoDeSesion(peticion) {
+  const sesion = await usuarioDeLaPeticion(peticion);
   return {
-    usuario: await usuarioDeLaPeticion(peticion),
+    usuario: sesion ? await datosCompletosDelUsuario(sesion.id) : null,
     necesitaConfiguracion: !await hayUsuarios()
   };
 }
@@ -46,7 +55,7 @@ export async function iniciarSesion(datos, respuesta) {
   }
   intentosFallidos.delete(nombreDeUsuario);
   await abrirSesion(usuario.id, respuesta);
-  return await consultas.datosDeUsuario.get(usuario.id);
+  return await datosCompletosDelUsuario(usuario.id);
 }
 export async function configurarPrimerAdministrador(datos, respuesta) {
   if (await hayUsuarios()) throw new ErrorParaElUsuario(CODIGOS.PROHIBIDO, 'El administrador ya fue creado. Inicia sesión.');
@@ -55,7 +64,7 @@ export async function configurarPrimerAdministrador(datos, respuesta) {
     rol: ADMINISTRADOR
   });
   await abrirSesion(usuario.id, respuesta);
-  return await consultas.datosDeUsuario.get(usuario.id);
+  return await datosCompletosDelUsuario(usuario.id);
 }
 export async function cerrarSesion(peticion, respuesta) {
   const llave = leerCookie(peticion, NOMBRE_DE_LA_COOKIE);

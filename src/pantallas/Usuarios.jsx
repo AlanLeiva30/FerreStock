@@ -17,6 +17,7 @@ import { formato } from '../utilidades/formato.js'
 import { servidor } from '../utilidades/servidor.js'
 import FormularioUsuario from '../ventanas/FormularioUsuario.jsx'
 import QuitarUsuario from '../ventanas/QuitarUsuario.jsx'
+import Icono from '../componentes/Icono.jsx'
 
 // Color de la etiqueta de cada rol (los estilos están en estilos.css, sección 7).
 const COLOR_DEL_ROL = { administrador: 'status', vendedor: 'status ok', trabajador: 'status info' }
@@ -80,7 +81,7 @@ export default function Usuarios({ usuario: yo, avisar, actualizarSesion }) {
   return (
     <section className="panel view">
       <div className="panelhead">
-        <h2>◉ Usuarios ({usuarios.length})</h2>
+        <h2><Icono nombre="usuarios" className="antes" />Usuarios ({usuarios.length})</h2>
         <div className="toolbar">
           <button className="primary" onClick={() => setEditando(null)} disabled={!roles.length}>＋ Nuevo usuario</button>
         </div>
@@ -129,8 +130,8 @@ export default function Usuarios({ usuario: yo, avisar, actualizarSesion }) {
         ))}
       </div>
       <p className="muted usuarios-nota">
-        🔒 Las contraseñas guardadas no se pueden ver (están cifradas). Si alguien olvida la suya, pulsa <b>Editar</b> y
-        ponle una nueva; con el botón 👁 puedes ver lo que escribes antes de guardar.
+        <Icono nombre="candado" tamano={14} className="antes" />Las contraseñas guardadas no se pueden ver (están cifradas). Si alguien olvida la suya, pulsa <b>Editar</b> y
+        ponle una nueva; con el botón del ojo puedes ver lo que escribes antes de guardar.
       </p>
 
       {editando !== undefined && (

@@ -6,17 +6,19 @@
 //     <p>Texto que va debajo del título</p>
 //   </Alerta>
 //
-//   icono            → 'pregunta' (signo ? naranja) o 'saludo' (mano 👋 que saluda)
+//   icono            → 'pregunta' (signo ? naranja), 'saludo' (martillo que se balancea) o 'stock' (triángulo de alerta)
 //   textoCancelar    → si no se pone, solo hay un botón
 //   cerrarEnSegundos → si se pone, se cierra sola (con una barrita que se va acortando)
 //
 // La tecla Escape o un clic fuera del aviso cuentan como "Cancelar".
 
 import { useEffect, useId, useRef, useState } from 'react'
+import Icono from './Icono.jsx'
 
 const ICONOS = {
   pregunta: '?',
-  saludo: '👋',
+  saludo: <Icono nombre="martillo" tamano={44} />,
+  stock: <Icono nombre="alerta" tamano={42} />,
 }
 
 export default function Alerta({ icono, titulo, textoAceptar = 'Aceptar', textoCancelar, cerrarEnSegundos, alAceptar, alCancelar, children }) {

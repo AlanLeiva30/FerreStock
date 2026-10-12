@@ -4,11 +4,12 @@
 // Si recibe un "usuarioAEditar", sirve para editarlo; si no, para crear uno nuevo.
 // "roles" es la lista de roles que se pueden asignar (viene de la base de datos).
 // Al editar, la contraseña es opcional: si se deja vacía, no cambia.
-// El botón 👁 de cada contraseña muestra lo que se escribió.
+// El botón de ojo de cada contraseña muestra lo que se escribió.
 
 import { useState } from 'react'
 import CampoClave from '../componentes/CampoClave.jsx'
 import { useGuardar } from './useGuardar.js'
+import Icono from '../componentes/Icono.jsx'
 
 export default function FormularioUsuario({ usuarioAEditar, roles, alGuardar }) {
   const esNuevo = !usuarioAEditar
@@ -54,7 +55,7 @@ export default function FormularioUsuario({ usuarioAEditar, roles, alGuardar }) 
             </select>
           </label>
         </div>
-        {rolElegido && <p className="form-hint">✓ {rolElegido.descripcion}</p>}
+        {rolElegido && <p className="form-hint"><Icono nombre="check" tamano={14} className="antes" />{rolElegido.descripcion}</p>}
 
         <div className="form-row">
           <label>{esNuevo ? 'Contraseña' : 'Nueva contraseña'}

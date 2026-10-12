@@ -6,6 +6,7 @@
 // El orden elegido aquí es el que se usa en todo el programa y en la base de datos.
 
 import { useState } from 'react'
+import Icono from '../componentes/Icono.jsx'
 
 export default function AdministrarCategorias({ categorias, acciones }) {
   const [error, setError] = useState('')
@@ -72,8 +73,8 @@ export default function AdministrarCategorias({ categorias, acciones }) {
                   <small>{categoria.productos} producto{categoria.productos === 1 ? '' : 's'}</small>
                 </span>
                 <span className="category-actions">
-                  <button onClick={() => ejecutar(() => acciones.mover(categoria.id, -1))} disabled={ocupado || posicion === 0} aria-label={`Subir ${categoria.nombre}`}>↑</button>
-                  <button onClick={() => ejecutar(() => acciones.mover(categoria.id, 1))} disabled={ocupado || posicion === categorias.length - 1} aria-label={`Bajar ${categoria.nombre}`}>↓</button>
+                  <button onClick={() => ejecutar(() => acciones.mover(categoria.id, -1))} disabled={ocupado || posicion === 0} aria-label={`Subir ${categoria.nombre}`}><Icono nombre="arriba" tamano={15} /></button>
+                  <button onClick={() => ejecutar(() => acciones.mover(categoria.id, 1))} disabled={ocupado || posicion === categorias.length - 1} aria-label={`Bajar ${categoria.nombre}`}><Icono nombre="abajo" tamano={15} /></button>
                   <button onClick={() => empezarARenombrar(categoria)} disabled={ocupado}>Renombrar</button>
                   <button onClick={() => borrar(categoria)} disabled={ocupado || categoria.productos > 0}
                     title={categoria.productos > 0 ? 'Solo se pueden borrar categorías sin productos' : undefined}>Borrar</button>
