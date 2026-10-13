@@ -580,6 +580,7 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 #### Nuevo
 - **Pantalla «Facturas»:** el administrador y el vendedor pueden ver las facturas anteriores, filtrarlas por fechas, buscarlas por cliente, DUI/NIT o número y reimprimirlas. El vendedor solo ve las suyas (lo valida el servidor).
 - **Panel principal → «Últimas Facturas»:** el recuadro de «Últimos Movimientos» ahora tiene dos pestañas, *Movimientos* y *Facturas*; al tocar una factura se abre.
+- **Ver por fecha en «Entradas y Salidas»:** la misma barra (*Todos*, *Hoy*, *Ayer* y selector de fecha) filtra el historial por día, y se combina con el filtro de tipo y el buscador.
 - **Ver por fecha en el panel principal:** el recuadro de movimientos y facturas tiene los botones *Todos*, *Hoy*, *Ayer* y un selector de fecha; al elegir un día solo aparecen las facturas y los movimientos de ese día.
 - **Cobrar sin límite de productos:** en *Vender*, la lista de la venta se desplaza sola cuando hay muchos productos, y el total y el botón *Cobrar y facturar* quedan siempre visibles.
 - **Ícono del sitio:** ahora el sitio tiene su propio ícono (la llave inglesa sobre el cuadro naranja de FerreStock). Aparece en la pestaña del navegador, en favoritos y como ícono de la aplicación cuando se guarda el sitio en la pantalla de inicio del celular.
@@ -593,7 +594,7 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 #### Detalle técnico
 - Archivos nuevos en la carpeta `public/`, que Vite copia tal cual a la raíz del sitio: `favicon.svg` (vectorial), `favicon-32.png`, `apple-touch-icon.png`, `icono-192.png`, `icono-512.png` y `manifest.webmanifest`.
 - Modificados: `index.html` (enlaces al ícono y al manifiesto) y `servidor/produccion.js` (tipo de archivo del manifiesto).
-- Facturas: `servidor/ventas/ventas.js` (`listarVentas`), `servidor/api.js` (`GET /ventas`), `src/utilidades/servidor.js`, `servidor/inventario/movimientos.js` (parámetro `dia`), `src/pantallas/Facturas.jsx` (nuevo), `src/pantallas/PanelPrincipal.jsx`, `src/pantallas/Vender.jsx`, `src/Sistema.jsx` y `src/estilos.css`.
+- Facturas: `servidor/ventas/ventas.js` (`listarVentas`), `servidor/api.js` (`GET /ventas`), `src/utilidades/servidor.js`, `servidor/inventario/movimientos.js` (parámetro `dia`), `src/utilidades/fechas.js` (nuevo), `src/pantallas/EntradasYSalidas.jsx`, `src/pantallas/Facturas.jsx` (nuevo), `src/pantallas/PanelPrincipal.jsx`, `src/pantallas/Vender.jsx`, `src/Sistema.jsx` y `src/estilos.css`.
 
 ---
 

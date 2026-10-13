@@ -181,6 +181,8 @@ footer { padding: 17px 20px; color: #8fa0ba; font-size: 12px; display: flex; jus
 .filtro-dia { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 20px 0; }
 .filtro-dia button { padding: 4px 11px; border: 1px solid #35435c; border-radius: 99px; background: transparent; color: #dce5f3; font-size: 12px; font-weight: 700; }
 .filtro-dia button.on { border-color: #ffb000; background: #ffb000; color: #14100a; }
+.filtro-dia-barra { margin: 0; }
+.filtro-dia-barra input { margin-left: 0; }
 .filtro-dia input { margin-left: auto; padding: 4px 8px; border: 1px solid #35435c; border-radius: 8px; outline: 0; background: #071022; color: #edf3fb; font-size: 12px; color-scheme: dark; }
 .moves > .ver-todas-facturas { display: flex; align-items: center; gap: 4px; margin: 12px 20px 0; padding: 4px 0; border: 0; background: transparent; color: #ffb000; font-size: 12px; font-weight: 700; }
 .filtros-facturas label { display: flex; align-items: center; gap: 6px; color: #b7c2d3; font-size: 12px; font-weight: 700; }

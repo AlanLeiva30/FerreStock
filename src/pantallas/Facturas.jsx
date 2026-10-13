@@ -10,20 +10,14 @@ import { useEffect, useState } from 'react'
 import FilaVacia from '../componentes/FilaVacia.jsx'
 import Icono from '../componentes/Icono.jsx'
 import Ventana from '../componentes/Ventana.jsx'
+import { diaDeHoy } from '../utilidades/fechas.js'
 import { formato } from '../utilidades/formato.js'
 import { servidor } from '../utilidades/servidor.js'
 import VerFactura from '../ventanas/VerFactura.jsx'
 
-// Fecha de la computadora como 'AAAA-MM-DD', moviéndola unos días (0 = hoy, -29 = hace 29 días).
-const dia = (desplazamiento = 0) => {
-  const fecha = new Date()
-  fecha.setDate(fecha.getDate() + desplazamiento)
-  return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`
-}
-
 export default function Facturas({ esAdmin, avisar }) {
-  const [desde, setDesde] = useState(dia(-29))
-  const [hasta, setHasta] = useState(dia())
+  const [desde, setDesde] = useState(diaDeHoy(-29))
+  const [hasta, setHasta] = useState(diaDeHoy())
   const [texto, setTexto] = useState('')
   const [lista, setLista] = useState({ ventas: [], cantidad: 0, total: 0 })
   const [cargando, setCargando] = useState(true)

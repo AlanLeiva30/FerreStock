@@ -14,18 +14,12 @@ import IconoDeArea from '../componentes/IconoDeArea.jsx'
 import TarjetaMovimiento from '../componentes/TarjetaMovimiento.jsx'
 import { areaDeLaCategoria } from '../utilidades/areas.js'
 import { coincideConBusqueda, resumenDelInventario, resumenPorCategoria } from '../utilidades/calculos.js'
+import { diaDeHoy } from '../utilidades/fechas.js'
 import { formato } from '../utilidades/formato.js'
 import { servidor } from '../utilidades/servidor.js'
 import Ventana from '../componentes/Ventana.jsx'
 import VerFactura from '../ventanas/VerFactura.jsx'
 import Icono from '../componentes/Icono.jsx'
-
-// Hoy como 'AAAA-MM-DD' (según la hora de la computadora), moviéndolo unos días (-1 = ayer).
-const diaDeHoy = (desplazamiento = 0) => {
-  const fecha = new Date()
-  fecha.setDate(fecha.getDate() + desplazamiento)
-  return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`
-}
 
 export default function PanelPrincipal({ productos, movimientos, alertas, configuracion, busqueda, irA, abrirMovimiento, verCategoria }) {
   const [verMasMovimientos, setVerMasMovimientos] = useState(false)
