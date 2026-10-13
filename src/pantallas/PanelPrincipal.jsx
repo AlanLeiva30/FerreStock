@@ -20,14 +20,31 @@ import Ventana from '../componentes/Ventana.jsx'
 import VerFactura from '../ventanas/VerFactura.jsx'
 import Icono from '../componentes/Icono.jsx'
 
+// Hoy como 'AAAA-MM-DD' (según la hora de la computadora), moviéndolo unos días (-1 = ayer).
+const diaDeHoy = (desplazamiento = 0) => {
+  const fecha = new Date()
+  fecha.setDate(fecha.getDate() + desplazamiento)
+  return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`
+}
+
 export default function PanelPrincipal({ productos, movimientos, alertas, configuracion, busqueda, irA, abrirMovimiento, verCategoria }) {
   const [verMasMovimientos, setVerMasMovimientos] = useState(false)
   const [lista, setLista] = useState('movimientos') //   qué se ve en el recuadro de la derecha: 'movimientos' o 'facturas'
-  const [facturas, setFacturas] = useState([]) //        últimas facturas (se piden al servidor)
+  const [facturas, setFacturas] = useState([]) //        facturas que se muestran (se piden al servidor)
+  const [movimientosDelDia, setMovimientosDelDia] = useState([]) // movimientos del día elegido
+  const [dia, setDia] = useState('') //                  día elegido ('AAAA-MM-DD'); vacío = los más recientes de todos los días
   const [factura, setFactura] = useState(null) //        factura abierta en la ventana (null = ninguna)
+  // Al elegir un día, se piden al servidor las facturas y los movimientos de ese día.
   useEffect(() => {
-    servidor.listaDeVentas({ limite: 15 }).then((respuesta) => setFacturas(respuesta.ventas)).catch(() => {}) // si falla, simplemente no se muestran
-  }, [])
+    let vigente = true
+    servidor.listaDeVentas(dia ? { desde: dia, hasta: dia, limite: 100 } : { limite: 15 })
+      .then((respuesta) => vigente && setFacturas(respuesta.ventas)).catch(() => {}) // si falla, simplemente no se muestran
+    if (dia) servidor.movimientosDelDia(dia).then((filas) => vigente && setMovimientosDelDia(filas)).catch(() => {})
+    return () => { vigente = false }
+  }, [dia])
+  const hoy = diaDeHoy()
+  const movimientosAMostrar = dia ? movimientosDelDia : movimientos
+  const cuantos = dia ? (verMasMovimientos ? 200 : 15) : (verMasMovimientos ? 15 : 5) // cuántas tarjetas se muestran
   const abrirFactura = async (ventaId) => {
     try {
       setFactura(await servidor.verFactura(ventaId))
@@ -118,17 +135,24 @@ export default function PanelPrincipal({ productos, movimientos, alertas, config
             <button className={lista === 'movimientos' ? 'on' : ''} aria-pressed={lista === 'movimientos'} onClick={() => setLista('movimientos')}>Movimientos</button>
             <button className={lista === 'facturas' ? 'on' : ''} aria-pressed={lista === 'facturas'} onClick={() => setLista('facturas')}>Facturas</button>
           </div>
+          {/* Filtro por día: "Todos" muestra lo más reciente; "Hoy" y "Ayer" son atajos; la fecha permite elegir cualquier día. */}
+          <div className="filtro-dia" role="group" aria-label="Ver por fecha">
+            <button className={!dia ? 'on' : ''} aria-pressed={!dia} onClick={() => setDia('')}>Todos</button>
+            <button className={dia === hoy ? 'on' : ''} aria-pressed={dia === hoy} onClick={() => setDia(hoy)}>Hoy</button>
+            <button className={dia === diaDeHoy(-1) ? 'on' : ''} aria-pressed={dia === diaDeHoy(-1)} onClick={() => setDia(diaDeHoy(-1))}>Ayer</button>
+            <input type="date" value={dia} max={hoy} onChange={(evento) => setDia(evento.target.value)} aria-label="Elegir un día" />
+          </div>
           {lista === 'movimientos' ? (
             <>
-              {movimientos.slice(0, verMasMovimientos ? 15 : 5).map((movimiento) => (
+              {movimientosAMostrar.slice(0, cuantos).map((movimiento) => (
                 <TarjetaMovimiento key={movimiento.id} movimiento={movimiento} />
               ))}
-              {!movimientos.length && <p className="muted">Aún no hay movimientos registrados.</p>}
+              {!movimientosAMostrar.length && <p className="muted">{dia ? 'No hay movimientos ese día.' : 'Aún no hay movimientos registrados.'}</p>}
             </>
           ) : (
             <>
               {/* Cada factura es un botón: al tocarla se abre para verla o reimprimirla. */}
-              {facturas.slice(0, verMasMovimientos ? 15 : 5).map((venta) => (
+              {facturas.slice(0, cuantos).map((venta) => (
                 <button className="venta-hoy" key={venta.id} onClick={() => abrirFactura(venta.id)} title="Ver o reimprimir la factura">
                   <div>
                     <b><Icono nombre="factura" tamano={15} className="antes" />Factura {formato.factura(venta.id)}</b>
@@ -137,7 +161,7 @@ export default function PanelPrincipal({ productos, movimientos, alertas, config
                   <div className="plus"><b>{formato.dinero(venta.total)}</b><span>{formato.fecha(venta.fecha)}</span></div>
                 </button>
               ))}
-              {!facturas.length && <p className="muted">Aún no hay facturas.</p>}
+              {!facturas.length && <p className="muted">{dia ? 'No hay facturas ese día.' : 'Aún no hay facturas.'}</p>}
               <button className="ver-todas-facturas" onClick={() => irA('facturas')}>Ver todas las facturas<Icono nombre="flechaDiagonal" tamano={14} className="despues" /></button>
             </>
           )}

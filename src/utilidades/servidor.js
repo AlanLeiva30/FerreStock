@@ -66,6 +66,7 @@ export const servidor = {
   cargarConfiguracion: () => pedir('/configuracion'), // categorías y motivos
   cargarProductos: () => pedir('/productos'),
   cargarMovimientos: (limite = 500) => pedir(`/movimientos?limite=${limite}`),
+  movimientosDelDia: (dia) => pedir(`/movimientos?limite=200&dia=${dia}`), // dia = 'AAAA-MM-DD'
 
   // Productos
   siguienteCodigoDeProducto: () => pedir('/productos/siguiente-codigo'), // { codigo: 'FER-1017' }: el que recibirá el próximo producto

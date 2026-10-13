@@ -10,13 +10,17 @@ const SELECCIONAR_MOVIMIENTOS = `
     JOIN categorias c ON c.id = p.categoria_id`;
 const consultas = {
   ultimos: bd.prepare(`${SELECCIONAR_MOVIMIENTOS} ORDER BY m.fecha DESC, m.id DESC LIMIT ?`),
+  deUnDia: bd.prepare(`${SELECCIONAR_MOVIMIENTOS} WHERE (m.fecha AT TIME ZONE 'America/El_Salvador')::date = ?::date ORDER BY m.fecha DESC, m.id DESC LIMIT ?`),
   uno: bd.prepare(`${SELECCIONAR_MOVIMIENTOS} WHERE m.id = ?`),
   crear: bd.prepare('INSERT INTO movimientos (producto_id, tipo, motivo, cantidad, usuario, nota) VALUES (?, ?, ?, ?, ?, ?)'),
   sumarAlStock: bd.prepare('UPDATE productos SET stock = stock + ? WHERE id = ?')
 };
-export async function listarMovimientos(limite) {
+// "dia" (AAAA-MM-DD) es opcional: si se manda, solo salen los movimientos de ese día.
+export async function listarMovimientos(limite, dia) {
   const cantidad = Math.trunc(Math.min(Math.max(Number(limite) || 50, 1), 1000));
-  return await consultas.ultimos.all(cantidad);
+  if (!dia) return await consultas.ultimos.all(cantidad);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) throw new ErrorParaElUsuario(CODIGOS.DATOS_INCORRECTOS, 'La fecha no es válida');
+  return await consultas.deUnDia.all(dia, cantidad);
 }
 export async function registrarMovimiento(datos, usuario) {
   const tipo = datos?.tipo;

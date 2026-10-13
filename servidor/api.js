@@ -69,7 +69,7 @@ const RUTAS = [
   ['PUT',    '/productos/:id',            SOLO_ADMIN,        ({ id, datos }) => editarProducto(id, datos)],
   ['PATCH',  '/productos/:id/activo',     SOLO_ADMIN,        ({ id, datos }) => activarODesactivarProducto(id, datos)],
 
-  ['GET',    '/movimientos',              SOLO_ADMIN,        ({ parametros }) => listarMovimientos(parametros.get('limite'))],
+  ['GET',    '/movimientos',              SOLO_ADMIN,        ({ parametros }) => listarMovimientos(parametros.get('limite'), parametros.get('dia'))],
   ['POST',   '/movimientos',              SOLO_ADMIN,        ({ datos, usuario }) => registrarMovimiento(datos, usuario)],
 
   ['GET',    '/usuarios',                 SOLO_ADMIN,        () => listarUsuarios()],
