@@ -7,7 +7,7 @@
 #   2. Guarda la contraseña de la base en Secret Manager de Google (no queda en tu historial de comandos).
 #   3. Compila y publica el programa, y muestra el link público.
 #
-# Antes de ejecutarlo necesitas (ver DESPLIEGUE.md):
+# Antes de ejecutarlo necesitas (ver docs/DOCUMENTACION.md, Parte 3):
 #   - Una cuenta de Google Cloud con un proyecto y la facturación activada.
 #   - La herramienta "gcloud" instalada y haber iniciado sesión: gcloud auth login
 #
@@ -26,7 +26,7 @@ SERVICIO="${SERVICIO:-ferrestock}"
 SECRETO="ferrestock-pgpassword"
 
 [ -n "$PROYECTO" ] || { echo "Falta el ID del proyecto de Google Cloud."; echo "Uso: ./scripts/desplegar-en-cloud-run.sh ID_DE_TU_PROYECTO"; exit 1; }
-command -v gcloud >/dev/null || { echo "No está instalado gcloud. Mira DESPLIEGUE.md, paso 2."; exit 1; }
+command -v gcloud >/dev/null || { echo "No está instalado gcloud. Mira docs/DOCUMENTACION.md (Parte 3, paso 2)."; exit 1; }
 [ -f .env.local ] || { echo "No encuentro .env.local en esta carpeta."; exit 1; }
 
 # Lee un valor de .env.local sin ejecutar nada del archivo.

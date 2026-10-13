@@ -1,6 +1,75 @@
-# FerreStock · Guía técnica del código
+# FerreStock · Documentación completa
 
-Sistema de inventario y ventas para ferretería. Esta guía documenta su arquitectura, estructura, modelo de datos, API, permisos y dónde modificar cada comportamiento. Está escrita para poder leerse sin experiencia previa en programación; los términos técnicos se explican en el [glosario](#10-glosario).
+Todo lo que hay que saber de FerreStock en **un solo archivo**: cómo se abre, cómo está hecho por dentro, cómo se publica en internet y qué cambió en cada versión.
+
+| | |
+|---|---|
+| **Versión actual** | 1.7.0 |
+| **Portada del proyecto** | [`README.md`](../README.md) |
+
+## Índice
+
+1. [Parte 1. Primeros pasos](#parte-1-primeros-pasos): instalar, configurar y abrir el programa.
+2. [Parte 2. Guía técnica del código](#parte-2-guía-técnica-del-código): arquitectura, estructura de archivos, base de datos, API, roles y dónde hacer cada cambio.
+3. [Parte 3. Publicar en Google Cloud Run](#parte-3-publicar-en-google-cloud-run): link público, actualización automática desde GitHub y cómo apagarlo.
+4. [Parte 4. Historial de versiones](#parte-4-historial-de-versiones): qué cambió en cada versión, con capturas del antes y el después.
+
+---
+
+## Parte 1. Primeros pasos
+
+### Requisitos
+
+- **Node.js 22.13 o superior** y conexión a Internet.
+- Un archivo **`.env.local`** en la carpeta del proyecto con los datos de tu base de Supabase (ver abajo).
+
+### Instalar y abrir
+
+```bash
+npm install     # una sola vez: descarga las dependencias
+npm run dev     # abre FerreStock en http://127.0.0.1:5173
+```
+
+En VS Code también puedes pulsar **⇧⌘B** (Mac) para abrirlo. Para detenerlo, pulsa **Ctrl + C** en la terminal; cerrar la pestaña del navegador no lo detiene.
+
+La primera vez que se abre sin usuarios, el sistema te guía para crear al **administrador**. Después, inicia sesión con tu usuario y contraseña de FerreStock (no son las de la base de datos).
+
+### Configuración (`.env.local`)
+
+El archivo se llama **`.env.local`** (el nombre empieza con punto):
+
+```
+PGHOST=
+PGPORT=5432
+PGDATABASE=postgres
+PGUSER=
+PGPASSWORD=
+```
+
+> ⚠️ Este archivo contiene la contraseña de tu base de datos. **No lo compartas ni lo subas a GitHub.** El `.gitignore` ya lo excluye; si tu archivo se llama `env.local` (sin punto) también queda excluido.
+> Si la contraseña tiene símbolos raros, escríbela entre comillas.
+
+### Comandos
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Abre el programa en modo desarrollo |
+| `npm run build` | Compila la interfaz en `dist/` |
+| `npm run preview` | Sirve la versión compilada junto con el servidor |
+| `npm start` | Servidor de producción (el que usa la nube); requiere `npm run build` antes |
+
+### Notas importantes
+
+- Las facturas son un **comprobante interno**: no son Documentos Tributarios Electrónicos (DTE) certificados por Hacienda.
+- Los respaldos de datos se hacen desde PostgreSQL/Supabase.
+- No uses dos versiones del programa a la vez para registrar operaciones sobre la misma base.
+- La base de datos es **la misma** para tu computadora y para el link público: una venta registrada en uno aparece en el otro.
+
+---
+
+## Parte 2. Guía técnica del código
+
+Sistema de inventario y ventas para ferretería. Esta parte documenta su arquitectura, estructura, modelo de datos, API, permisos y dónde modificar cada comportamiento. Está escrita para poder leerse sin experiencia previa en programación; los términos técnicos se explican en el [glosario](#10-glosario).
 
 | | |
 |---|---|
@@ -10,7 +79,7 @@ Sistema de inventario y ventas para ferretería. Esta guía documenta su arquite
 | **Base de datos** | PostgreSQL alojado en Supabase (`pg` 8) |
 | **Idioma del código** | Español (nombres de archivos, funciones y textos) |
 
-## Contenido
+### Contenido
 
 1. [Arquitectura](#1-arquitectura)
 2. [Puesta en marcha](#2-puesta-en-marcha)
@@ -25,7 +94,7 @@ Sistema de inventario y ventas para ferretería. Esta guía documenta su arquite
 
 ---
 
-## 1. Arquitectura
+### 1. Arquitectura
 
 FerreStock se divide en **tres capas**. Cada una solo habla con la siguiente:
 
@@ -41,7 +110,7 @@ FerreStock se divide en **tres capas**. Cada una solo habla con la siguiente:
 - Las credenciales de la base viven solo en `.env.local`, que lee el servidor. El navegador nunca las recibe.
 - En desarrollo, un único proceso (Vite) sirve la interfaz y atiende las peticiones `/api`, tal como lo configura `vite.config.js`.
 
-### Cómo se conectan los módulos
+#### Cómo se conectan los módulos
 
 ```
 index.html ─► src/main.jsx ─► src/App.jsx ─┬─► pantallas/Ingreso.jsx          (sin sesión)
@@ -60,7 +129,7 @@ index.html ─► src/main.jsx ─► src/App.jsx ─┬─► pantallas/Ingreso
 
 ---
 
-## 2. Puesta en marcha
+### 2. Puesta en marcha
 
 **Requisitos:** Node.js ≥ 22.13, conexión a Internet y un archivo `.env.local` en la raíz.
 
@@ -88,11 +157,11 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 
 ---
 
-## 3. Estructura del proyecto
+### 3. Estructura del proyecto
 
 ★ marca los archivos que con más probabilidad se modificarán.
 
-### 3.1 Raíz
+#### 3.1 Raíz
 
 | Archivo / carpeta | Función |
 |---|---|
@@ -100,15 +169,15 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 | `package.json` · `package-lock.json` | Dependencias, versiones exactas y comandos `npm run …`. |
 | `vite.config.js` | Conecta la interfaz con el servidor: las rutas `/api` se atienden con `servidor/api.js`. |
 | `index.html` | Página vacía donde React dibuja la aplicación. |
-| `README.md` · `GUIA_DEL_CODIGO.md` · `CHANGELOG.md` · `DESPLIEGUE.md` | Documentación (uso, técnica, historial de versiones y cómo publicarlo en Google Cloud Run). |
+| `README.md` · `docs/DOCUMENTACION.md` | Documentación: la portada (en la raíz) y el manual completo (primeros pasos, guía técnica, publicación en Google Cloud Run e historial de versiones). |
 | `Dockerfile` · `.dockerignore` · `.gcloudignore` | Empaquetado para la nube. Excluyen siempre `.env.local`. |
 | `scripts/desplegar-en-cloud-run.sh` | Publica FerreStock en Google Cloud Run con un comando. |
-| `docs/versiones/` | Capturas de pantalla (antes y después) que usa el `CHANGELOG.md`. Se tomaron con datos de ejemplo. |
+| `docs/versiones/` | Capturas de pantalla (antes y después) que usa el historial de versiones (Parte 4). Se tomaron con datos de ejemplo. |
 | `.gitignore` · `.gitattributes` | Reglas de git: qué no se sube y cómo se normalizan los saltos de línea. |
 | `.vscode/tasks.json` | Tarea `FerreStock` para VS Code. |
 | `node_modules/` | Dependencias descargadas; se regenera con `npm install`. No se edita. |
 
-### 3.2 `servidor/` — lógica y acceso a datos
+#### 3.2 `servidor/` — lógica y acceso a datos
 
 | Carpeta | Archivo | Responsabilidad |
 |---|---|---|
@@ -132,7 +201,7 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 | | `supabase-ca.crt` | Certificado oficial para comprobar que la conexión es realmente con Supabase. |
 | `comun/` | `http.js` | Lectura de peticiones, respuestas, cookies y códigos de error. |
 
-### 3.3 `src/` — interfaz
+#### 3.3 `src/` — interfaz
 
 | Carpeta / archivo | Contenido |
 |---|---|
@@ -169,7 +238,7 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 
 ---
 
-## 4. Modelo de datos
+### 4. Modelo de datos
 
 La base tiene **8 tablas**. Las relaciones se indican con `→`.
 
@@ -194,7 +263,7 @@ La pantalla *Base de Datos* muestra además resúmenes calculados (`productos_po
 
 ---
 
-## 5. Referencia de la API
+### 5. Referencia de la API
 
 Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los métodos significan: `GET` consultar · `POST` crear · `PUT` modificar · `PATCH` cambiar un detalle · `DELETE` borrar.
 
@@ -226,7 +295,7 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 
 ---
 
-## 6. Roles y permisos
+### 6. Roles y permisos
 
 | Capacidad | Trabajador | Vendedor | Administrador |
 |---|:---:|:---:|:---:|
@@ -261,7 +330,7 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 
 ---
 
-## 7. Flujo de ejemplo: cobrar una venta
+### 7. Flujo de ejemplo: cobrar una venta
 
 1. En **Vender** (`src/pantallas/Vender.jsx`), el vendedor selecciona productos (con clic o escribiendo el código y pulsando Enter). Se acumulan en la *Venta actual* con su total.
 2. Opcionalmente indica el cliente (nombre y DUI/NIT; si no, la factura dice *Consumidor Final*) y el efectivo recibido; la pantalla calcula el **cambio**. Luego pulsa **Cobrar y facturar**.
@@ -277,7 +346,7 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 
 ---
 
-## 8. Seguridad y consistencia de datos
+### 8. Seguridad y consistencia de datos
 
 | Aspecto | Cómo se resuelve |
 |---|---|
@@ -292,7 +361,7 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 
 ---
 
-## 9. Guía de cambios frecuentes
+### 9. Guía de cambios frecuentes
 
 > **Antes de modificar código**, haz una copia de la carpeta. Los cambios en `src/` se ven al instante con `npm run dev`; los de `servidor/` requieren reiniciarlo.
 
@@ -332,7 +401,7 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 
 ---
 
-## 10. Glosario
+### 10. Glosario
 
 | Término | Significado |
 |---|---|
@@ -354,3 +423,332 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | **Node.js** | Programa que ejecuta el servidor y las herramientas en tu computadora. |
 | **npm** | Instalador de programas de Node.js (`npm install`, `npm run dev`). |
 | **`async` / `await`** | "Espera la respuesta": se usa cuando hay que esperar al servidor. |
+
+---
+
+## Parte 3. Publicar en Google Cloud Run
+
+Con esto FerreStock queda en un servidor de Google, con un **link público** que puedes compartir y abrir desde cualquier computadora o celular.
+
+> **Importante:** el link usará **la misma base de datos de Supabase** que tu programa de ahora. Quien tenga un usuario y contraseña de FerreStock podrá entrar y cambiar datos reales. Crea un usuario aparte para quien lo vea (por ejemplo un vendedor) y no compartas el tuyo. Al terminar, puedes apagar el servicio (paso 7) y cambiar o borrar la base.
+
+### Qué se publica y qué no
+
+| Se publica | No se publica nunca |
+|---|---|
+| Las pantallas compiladas y el servidor de FerreStock | `.env.local` (tus datos de conexión) |
+| | La carpeta `docs/` con las capturas |
+
+La contraseña de la base no viaja en el código: se guarda en **Secret Manager** de Google y se entrega al programa como variable de entorno.
+
+### Antes de empezar (lo haces tú)
+
+Estas partes necesitan tu cuenta de Google y tu tarjeta, así que no se pueden automatizar:
+
+1. **Cuenta y proyecto de Google Cloud**
+   - Entra a <https://console.cloud.google.com> con tu cuenta de Google.
+   - Crea un proyecto nuevo (por ejemplo `ferrestock`) y **anota su ID** (aparece junto al nombre; puede ser distinto al nombre, por ejemplo `ferrestock-123456`).
+   - Activa la **facturación** del proyecto (*Facturación → Vincular una cuenta de facturación*). Google pide una tarjeta, pero Cloud Run tiene una **capa gratuita mensual** y con poco uso normalmente no se cobra. Revisa los precios actuales en <https://cloud.google.com/run/pricing>.
+   - Recomendado: en *Facturación → Presupuestos y alertas* crea un presupuesto de, por ejemplo, 5 USD para que Google te avise por correo si el gasto sube.
+
+2. **Instalar `gcloud`** (la herramienta de Google para la terminal). En la terminal del Mac:
+
+   ```bash
+   curl https://sdk.cloud.google.com | bash
+   ```
+
+   Cierra y abre la terminal. Comprueba que funciona con `gcloud --version`. (Otra forma: el instalador de <https://cloud.google.com/sdk/docs/install>.)
+
+3. **Iniciar sesión** (se abre el navegador para que aceptes con tu cuenta):
+
+   ```bash
+   gcloud auth login
+   ```
+
+### Publicar
+
+Desde la carpeta del proyecto, ejecuta el script con el ID de tu proyecto:
+
+```bash
+./scripts/desplegar-en-cloud-run.sh ID_DE_TU_PROYECTO
+```
+
+El script:
+1. Lee los datos de conexión de tu `.env.local` (no los muestra).
+2. Pide confirmación: escribe `SI`.
+3. Activa los servicios de Google necesarios (la primera vez tarda unos minutos).
+4. Guarda la contraseña de la base en Secret Manager.
+5. Compila el programa en Google y lo publica en la región **Montreal** (`northamerica-northeast1`), la más cercana a tu Supabase (Canadá).
+6. Al final imprime el link, parecido a `https://ferrestock-xxxxxxxx-nn.a.run.app`.
+
+La primera publicación tarda entre 3 y 8 minutos.
+
+### Que se actualice sola al subir cambios a GitHub
+
+El proyecto incluye `.github/workflows/desplegar.yml`. Con ese archivo, **cada vez que subes cambios a la rama `main` de GitHub** (por ejemplo con *Push origin* en GitHub Desktop), GitHub compila el programa y actualiza el link público. No hace falta ejecutar nada.
+
+- Tarda unos **5 a 8 minutos**. Puedes verlo en la pestaña **Actions** de tu repositorio en github.com.
+- Los cambios que solo tocan documentación (`*.md`) o las capturas (`docs/`) **no** republican.
+- Se puede lanzar a mano: pestaña **Actions → Publicar en Google Cloud Run → Run workflow**.
+- Si algo sale mal, ese mismo lugar muestra el error en rojo, y el sitio anterior sigue funcionando.
+- **No hay claves guardadas en GitHub.** GitHub se identifica ante Google con una conexión segura (*Workload Identity Federation*) que solo acepta este repositorio y la rama `main`. La cuenta de servicio `github-deployer` solo puede publicar este servicio.
+- La base de datos y su contraseña no cambian: el servicio las conserva.
+
+**Para quitarlo:** borra el archivo `.github/workflows/desplegar.yml`, o desactiva el workflow en la pestaña Actions.
+
+### Comprobar que funciona
+
+1. Abre el link: debe aparecer la pantalla de ingreso.
+2. Inicia sesión con tu usuario.
+3. Crea desde *Usuarios y Roles* un usuario para quien vaya a verlo y dale solo el rol que necesite.
+
+### Actualizar después de hacer cambios
+
+Vuelve a ejecutar el mismo script. El link no cambia.
+
+### Apagar o borrar (paso 7)
+
+- **Dejar de publicar el programa** (el link deja de funcionar y no se cobra más):
+
+  ```bash
+  gcloud run services delete ferrestock --region northamerica-northeast1
+  ```
+
+- **Borrar todo el proyecto de Google** (incluye el secreto de la contraseña): *Consola de Google Cloud → IAM y administración → Configuración → Cerrar*.
+- **Tu base de datos no se toca** al apagar el servicio. Si quieres cambiar la contraseña de la base, hazlo en Supabase (*Project Settings → Database*) y vuelve a ejecutar el script.
+
+### Si algo falla
+
+| Mensaje o problema | Qué hacer |
+|---|---|
+| `Billing account ... not found` o `billing must be enabled` | Falta activar la facturación del proyecto (paso 1). |
+| `The user does not have permission` | Entra con la cuenta dueña del proyecto: `gcloud auth login`. |
+| El link abre pero dice "Error interno" al entrar | Revisa los registros: *Consola → Cloud Run → ferrestock → Registros*. |
+| No conecta a Supabase (tiempo de espera) | En Supabase, revisa *Settings → Database → Network restrictions*. Si hay restricciones de IP, Cloud Run no tiene una IP fija y quedaría bloqueado. |
+| `Permission denied` al ejecutar el script | Ejecuta una vez `chmod +x scripts/desplegar-en-cloud-run.sh`. |
+| `Build failed because the default service account is missing required IAM permissions` | Pasa en proyectos nuevos de Google. Dale a la cuenta de compilación el rol de constructor: `gcloud projects add-iam-policy-binding ID_DEL_PROYECTO --member="serviceAccount:NUMERO_DEL_PROYECTO-compute@developer.gserviceaccount.com" --role="roles/cloudbuild.builds.builder"`. El número del proyecto sale en el propio mensaje de error (o con `gcloud projects describe ID_DEL_PROYECTO`). |
+| El link abre, pero al entrar sale "Error interno del servidor" y los registros dicen `28P01` | La base rechazó la contraseña. El script ya quita las comillas de `.env.local` (si la contraseña está escrita `"así"`); vuelve a ejecutarlo para guardar la contraseña correcta. |
+| `gcloud` dice que Python no es compatible | `gcloud` necesita Python 3.10 o más. Instala uno y apunta `CLOUDSDK_PYTHON` a él. |
+
+### Probar el servidor de producción en tu computadora
+
+```bash
+npm run build
+npm start
+```
+
+Se abre en `http://localhost:8080`. (Usa el mismo `.env.local`.)
+
+### Notas de seguridad
+
+- Cada entrada de la API valida el rol en el servidor; el link público no cambia eso.
+- Tras 5 contraseñas incorrectas seguidas, el usuario espera 1 minuto. Ese contador es **por instancia** del servicio; por eso se limitó a 2 instancias.
+- La cookie de sesión se envía solo por HTTPS en la nube (`Secure`).
+- El servidor añade protecciones del navegador (CSP, `X-Frame-Options`, etc.).
+
+---
+
+## Parte 4. Historial de versiones
+
+Esta parte muestra **qué cambió en cada versión**, con capturas del **antes** y el **después**.
+
+> Las capturas se tomaron con **datos de ejemplo** (productos, ventas y usuarios ficticios), no con datos reales.
+> Las del **antes** salen de la versión 1.5.0 original; las del **después**, de la versión actual.
+> Todas están en `docs/versiones/` (carpeta `versiones/`, junto a este archivo).
+
+| Versión | Fecha | Resumen |
+|---|---|---|
+| [1.7.0](#170--12-de-octubre-de-2026) | 12-oct-2026 | El vendedor consulta el inventario y recibe avisos de poco stock |
+| [1.6.0](#160--12-de-octubre-de-2026) | 12-oct-2026 | Menú de usuario con foto y ajustes, íconos nuevos, temas rediseñados y diseño fluido |
+| [1.5.0](#150--versión-base) | — | Versión base con Supabase |
+
+---
+
+### Próxima versión (sin publicar)
+
+#### Nuevo
+- **Publicación en Google Cloud Run:** servidor de producción (`npm start`), `Dockerfile`, script `scripts/desplegar-en-cloud-run.sh` y la guía de publicación (Parte 3).
+- La conexión a Supabase ahora puede venir de **variables de entorno** (en la nube), además de `.env.local`.
+- La cookie de sesión lleva la marca `Secure` cuando el programa corre en producción (HTTPS).
+- El script de publicación quita las comillas de los valores de `.env.local`, igual que el programa.
+- **Publicación automática:** al subir cambios a la rama `main` de GitHub, la página en internet se actualiza sola (GitHub Actions + Google Cloud Run, sin claves guardadas). Ver la Parte 3.
+
+---
+
+### 1.7.0 · 12 de octubre de 2026
+
+**El vendedor consulta el inventario y recibe avisos de poco stock y de productos agotados.** Todo es de solo lectura: no ve costos ni puede modificar nada.
+
+#### Qué cambió
+- **Consulta de Inventario para el vendedor:** búsqueda, filtros (Todos / Con stock / Poco stock / Agotados) y un aviso en la parte de arriba que dice cuántos productos se están acabando.
+- **Alertas de Stock Mínimo para el vendedor:** la misma pantalla del administrador, pero sin costos de reposición y sin botón "Reabastecer".
+- **Notificación al entrar:** una ventana con los productos agotados o con poco stock, para el vendedor y el administrador. Tiene "Ver alertas" y "Ahora no".
+- **Aviso en vivo:** si una venta deja un producto con poco stock o agotado, aparece una franja ámbar abajo a la derecha (por ejemplo, "Taladro Percutor: quedan solo 2 Pieza").
+- **Campana y globo del menú** también para el vendedor.
+- **Etiquetas de estado** (STOCK BAJO / AGOTADO) junto a la cantidad en la pantalla de venta.
+- **Ajuste nuevo** *Avisarme del stock al entrar* en *Ajustes de mi cuenta* (viene activado).
+- La descripción del rol vendedor se actualizó.
+
+#### Cómo se ve
+Antes, el vendedor no tenía ninguna de estas pantallas.
+
+**Consulta de Inventario del vendedor (con el aviso de stock y los filtros)**
+
+<img src="versiones/1.7.0/vendedor-consulta.jpg" width="80%">
+
+**Alertas de Stock Mínimo del vendedor (sin costos ni reabastecer)**
+
+<img src="versiones/1.7.0/vendedor-alertas.jpg" width="80%">
+
+**Notificación al entrar**
+
+<img src="versiones/1.7.0/vendedor-notificacion-de-stock.jpg" width="80%">
+
+**Pantalla de venta del vendedor (tema claro, con etiquetas de estado)**
+
+<img src="versiones/1.7.0/vendedor-vender-claro.jpg" width="80%">
+
+#### Detalle técnico
+- Nuevos o modificados: `src/pantallas/Consulta.jsx`, `src/pantallas/Alertas.jsx`, `src/pantallas/Vender.jsx`, `src/Sistema.jsx`, `src/componentes/Alerta.jsx`, `src/ventanas/AjustesDeUsuario.jsx`, `servidor/acceso/perfil.js` (ajuste `avisoStock`), `servidor/acceso/roles.js` y `src/estilos.css`.
+- El servidor ya ocultaba el costo al vendedor y rechazaba sus escrituras; no hubo cambios de permisos.
+
+---
+
+### 1.6.0 · 12 de octubre de 2026
+
+**Menú de usuario con foto y ajustes personales, íconos nuevos, temas rediseñados y diseño que se adapta a la pantalla.**
+
+#### 1. Menú de usuario, foto de perfil y ajustes de cuenta
+El nombre del usuario y el botón "Salir" eran dos cosas separadas. Ahora son un solo menú desplegable con **cambiar foto de perfil**, **ajustes de mi cuenta** y **cerrar sesión**, para todos los roles. Los ajustes se guardan en la base de datos, así que acompañan a la persona en cualquier computadora.
+
+**Barra superior**
+
+| Antes (1.5.0) | Después |
+|---|---|
+| <img src="versiones/1.5.0/detalle-barra-superior.jpg" width="100%"> | <img src="versiones/1.7.0/detalle-barra-superior.jpg" width="100%"> |
+
+**Menú de usuario abierto (tema oscuro)**
+
+<img src="versiones/1.7.0/menu-de-usuario-oscuro.jpg" width="80%">
+
+**Ajustes de mi cuenta (tema oscuro)**
+
+<img src="versiones/1.7.0/ajustes-de-cuenta-oscuro.jpg" width="80%">
+
+**Ajustes de mi cuenta (tema claro)**
+
+<img src="versiones/1.7.0/ajustes-de-cuenta-claro.jpg" width="80%">
+
+
+Cada persona puede cambiar: **foto de perfil**, **tema** (claro u oscuro), **menú compacto**, **pantalla de inicio**, **mostrar la bienvenida** y **su propia contraseña** (pide la actual y cierra sus otras sesiones).
+
+#### 2. Íconos nuevos con temática de ferretería
+Los emojis y símbolos de texto (🔨 ▦ ⇅ 👁 🖨…) se veían distintos en cada sistema. Se reemplazaron por **íconos vectoriales propios**: martillo, tuerca, válvula, rayo, foco, rodillo, ladrillos, llave, casco y más, con el color de cada categoría.
+
+**Catálogo de productos (íconos de las categorías y del menú)**
+
+| Antes (1.5.0) | Después |
+|---|---|
+| <img src="versiones/1.5.0/catalogo-oscuro.jpg" width="100%"> | <img src="versiones/1.7.0/catalogo-oscuro.jpg" width="100%"> |
+
+#### 3. Diseño que se adapta a la pantalla
+El contenido tenía un ancho fijo de 1190 px y quedaba con franjas oscuras a los lados; en la barra de arriba, los botones se partían en dos líneas. Ahora **ocupa todo el ancho**, el menú lateral queda fijo al desplazarse y la barra superior se simplifica en pantallas angostas.
+
+**Panel principal (tema oscuro)**
+
+| Antes (1.5.0) | Después |
+|---|---|
+| <img src="versiones/1.5.0/panel-oscuro.jpg" width="100%"> | <img src="versiones/1.7.0/panel-oscuro.jpg" width="100%"> |
+
+#### 4. Dos temas con personalidad propia
+- **Oscuro:** marino profundo con relieve, sombras suaves y brillo naranja en la opción activa.
+- **Claro:** crema cálido con el naranja de FerreStock, tinta marrón y sombras suaves. Dejó de ser "el oscuro invertido".
+- El tema elegido en la pantalla de ingreso **se conserva al entrar** y se guarda en la cuenta.
+
+**Panel principal (tema claro)**
+
+| Antes (1.5.0) | Después |
+|---|---|
+| <img src="versiones/1.5.0/panel-claro.jpg" width="100%"> | <img src="versiones/1.7.0/panel-claro.jpg" width="100%"> |
+
+**Catálogo (tema claro)**
+
+| Antes (1.5.0) | Después |
+|---|---|
+| <img src="versiones/1.5.0/catalogo-claro.jpg" width="100%"> | <img src="versiones/1.7.0/catalogo-claro.jpg" width="100%"> |
+
+**Reportes (tema claro)**
+
+| Antes (1.5.0) | Después |
+|---|---|
+| <img src="versiones/1.5.0/reportes-claro.jpg" width="100%"> | <img src="versiones/1.7.0/reportes-claro.jpg" width="100%"> |
+
+#### 5. Pantalla de ingreso
+- **Oscuro:** igual que antes, con íconos vectoriales y textos corregidos.
+- **Claro:** diseño propio, con un panel de la marca en dorado suave sobre fondo crema. Mantiene el mismo orden (marca a la izquierda, formulario a la derecha).
+- Se corrigieron dos textos desactualizados: mencionaba un lanzador de Windows que ya no existe y decía que los datos se guardaban "solo en esta computadora".
+
+**Ingreso (tema oscuro)**
+
+| Antes (1.5.0) | Después |
+|---|---|
+| <img src="versiones/1.5.0/ingreso-oscuro.jpg" width="100%"> | <img src="versiones/1.7.0/ingreso-oscuro.jpg" width="100%"> |
+
+**Ingreso (tema claro)**
+
+| Antes (1.5.0) | Después |
+|---|---|
+| <img src="versiones/1.5.0/ingreso-claro.jpg" width="100%"> | <img src="versiones/1.7.0/ingreso-claro.jpg" width="100%"> |
+
+#### 6. Globo de alertas del menú
+El número de alertas quedaba encima del texto "reabastecer". Ahora está centrado a la derecha, no tapa nada y se invierte (círculo oscuro) cuando la opción está activa.
+
+**Detalle del globo de alertas**
+
+| Antes (1.5.0) | Después |
+|---|---|
+| <img src="versiones/1.5.0/detalle-globo-de-alertas.jpg" width="70%"> | <img src="versiones/1.7.0/detalle-globo-de-alertas.jpg" width="70%"> |
+
+#### 7. Otras pantallas (antes y después)
+
+**Vender (tema oscuro)**
+
+| Antes (1.5.0) | Después |
+|---|---|
+| <img src="versiones/1.5.0/vender-oscuro.jpg" width="100%"> | <img src="versiones/1.7.0/vender-oscuro.jpg" width="100%"> |
+
+**Entradas y Salidas (tema oscuro)**
+
+| Antes (1.5.0) | Después |
+|---|---|
+| <img src="versiones/1.5.0/entradas-y-salidas-oscuro.jpg" width="100%"> | <img src="versiones/1.7.0/entradas-y-salidas-oscuro.jpg" width="100%"> |
+
+**Alertas de Stock Mínimo del administrador (tema oscuro)**
+
+| Antes (1.5.0) | Después |
+|---|---|
+| <img src="versiones/1.5.0/alertas-oscuro.jpg" width="100%"> | <img src="versiones/1.7.0/alertas-oscuro.jpg" width="100%"> |
+
+#### Otros cambios de la 1.6.0
+- **Bienvenida** más corta: de 30 a 15 segundos.
+- **Servidor reorganizado** en carpetas por tema: `acceso`, `inventario`, `ventas`, `basedatos` y `comun`.
+- **Documentación reescrita:** `README.md` y la guía técnica (arquitectura, modelo de datos, API, roles y dónde hacer cada cambio).
+- **Base de datos:** se añadieron dos columnas a la tabla `usuarios`: `foto` y `preferencias`. Se crean solas si faltan.
+- **Eliminado:** código de SQLite sin uso (`actualizaciones.js`, `estructura.js`, `datosIniciales.js`), `ABRIR_FERRESTOCK.cmd` y `LEEME_SUPABASE.md`.
+
+#### Detalle técnico
+- Nuevos: `servidor/acceso/perfil.js`, `src/componentes/Icono.jsx`, `Avatar.jsx`, `MenuDeUsuario.jsx`, `src/ventanas/AjustesDeUsuario.jsx` y `src/utilidades/foto.js`.
+- Nuevas rutas de la API: `PUT /api/perfil` y `POST /api/perfil/clave` (para todos los roles; cada persona solo toca lo suyo).
+- Seguridad: la foto solo acepta JPG, PNG o WebP (no SVG) de hasta 90 KB; los ajustes se validan en el servidor.
+
+---
+
+### 1.5.0 · Versión base
+
+Sistema de inventario y ventas para ferretería con React, Vite y Supabase (PostgreSQL): roles (administrador, vendedor y trabajador), ventas con factura imprimible, inventario por categorías, entradas y salidas, alertas de stock mínimo, reportes y administración de usuarios.
+
+Así se veía:
+
+| Ingreso | Panel principal |
+|---|---|
+| <img src="versiones/1.5.0/ingreso-oscuro.jpg"> | <img src="versiones/1.5.0/panel-oscuro.jpg"> |
