@@ -12,6 +12,12 @@ Sistema de gestión para ferreterías: factura en segundos, sabe cuándo reponer
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase&logoColor=white)
 ![Versión](https://img.shields.io/badge/versi%C3%B3n-1.7.0-orange)
 
+### 🌐 [Abrir FerreStock en línea](https://ferrestock-pgyocehooa-nn.a.run.app)
+
+[`https://ferrestock-pgyocehooa-nn.a.run.app`](https://ferrestock-pgyocehooa-nn.a.run.app)
+
+<sub>Funciona desde cualquier computadora o celular con internet. Se necesita un usuario y contraseña para entrar.</sub>
+
 </div>
 
 ---
@@ -117,7 +123,7 @@ PGPASSWORD=
 
 ## ☁️ Publicarlo en internet
 
-FerreStock se puede publicar en **Google Cloud Run** y obtener un link para compartir. Sigue la [guía de publicación](docs/DOCUMENTACION.md#parte-3-publicar-en-google-cloud-run). El proyecto ya incluye el `Dockerfile`, el servidor de producción (`npm start`) y un script que lo publica con un solo comando.
+FerreStock está publicado en **Google Cloud Run**: **https://ferrestock-pgyocehooa-nn.a.run.app**. Cada vez que se suben cambios de código a la rama `main` de GitHub, el link se actualiza solo. Para publicarlo desde cero, sigue la [guía de publicación](docs/DOCUMENTACION.md#parte-3-publicar-en-google-cloud-run). El proyecto ya incluye el `Dockerfile`, el servidor de producción (`npm start`) y un script que lo publica con un solo comando.
 
 > El link usa la misma base de datos que tu `.env.local`. Crea un usuario aparte para quien lo vea.
 
