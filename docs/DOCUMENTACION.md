@@ -169,6 +169,7 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 | `package.json` · `package-lock.json` | Dependencias, versiones exactas y comandos `npm run …`. |
 | `vite.config.js` | Conecta la interfaz con el servidor: las rutas `/api` se atienden con `servidor/api.js`. |
 | `index.html` | Página vacía donde React dibuja la aplicación. |
+| `public/` | Archivos que se copian tal cual a la raíz del sitio: el ícono (`favicon.svg` y los PNG) y `manifest.webmanifest`. |
 | `README.md` · `docs/DOCUMENTACION.md` | Documentación: la portada (en la raíz) y el manual completo (primeros pasos, guía técnica, publicación en Google Cloud Run e historial de versiones). |
 | `Dockerfile` · `.dockerignore` · `.gcloudignore` | Empaquetado para la nube. Excluyen siempre `.env.local`. |
 | `scripts/desplegar-en-cloud-run.sh` | Publica FerreStock en Google Cloud Run con un comando. |
@@ -569,6 +570,23 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 | [1.7](#17--12-de-octubre-de-2026) | 12-oct-2026 | El vendedor consulta el inventario y recibe avisos de poco stock |
 | [1.6](#16--12-de-octubre-de-2026) | 12-oct-2026 | Menú de usuario con foto y ajustes, íconos nuevos, temas rediseñados y diseño fluido |
 | [1.5](#15--versión-base) | — | Versión base con Supabase |
+
+---
+
+### Próxima versión (sin publicar)
+
+#### Nuevo
+- **Ícono del sitio:** ahora el sitio tiene su propio ícono (la llave inglesa sobre el cuadro naranja de FerreStock). Aparece en la pestaña del navegador, en favoritos y como ícono de la aplicación cuando se guarda el sitio en la pantalla de inicio del celular.
+- **Instalable como aplicación:** se agregó un manifiesto (`manifest.webmanifest`), y Chrome no reporta ningún problema para instalarlo. En el navegador aparece la opción *Instalar FerreStock*.
+- El color de la barra del navegador del celular se ajusta al de la barra superior del programa.
+
+**El ícono en una pestaña oscura, una clara y en el celular**
+
+<img src="versiones/proxima/icono-del-sitio.jpg" width="90%">
+
+#### Detalle técnico
+- Archivos nuevos en la carpeta `public/`, que Vite copia tal cual a la raíz del sitio: `favicon.svg` (vectorial), `favicon-32.png`, `apple-touch-icon.png`, `icono-192.png`, `icono-512.png` y `manifest.webmanifest`.
+- Modificados: `index.html` (enlaces al ícono y al manifiesto) y `servidor/produccion.js` (tipo de archivo del manifiesto).
 
 ---
 
