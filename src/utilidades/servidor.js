@@ -66,6 +66,7 @@ export const servidor = {
   cargarMovimientos: (limite = 500) => pedir(`/movimientos?limite=${limite}`),
 
   // Productos
+  siguienteCodigoDeProducto: () => pedir('/productos/siguiente-codigo'), // { codigo: 'FER-1017' }: el que recibirá el próximo producto
   crearProducto: (producto) => pedir('/productos', { metodo: 'POST', datos: producto }),
   editarProducto: (id, producto) => pedir(`/productos/${id}`, { metodo: 'PUT', datos: producto }),
   cambiarActivo: (id, activo) => pedir(`/productos/${id}/activo`, { metodo: 'PATCH', datos: { activo } }),

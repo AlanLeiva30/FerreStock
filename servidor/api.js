@@ -22,7 +22,7 @@ import { CODIGOS, ErrorParaElUsuario, leerDatosEnviados, responder, responderErr
 import { MOTIVOS } from './inventario/motivos.js'
 import { listarMovimientos, registrarMovimiento } from './inventario/movimientos.js'
 import { datosDelNegocio, guardarDatosDelNegocio } from './ventas/negocio.js'
-import { activarODesactivarProducto, crearProducto, editarProducto, listarProductos } from './inventario/productos.js'
+import { activarODesactivarProducto, crearProducto, editarProducto, listarProductos, siguienteCodigo } from './inventario/productos.js'
 import { ADMINISTRADOR, TRABAJADOR, VENDEDOR } from './acceso/roles.js'
 import { cerrarSesion, configurarPrimerAdministrador, estadoDeSesion, huellaDeLaSesion, iniciarSesion, usuarioDeLaPeticion } from './acceso/sesiones.js'
 import { cambiarFotoDeUsuario, cambiarMiClave, guardarPerfil } from './acceso/perfil.js'
@@ -63,6 +63,7 @@ const RUTAS = [
   ['POST',   '/categorias/:id/mover',     SOLO_ADMIN,        ({ id, datos }) => moverCategoria(id, datos)],
   ['DELETE', '/categorias/:id',           SOLO_ADMIN,        ({ id }) => borrarCategoria(id)],
 
+  ['GET',    '/productos/siguiente-codigo', SOLO_ADMIN,      async () => ({ codigo: await siguienteCodigo() })],
   ['POST',   '/productos',                SOLO_ADMIN,        ({ datos }) => crearProducto(datos)],
   ['PUT',    '/productos/:id',            SOLO_ADMIN,        ({ id, datos }) => editarProducto(id, datos)],
   ['PATCH',  '/productos/:id/activo',     SOLO_ADMIN,        ({ id, datos }) => activarODesactivarProducto(id, datos)],

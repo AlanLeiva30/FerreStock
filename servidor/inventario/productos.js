@@ -1,7 +1,12 @@
-import {bd} from '../basedatos/baseDeDatos.js';
+import {bd, consultar} from '../basedatos/baseDeDatos.js';
 import {existeCategoria} from './categorias.js';
 import {CODIGOS, ErrorParaElUsuario, texto} from '../comun/http.js';
 import {ADMINISTRADOR, VENDEDOR} from '../acceso/roles.js';
+// CÓDIGO AUTOMÁTICO de los productos nuevos: PREFIJO-NÚMERO, por ejemplo FER-1017.
+// Cada producto nuevo recibe el número que sigue al más alto que exista (FER-1016 → FER-1017 → FER-1018…).
+// Para cambiar el prefijo o el número con el que empieza una base vacía, se cambia aquí.
+const PREFIJO_DE_CODIGO = 'FER';
+const PRIMER_NUMERO = 1001;
 const SELECCIONAR_PRODUCTOS = `
   SELECT p.*, c.nombre AS categoria
   FROM productos p JOIN categorias c ON c.id = p.categoria_id`;
@@ -30,8 +35,17 @@ export async function buscarProducto(id) {
   if (!producto) throw new ErrorParaElUsuario(CODIGOS.NO_EXISTE, 'Producto no encontrado');
   return producto;
 }
+// El código que le tocaría al próximo producto. Solo cuentan los códigos con el formato PREFIJO-NÚMERO.
+export async function siguienteCodigo() {
+  const {rows} = await consultar(`SELECT MAX(substring(codigo from '[0-9]+$')::bigint) AS ultimo FROM productos WHERE codigo ~* $1`, [`^${PREFIJO_DE_CODIGO}-[0-9]+$`]);
+  const ultimo = rows[0].ultimo === null ? PRIMER_NUMERO - 1 : Number(rows[0].ultimo);
+  return `${PREFIJO_DE_CODIGO}-${ultimo + 1}`;
+}
+// El código NUNCA lo pone quien crea el producto: lo asigna el servidor (se ignora el que llegue desde la pantalla).
+// Todas las escrituras se hacen una por una (api.js), así que dos productos no pueden recibir el mismo número.
 export async function crearProducto(datos) {
-  const {lastInsertRowid: id} = await consultas.crear.run(await revisarDatos(datos, {
+  const codigo = await siguienteCodigo();
+  const {lastInsertRowid: id} = await consultas.crear.run(await revisarDatos({...datos, codigo}, {
     esNuevo: true
   }));
   return await consultas.uno.get(id);

@@ -10,7 +10,7 @@ Sistema de gestión para ferreterías: factura en segundos, sabe cuándo reponer
 ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.13-339933?logo=nodedotjs&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase&logoColor=white)
-![Versión](https://img.shields.io/badge/versi%C3%B3n-1.7.0-orange)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-1.9-orange)
 
 ### 🌐 [Abrir FerreStock en línea](https://ferrestock-pgyocehooa-nn.a.run.app)
 
@@ -47,6 +47,7 @@ Una ferretería maneja cientos de productos, entradas y salidas todos los días.
 
 ### 📦 Inventario
 - Catálogo por categorías, con íconos y colores para ubicar todo de un vistazo.
+- **Código automático** al crear un producto: sigue la numeración sola (FER-1017, FER-1018…), sin repetir ni saltarse ninguno.
 - Registro de **entradas y salidas** con motivo (venta, merma, compra…).
 - Historial completo de movimientos, con filtros y buscador.
 - Búsqueda rápida de productos para el mostrador.
@@ -167,6 +168,6 @@ FerreStock/
 
 <div align="center">
 
-**FerreStock** · Hecho para ferreterías · v1.7.0
+**FerreStock** · Hecho para ferreterías · v1.9
 
 </div>

@@ -4,7 +4,7 @@ Todo lo que hay que saber de FerreStock en **un solo archivo**: cómo se abre, c
 
 | | |
 |---|---|
-| **Versión actual** | 1.7.0 |
+| **Versión actual** | 1.9 |
 | **Portada del proyecto** | [`README.md`](../README.md) |
 
 ## Índice
@@ -73,7 +73,7 @@ Sistema de inventario y ventas para ferretería. Esta parte documenta su arquite
 
 | | |
 |---|---|
-| **Versión** | 1.7.0 |
+| **Versión** | 1.9 |
 | **Interfaz** | React 19 + Vite 8 |
 | **Servidor** | Node.js ≥ 22.13 (middleware de Vite, sin framework adicional) |
 | **Base de datos** | PostgreSQL alojado en Supabase (`pg` 8) |
@@ -278,6 +278,7 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | PUT | `/perfil` | Todos | Cambiar la propia foto y los propios ajustes. |
 | POST | `/perfil/clave` | Todos | Cambiar la propia contraseña (pide la actual). |
 | GET | `/productos` | Todos | Listar productos; cada rol recibe solo los datos que le corresponden. |
+| GET | `/productos/siguiente-codigo` | Admin | El código que recibirá el próximo producto (por ejemplo `FER-1017`). |
 | POST | `/ventas` | Admin + Vendedor | Cobrar una venta y generar la factura. |
 | GET | `/ventas/hoy` | Admin + Vendedor | Ventas del día (el vendedor ve solo las suyas). |
 | GET | `/ventas/:id` | Admin + Vendedor | Ver o reimprimir una factura. |
@@ -388,6 +389,7 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | Agregar un ajuste personal nuevo | `servidor/acceso/perfil.js` (`normalizarPreferencias`) y `src/ventanas/AjustesDeUsuario.jsx` | Añadir la clave en ambos |
 | Cambiar la duración de la sesión | `servidor/acceso/sesiones.js` | `HORAS_DE_SESION` |
 | Agregar o quitar un motivo de entrada o salida | `servidor/inventario/motivos.js` | Listas `entrada` y `salida` |
+| Cambiar el prefijo o el número inicial de los códigos de producto | `servidor/inventario/productos.js` | `PREFIJO_DE_CODIGO`, `PRIMER_NUMERO` |
 | Cambiar el criterio de "STOCK BAJO" | `src/utilidades/calculos.js` | `estadoDelProducto` |
 | Cambiar el formato de dinero o fechas | `src/utilidades/formato.js` | `es-SV`, `USD` |
 | Cambiar colores generales | `src/estilos.css` | Lista de colores al inicio |
@@ -557,18 +559,48 @@ Se abre en `http://localhost:8080`. (Usa el mismo `.env.local`.)
 Esta parte muestra **qué cambió en cada versión**, con capturas del **antes** y el **después**.
 
 > Las capturas se tomaron con **datos de ejemplo** (productos, ventas y usuarios ficticios), no con datos reales.
-> Las del **antes** salen de la versión 1.5.0 original; las del **después**, de la versión actual.
+> Las del **antes** salen de la versión 1.5 original; las del **después**, de la versión actual.
 > Todas están en `docs/versiones/` (carpeta `versiones/`, junto a este archivo).
 
 | Versión | Fecha | Resumen |
 |---|---|---|
-| [1.7.0](#170--12-de-octubre-de-2026) | 12-oct-2026 | El vendedor consulta el inventario y recibe avisos de poco stock |
-| [1.6.0](#160--12-de-octubre-de-2026) | 12-oct-2026 | Menú de usuario con foto y ajustes, íconos nuevos, temas rediseñados y diseño fluido |
-| [1.5.0](#150--versión-base) | — | Versión base con Supabase |
+| [1.9](#19--13-de-octubre-de-2026) | 13-oct-2026 | Código automático al crear un producto (FER-1017, FER-1018…) |
+| [1.8](#18--13-de-octubre-de-2026) | 13-oct-2026 | Campanita de notificaciones, fotos y sexo de cada usuario, y publicación en Google Cloud Run |
+| [1.7](#17--12-de-octubre-de-2026) | 12-oct-2026 | El vendedor consulta el inventario y recibe avisos de poco stock |
+| [1.6](#16--12-de-octubre-de-2026) | 12-oct-2026 | Menú de usuario con foto y ajustes, íconos nuevos, temas rediseñados y diseño fluido |
+| [1.5](#15--versión-base) | — | Versión base con Supabase |
 
 ---
 
-### Próxima versión (sin publicar)
+### 1.9 · 13 de octubre de 2026
+
+**Al crear un producto, el código se genera solo y sigue la numeración.**
+
+#### Nuevo
+- **Código automático:** al agregar un producto, el sistema le asigna el siguiente código en orden, con el formato `FER-NÚMERO`. Si el último fue `FER-1016`, el nuevo será `FER-1017`, y el siguiente `FER-1018`, y así sucesivamente.
+- En la ventana **Nuevo producto**, la casilla *Código (automático)* muestra el código que le tocará y no se puede escribir. Al guardar, el aviso dice el código asignado: *«Producto agregado al catálogo (código FER-1017)»*.
+- **El servidor es quien asigna el código**: si alguien intenta mandar otro, se ignora. Como las escrituras se hacen una por una, dos personas creando productos a la vez nunca reciben el mismo número.
+- Solo cuentan los códigos con el formato `FER-NÚMERO`: un código de otro formato no altera la numeración. Si alguien edita un código a `FER-2500`, el siguiente será `FER-2501`.
+- Nueva ruta `GET /api/productos/siguiente-codigo`, solo para el administrador.
+
+#### Sin cambios
+- Al **editar** un producto existente, el código se sigue pudiendo cambiar.
+- Para cambiar el prefijo (`FER`) o el número con que empieza una base vacía (`1001`), se edita `PREFIJO_DE_CODIGO` y `PRIMER_NUMERO` en `servidor/inventario/productos.js`.
+
+**Nuevo producto con código automático (tema oscuro)**
+
+<img src="versiones/1.9.0/producto-nuevo-codigo-automatico-dark.jpg" width="80%">
+
+**Nuevo producto con código automático (tema claro)**
+
+<img src="versiones/1.9.0/producto-nuevo-codigo-automatico-light.jpg" width="80%">
+
+#### Detalle técnico
+- Modificados: `servidor/inventario/productos.js` (`siguienteCodigo` y `crearProducto`), `servidor/api.js`, `src/utilidades/servidor.js`, `src/ventanas/FormularioProducto.jsx`, `src/Sistema.jsx` y `src/estilos.css`.
+
+---
+
+### 1.8 · 13 de octubre de 2026
 
 #### Nuevo
 - **Publicación en Google Cloud Run:** servidor de producción (`npm start`), `Dockerfile`, script `scripts/desplegar-en-cloud-run.sh` y la guía de publicación (Parte 3).
@@ -583,19 +615,19 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 
 **Lista de usuarios con fotos (tema oscuro)**
 
-<img src="versiones/proxima/usuarios-fotos-lista-dark.jpg" width="80%">
+<img src="versiones/1.8.0/usuarios-fotos-lista-dark.jpg" width="80%">
 
 **Lista de usuarios con fotos (tema claro)**
 
-<img src="versiones/proxima/usuarios-fotos-lista-light.jpg" width="80%">
+<img src="versiones/1.8.0/usuarios-fotos-lista-light.jpg" width="80%">
 
 **Ventana Editar usuario, con la foto al costado y el sexo (tema oscuro)**
 
-<img src="versiones/proxima/usuarios-editar-con-foto-dark.jpg" width="80%">
+<img src="versiones/1.8.0/usuarios-editar-con-foto-dark.jpg" width="80%">
 
 **Ventana Editar usuario (tema claro)**
 
-<img src="versiones/proxima/usuarios-editar-con-foto-light.jpg" width="80%">
+<img src="versiones/1.8.0/usuarios-editar-con-foto-light.jpg" width="80%">
 
 En pantallas angostas el panel de foto pasa arriba del formulario. Al crear un usuario nuevo no aparece el panel de foto (aún no existe la persona); se le pone después, al editarlo.
 
@@ -605,19 +637,19 @@ En pantallas angostas el panel de foto pasa arriba del formulario. Al crear un u
 
 **Campanita de notificaciones (administrador, tema oscuro)**
 
-<img src="versiones/proxima/campana-notificaciones-oscuro.jpg" width="80%">
+<img src="versiones/1.8.0/campana-notificaciones-oscuro.jpg" width="80%">
 
 **Campanita de notificaciones (administrador, tema claro)**
 
-<img src="versiones/proxima/campana-notificaciones-claro.jpg" width="80%">
+<img src="versiones/1.8.0/campana-notificaciones-claro.jpg" width="80%">
 
 **Campanita de notificaciones (vendedor)**
 
-<img src="versiones/proxima/campana-notificaciones-vendedor.jpg" width="80%">
+<img src="versiones/1.8.0/campana-notificaciones-vendedor.jpg" width="80%">
 
 ---
 
-### 1.7.0 · 12 de octubre de 2026
+### 1.7 · 12 de octubre de 2026
 
 **El vendedor consulta el inventario y recibe avisos de poco stock y de productos agotados.** Todo es de solo lectura: no ve costos ni puede modificar nada.
 
@@ -656,7 +688,7 @@ Antes, el vendedor no tenía ninguna de estas pantallas.
 
 ---
 
-### 1.6.0 · 12 de octubre de 2026
+### 1.6 · 12 de octubre de 2026
 
 **Menú de usuario con foto y ajustes personales, íconos nuevos, temas rediseñados y diseño que se adapta a la pantalla.**
 
@@ -665,7 +697,7 @@ El nombre del usuario y el botón "Salir" eran dos cosas separadas. Ahora son un
 
 **Barra superior**
 
-| Antes (1.5.0) | Después |
+| Antes (1.5) | Después |
 |---|---|
 | <img src="versiones/1.5.0/detalle-barra-superior.jpg" width="100%"> | <img src="versiones/1.7.0/detalle-barra-superior.jpg" width="100%"> |
 
@@ -689,7 +721,7 @@ Los emojis y símbolos de texto (🔨 ▦ ⇅ 👁 🖨…) se veían distintos 
 
 **Catálogo de productos (íconos de las categorías y del menú)**
 
-| Antes (1.5.0) | Después |
+| Antes (1.5) | Después |
 |---|---|
 | <img src="versiones/1.5.0/catalogo-oscuro.jpg" width="100%"> | <img src="versiones/1.7.0/catalogo-oscuro.jpg" width="100%"> |
 
@@ -698,7 +730,7 @@ El contenido tenía un ancho fijo de 1190 px y quedaba con franjas oscuras a los
 
 **Panel principal (tema oscuro)**
 
-| Antes (1.5.0) | Después |
+| Antes (1.5) | Después |
 |---|---|
 | <img src="versiones/1.5.0/panel-oscuro.jpg" width="100%"> | <img src="versiones/1.7.0/panel-oscuro.jpg" width="100%"> |
 
@@ -709,19 +741,19 @@ El contenido tenía un ancho fijo de 1190 px y quedaba con franjas oscuras a los
 
 **Panel principal (tema claro)**
 
-| Antes (1.5.0) | Después |
+| Antes (1.5) | Después |
 |---|---|
 | <img src="versiones/1.5.0/panel-claro.jpg" width="100%"> | <img src="versiones/1.7.0/panel-claro.jpg" width="100%"> |
 
 **Catálogo (tema claro)**
 
-| Antes (1.5.0) | Después |
+| Antes (1.5) | Después |
 |---|---|
 | <img src="versiones/1.5.0/catalogo-claro.jpg" width="100%"> | <img src="versiones/1.7.0/catalogo-claro.jpg" width="100%"> |
 
 **Reportes (tema claro)**
 
-| Antes (1.5.0) | Después |
+| Antes (1.5) | Después |
 |---|---|
 | <img src="versiones/1.5.0/reportes-claro.jpg" width="100%"> | <img src="versiones/1.7.0/reportes-claro.jpg" width="100%"> |
 
@@ -732,13 +764,13 @@ El contenido tenía un ancho fijo de 1190 px y quedaba con franjas oscuras a los
 
 **Ingreso (tema oscuro)**
 
-| Antes (1.5.0) | Después |
+| Antes (1.5) | Después |
 |---|---|
 | <img src="versiones/1.5.0/ingreso-oscuro.jpg" width="100%"> | <img src="versiones/1.7.0/ingreso-oscuro.jpg" width="100%"> |
 
 **Ingreso (tema claro)**
 
-| Antes (1.5.0) | Después |
+| Antes (1.5) | Después |
 |---|---|
 | <img src="versiones/1.5.0/ingreso-claro.jpg" width="100%"> | <img src="versiones/1.7.0/ingreso-claro.jpg" width="100%"> |
 
@@ -747,7 +779,7 @@ El número de alertas quedaba encima del texto "reabastecer". Ahora está centra
 
 **Detalle del globo de alertas**
 
-| Antes (1.5.0) | Después |
+| Antes (1.5) | Después |
 |---|---|
 | <img src="versiones/1.5.0/detalle-globo-de-alertas.jpg" width="70%"> | <img src="versiones/1.7.0/detalle-globo-de-alertas.jpg" width="70%"> |
 
@@ -755,23 +787,23 @@ El número de alertas quedaba encima del texto "reabastecer". Ahora está centra
 
 **Vender (tema oscuro)**
 
-| Antes (1.5.0) | Después |
+| Antes (1.5) | Después |
 |---|---|
 | <img src="versiones/1.5.0/vender-oscuro.jpg" width="100%"> | <img src="versiones/1.7.0/vender-oscuro.jpg" width="100%"> |
 
 **Entradas y Salidas (tema oscuro)**
 
-| Antes (1.5.0) | Después |
+| Antes (1.5) | Después |
 |---|---|
 | <img src="versiones/1.5.0/entradas-y-salidas-oscuro.jpg" width="100%"> | <img src="versiones/1.7.0/entradas-y-salidas-oscuro.jpg" width="100%"> |
 
 **Alertas de Stock Mínimo del administrador (tema oscuro)**
 
-| Antes (1.5.0) | Después |
+| Antes (1.5) | Después |
 |---|---|
 | <img src="versiones/1.5.0/alertas-oscuro.jpg" width="100%"> | <img src="versiones/1.7.0/alertas-oscuro.jpg" width="100%"> |
 
-#### Otros cambios de la 1.6.0
+#### Otros cambios de la 1.6
 - **Bienvenida** más corta: de 30 a 15 segundos.
 - **Servidor reorganizado** en carpetas por tema: `acceso`, `inventario`, `ventas`, `basedatos` y `comun`.
 - **Documentación reescrita:** `README.md` y la guía técnica (arquitectura, modelo de datos, API, roles y dónde hacer cada cambio).
@@ -785,7 +817,7 @@ El número de alertas quedaba encima del texto "reabastecer". Ahora está centra
 
 ---
 
-### 1.5.0 · Versión base
+### 1.5 · Versión base
 
 Sistema de inventario y ventas para ferretería con React, Vite y Supabase (PostgreSQL): roles (administrador, vendedor y trabajador), ventas con factura imprimible, inventario por categorías, entradas y salidas, alertas de stock mínimo, reportes y administración de usuarios.
 

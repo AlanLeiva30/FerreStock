@@ -986,3 +986,7 @@ tbody tr:hover { background: #141f34; }
 .ingreso select { width: 100%; height: 48px; padding: 0 14px; border: 1px solid #35435c; border-radius: 11px; outline: 0; background: #071022; color: #edf3fb; font-size: 15px; }
 .ingreso select:focus { border-color: #ff9d00; box-shadow: 0 0 0 4px #ff9d0026; }
 [data-theme="light"] .ingreso select { background: #faf6ee; border-color: #ddd1ba; color: #2b2318; }
+
+/* Código automático del producto nuevo: se ve, pero no se escribe */
+.modal input.campo-automatico { border-style: dashed; background: #0b1426; color: #ffb000; font-weight: 800; letter-spacing: .03em; cursor: default; }
+[data-theme="light"] .modal input.campo-automatico { background: #fff4d6; border-color: #e0b95e; color: #8a5a00; }

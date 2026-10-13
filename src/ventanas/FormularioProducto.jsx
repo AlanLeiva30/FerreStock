@@ -3,12 +3,25 @@
 // ─────────────────────────────────────────────────────────────
 // Si recibe un "producto", sirve para editarlo; si no, para crear uno nuevo.
 // Al editar no aparece el stock: el stock solo cambia con entradas y salidas.
+//
+// Al crear un producto el CÓDIGO es automático (FER-1017, FER-1018…): el servidor lo asigna al guardar
+// y aquí se muestra cuál le tocará, en una casilla que no se puede escribir. Al editar, el código sí se puede cambiar.
 
+import { useEffect, useState } from 'react'
+import { servidor } from '../utilidades/servidor.js'
 import { useGuardar } from './useGuardar.js'
 
 export default function FormularioProducto({ producto, categorias, categoriaSugerida, alGuardar }) {
   const esNuevo = !producto
   const { error, guardando, enviar } = useGuardar(alGuardar)
+  const [codigoNuevo, setCodigoNuevo] = useState('') // el código que recibirá el producto nuevo ('' = todavía no se sabe)
+
+  useEffect(() => {
+    if (!esNuevo) return
+    let vigente = true
+    servidor.siguienteCodigoDeProducto().then((respuesta) => vigente && setCodigoNuevo(respuesta.codigo)).catch(() => {})
+    return () => { vigente = false }
+  }, [esNuevo])
 
   // Toma todo lo escrito en el formulario y lo envía a guardar.
   const guardar = (evento) => {
@@ -35,11 +48,17 @@ export default function FormularioProducto({ producto, categorias, categoriaSuge
 
       <form onSubmit={guardar}>
         <div className="form-row">
-          {casilla('codigo', 'Código', { required: true, placeholder: 'FER-1017', autoFocus: true })}
+          {esNuevo ? (
+            <label>Código (automático)
+              <input className="campo-automatico" value={codigoNuevo || 'Se asigna al guardar'} readOnly tabIndex={-1} aria-describedby="ayuda-codigo" />
+            </label>
+          ) : casilla('codigo', 'Código', { required: true, autoFocus: true })}
           {casilla('unidad', 'Unidad', { required: true, placeholder: 'Pieza, Litro, Caja…', defaultValue: 'Pieza' })}
         </div>
 
-        {casilla('nombre', 'Nombre', { required: true })}
+        {esNuevo && <p id="ayuda-codigo" className="form-hint">El código se asigna solo y sigue la numeración: cada producto nuevo recibe el siguiente.</p>}
+
+        {casilla('nombre', 'Nombre', { required: true, autoFocus: esNuevo })}
 
         <label>Categoría
           <select name="categoria_id" defaultValue={categoriaInicial}>

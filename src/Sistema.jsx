@@ -151,11 +151,10 @@ export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir
   }
 
   const guardarProducto = async (datos, id) => {
-    if (id) await servidor.editarProducto(id, datos)
-    else await servidor.crearProducto(datos)
+    const producto = id ? await servidor.editarProducto(id, datos) : await servidor.crearProducto(datos)
     await recargar()
     cerrarVentana()
-    setAviso(id ? 'Producto actualizado' : 'Producto agregado al catálogo')
+    setAviso(id ? 'Producto actualizado' : `Producto agregado al catálogo (código ${producto?.codigo ?? 'asignado'})`)
   }
 
   const activarODesactivar = async (producto) => {
@@ -216,7 +215,7 @@ export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir
         <div className="topin">
           <div className="logo"><Icono nombre="llaveInglesa" tamano={22} /></div>
           <div className="brand"><b>FerreStock</b><small>Ferretería Medrano • Control de Inventarios</small></div>
-          <i>v1.7</i>
+          <i>v1.9</i>
           <div className="actions">
             {esAdmin && <button className="registrar" onClick={() => abrirMovimiento()} aria-label="Registrar movimiento"><Icono nombre="mas" tamano={16} className="antes" />Registrar Movimiento</button>}
             <button className="theme-toggle" onClick={cambiarTema} aria-label="Cambiar modo">
