@@ -55,6 +55,19 @@ El script:
 
 La primera publicación tarda entre 3 y 8 minutos.
 
+## Que se actualice sola al subir cambios a GitHub
+
+El proyecto incluye `.github/workflows/desplegar.yml`. Con ese archivo, **cada vez que subes cambios a la rama `main` de GitHub** (por ejemplo con *Push origin* en GitHub Desktop), GitHub compila el programa y actualiza el link público. No hace falta ejecutar nada.
+
+- Tarda unos **5 a 8 minutos**. Puedes verlo en la pestaña **Actions** de tu repositorio en github.com.
+- Los cambios que solo tocan documentación (`*.md`) o las capturas (`docs/`) **no** republican.
+- Se puede lanzar a mano: pestaña **Actions → Publicar en Google Cloud Run → Run workflow**.
+- Si algo sale mal, ese mismo lugar muestra el error en rojo, y el sitio anterior sigue funcionando.
+- **No hay claves guardadas en GitHub.** GitHub se identifica ante Google con una conexión segura (*Workload Identity Federation*) que solo acepta este repositorio y la rama `main`. La cuenta de servicio `github-deployer` solo puede publicar este servicio.
+- La base de datos y su contraseña no cambian: el servicio las conserva.
+
+**Para quitarlo:** borra el archivo `.github/workflows/desplegar.yml`, o desactiva el workflow en la pestaña Actions.
+
 ## Comprobar que funciona
 
 1. Abre el link: debe aparecer la pantalla de ingreso.

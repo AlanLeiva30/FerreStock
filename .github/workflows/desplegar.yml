@@ -1,0 +1,53 @@
+# ─────────────────────────────────────────────────────────────
+# Publicación automática de FerreStock en Google Cloud Run
+# ─────────────────────────────────────────────────────────────
+# Cada vez que se suben cambios a la rama "main" de GitHub, este archivo hace que
+# GitHub compile el programa y actualice el link público. No guarda ninguna clave:
+# GitHub se identifica ante Google con una conexión segura (Workload Identity
+# Federation) que solo acepta peticiones de este repositorio y de la rama main.
+#
+# Los cambios que solo tocan documentación (*.md) o capturas (docs/) no republican.
+# También se puede lanzar a mano: pestaña Actions → "Publicar en Google Cloud Run" → Run workflow.
+
+name: Publicar en Google Cloud Run
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # necesario para identificarse ante Google sin claves
+
+# Si se suben dos cambios seguidos, solo se publica el último.
+concurrency:
+  group: publicar-ferrestock
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v7
+
+      - name: Identificarse ante Google (sin claves)
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/658710987978/locations/global/workloadIdentityPools/github/providers/github-actions
+          service_account: github-deployer@ferrestock-122407.iam.gserviceaccount.com
+
+      # El servicio ya tiene configurados la base de datos y su contraseña (en Secret Manager);
+      # al publicar desde el código esa configuración se conserva.
+      - name: Compilar y publicar
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: ferrestock
+          region: northamerica-northeast1
+          project_id: ferrestock-122407
+          source: .

@@ -21,6 +21,7 @@ Aquí se ve **qué cambió en cada versión**, con capturas del **antes** y el *
 - La conexión a Supabase ahora puede venir de **variables de entorno** (en la nube), además de `.env.local`.
 - La cookie de sesión lleva la marca `Secure` cuando el programa corre en producción (HTTPS).
 - El script de publicación quita las comillas de los valores de `.env.local`, igual que el programa.
+- **Publicación automática:** al subir cambios a la rama `main` de GitHub, la página en internet se actualiza sola (GitHub Actions + Google Cloud Run, sin claves guardadas). Ver `DESPLIEGUE.md`.
 
 ---
 
