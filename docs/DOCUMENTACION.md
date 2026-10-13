@@ -221,7 +221,8 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 |---|---|---|
 | `Ingreso.jsx` | Público | Usuario y contraseña; creación del primer administrador. |
 | `PanelPrincipal.jsx` | Admin | Resumen general e indicadores. |
-| `Vender.jsx` | Admin · Vendedor | Caja: armar la venta, cobrar y facturar. |
+| `Vender.jsx` | Admin · Vendedor | Caja: armar la venta, cobrar y facturar. La lista de la venta se desplaza sola y el total y «Cobrar» siempre quedan a la vista. |
+| `Facturas.jsx` | Admin · Vendedor | Historial de facturas con filtro por fechas y buscador (cliente, DUI/NIT o número). Al tocar una se abre para reimprimirla. |
 | `Almacen.jsx` | Trabajador | Stock por categoría, sin precios ni costos. |
 | `Catalogo.jsx` | Admin | Alta, edición y estado de productos; administración de categorías. |
 | `EntradasYSalidas.jsx` | Admin | Historial de movimientos con filtros. |
@@ -281,6 +282,7 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | GET | `/productos` | Todos | Listar productos; cada rol recibe solo los datos que le corresponden. |
 | GET | `/productos/siguiente-codigo` | Admin | El código que recibirá el próximo producto (por ejemplo `FER-1017`). |
 | POST | `/ventas` | Admin + Vendedor | Cobrar una venta y generar la factura. |
+| GET | `/ventas` | Admin + Vendedor | Historial de facturas. Filtros opcionales: `desde`, `hasta` (AAAA-MM-DD), `q` (cliente, DUI/NIT, vendedor o número) y `limite` (máx. 300). El vendedor ve solo las suyas. |
 | GET | `/ventas/hoy` | Admin + Vendedor | Ventas del día (el vendedor ve solo las suyas). |
 | GET | `/ventas/:id` | Admin + Vendedor | Ver o reimprimir una factura. |
 | GET | `/configuracion` | Admin | Categorías y motivos para los formularios. |
@@ -576,6 +578,9 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 ### Próxima versión (sin publicar)
 
 #### Nuevo
+- **Pantalla «Facturas»:** el administrador y el vendedor pueden ver las facturas anteriores, filtrarlas por fechas, buscarlas por cliente, DUI/NIT o número y reimprimirlas. El vendedor solo ve las suyas (lo valida el servidor).
+- **Panel principal → «Últimas Facturas»:** el recuadro de «Últimos Movimientos» ahora tiene dos pestañas, *Movimientos* y *Facturas*; al tocar una factura se abre.
+- **Cobrar sin límite de productos:** en *Vender*, la lista de la venta se desplaza sola cuando hay muchos productos, y el total y el botón *Cobrar y facturar* quedan siempre visibles.
 - **Ícono del sitio:** ahora el sitio tiene su propio ícono (la llave inglesa sobre el cuadro naranja de FerreStock). Aparece en la pestaña del navegador, en favoritos y como ícono de la aplicación cuando se guarda el sitio en la pantalla de inicio del celular.
 - **Instalable como aplicación:** se agregó un manifiesto (`manifest.webmanifest`), y Chrome no reporta ningún problema para instalarlo. En el navegador aparece la opción *Instalar FerreStock*.
 - El color de la barra del navegador del celular se ajusta al de la barra superior del programa.
@@ -587,6 +592,7 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 #### Detalle técnico
 - Archivos nuevos en la carpeta `public/`, que Vite copia tal cual a la raíz del sitio: `favicon.svg` (vectorial), `favicon-32.png`, `apple-touch-icon.png`, `icono-192.png`, `icono-512.png` y `manifest.webmanifest`.
 - Modificados: `index.html` (enlaces al ícono y al manifiesto) y `servidor/produccion.js` (tipo de archivo del manifiesto).
+- Facturas: `servidor/ventas/ventas.js` (`listarVentas`), `servidor/api.js` (`GET /ventas`), `src/utilidades/servidor.js`, `src/pantallas/Facturas.jsx` (nuevo), `src/pantallas/PanelPrincipal.jsx`, `src/pantallas/Vender.jsx`, `src/Sistema.jsx` y `src/estilos.css`.
 
 ---
 

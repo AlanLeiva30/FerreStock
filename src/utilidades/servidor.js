@@ -42,6 +42,8 @@ export const servidor = {
   // venta = { productos: [{ productoId, cantidad }], recibido, cliente, clienteDocumento }
   cobrarVenta: (venta) => pedir('/ventas', { metodo: 'POST', datos: venta }), // devuelve la factura
   ventasDeHoy: () => pedir('/ventas/hoy'),
+  // filtros = { desde: 'AAAA-MM-DD', hasta: 'AAAA-MM-DD', q: 'texto', limite: 100 } (todos opcionales)
+  listaDeVentas: (filtros = {}) => pedir(`/ventas?${new URLSearchParams(Object.entries(filtros).filter(([, valor]) => valor !== '' && valor != null))}`),
   verFactura: (id) => pedir(`/ventas/${id}`),
 
   // Usuarios y roles (solo administrador)

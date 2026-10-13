@@ -97,6 +97,35 @@ export async function ventasDeHoy(usuario) {
     total: redondear(ventas.reduce((suma, venta) => suma + venta.total, 0))
   };
 }
+// Historial de facturas. El administrador ve todas; el vendedor, solo las suyas.
+// Filtros opcionales: desde / hasta (AAAA-MM-DD), q (cliente, DUI/NIT, vendedor o número de factura) y limite.
+export async function listarVentas(parametros, usuario) {
+  const dia = /^\d{4}-\d{2}-\d{2}$/;
+  const desde = parametros.get('desde') || '';
+  const hasta = parametros.get('hasta') || '';
+  if (desde && !dia.test(desde) || hasta && !dia.test(hasta)) throw new ErrorParaElUsuario(CODIGOS.DATOS_INCORRECTOS, 'Las fechas no son válidas');
+  const limite = Math.min(Math.max(Math.trunc(Number(parametros.get('limite'))) || 100, 1), 300);
+  const busqueda = texto(parametros.get('q')).slice(0, 80);
+  const condiciones = [];
+  const valores = [];
+  const agregar = valor => '$' + valores.push(valor);
+  const EL_DIA = "(v.fecha AT TIME ZONE 'America/El_Salvador')::date";
+  if (usuario.rol !== ADMINISTRADOR) condiciones.push(`v.usuario_id = ${agregar(usuario.id)}`);
+  if (desde) condiciones.push(`${EL_DIA} >= ${agregar(desde)}::date`);
+  if (hasta) condiciones.push(`${EL_DIA} <= ${agregar(hasta)}::date`);
+  if (busqueda) {
+    const comodin = agregar(`%${busqueda.replace(/[\\%_]/g, '\\$&')}%`);
+    const numero = /^\d{1,9}$/.test(busqueda) ? ` OR v.id = ${agregar(Number(busqueda))}` : '';
+    condiciones.push(`(v.cliente ILIKE ${comodin} OR v.cliente_documento ILIKE ${comodin} OR u.nombre ILIKE ${comodin}${numero})`);
+  }
+  const donde = condiciones.length ? ` WHERE ${condiciones.join(' AND ')}` : '';
+  const ventas = (await consultar(`${SELECCIONAR_VENTAS}${donde} ORDER BY v.id DESC LIMIT ${limite}`, valores)).rows;
+  return {
+    ventas,
+    cantidad: ventas.length,
+    total: redondear(ventas.reduce((suma, venta) => suma + Number(venta.total), 0))
+  };
+}
 export async function ventasPorDia(dias) {
   const cantidadDeDias = Number(dias ?? 7);
   if (!Number.isInteger(cantidadDeDias) || cantidadDeDias < 1 || cantidadDeDias > 90) {

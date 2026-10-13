@@ -7,7 +7,7 @@
 //   3. Productos con poco stock  +  últimos movimientos
 //   4. Cuántos productos hay en cada categoría
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import EtiquetaEstado from '../componentes/EtiquetaEstado.jsx'
 import FilaVacia from '../componentes/FilaVacia.jsx'
 import IconoDeArea from '../componentes/IconoDeArea.jsx'
@@ -15,10 +15,24 @@ import TarjetaMovimiento from '../componentes/TarjetaMovimiento.jsx'
 import { areaDeLaCategoria } from '../utilidades/areas.js'
 import { coincideConBusqueda, resumenDelInventario, resumenPorCategoria } from '../utilidades/calculos.js'
 import { formato } from '../utilidades/formato.js'
+import { servidor } from '../utilidades/servidor.js'
+import Ventana from '../componentes/Ventana.jsx'
+import VerFactura from '../ventanas/VerFactura.jsx'
 import Icono from '../componentes/Icono.jsx'
 
 export default function PanelPrincipal({ productos, movimientos, alertas, configuracion, busqueda, irA, abrirMovimiento, verCategoria }) {
   const [verMasMovimientos, setVerMasMovimientos] = useState(false)
+  const [lista, setLista] = useState('movimientos') //   qué se ve en el recuadro de la derecha: 'movimientos' o 'facturas'
+  const [facturas, setFacturas] = useState([]) //        últimas facturas (se piden al servidor)
+  const [factura, setFactura] = useState(null) //        factura abierta en la ventana (null = ninguna)
+  useEffect(() => {
+    servidor.listaDeVentas({ limite: 15 }).then((respuesta) => setFacturas(respuesta.ventas)).catch(() => {}) // si falla, simplemente no se muestran
+  }, [])
+  const abrirFactura = async (ventaId) => {
+    try {
+      setFactura(await servidor.verFactura(ventaId))
+    } catch { /* si falla, no se abre */ }
+  }
   const totales = useMemo(() => resumenDelInventario(productos), [productos])
   const categorias = useMemo(() => resumenPorCategoria(productos, configuracion.categorias), [productos, configuracion.categorias])
   const alertasVisibles = alertas.filter((producto) => coincideConBusqueda(busqueda, producto.codigo, producto.nombre, producto.categoria))
@@ -94,18 +108,47 @@ export default function PanelPrincipal({ productos, movimientos, alertas, config
           </footer>
         </section>
 
-        {/* 3b. Últimos movimientos (5, o 15 con "Ver más") */}
+        {/* 3b. Últimos movimientos o últimas facturas (5, o 15 con "Ver más") */}
         <section className="panel moves">
           <div className="panelhead">
-            <h2><Icono nombre="movimientos" className="antes" />Últimos Movimientos</h2>
+            <h2><Icono nombre={lista === 'facturas' ? 'factura' : 'movimientos'} className="antes" />{lista === 'facturas' ? 'Últimas Facturas' : 'Últimos Movimientos'}</h2>
             <button onClick={() => setVerMasMovimientos(!verMasMovimientos)}>{verMasMovimientos ? 'Ver menos' : 'Ver más'}</button>
           </div>
-          {movimientos.slice(0, verMasMovimientos ? 15 : 5).map((movimiento) => (
-            <TarjetaMovimiento key={movimiento.id} movimiento={movimiento} />
-          ))}
-          {!movimientos.length && <p className="muted">Aún no hay movimientos registrados.</p>}
+          <div className="pestanas" role="group" aria-label="Qué mostrar">
+            <button className={lista === 'movimientos' ? 'on' : ''} aria-pressed={lista === 'movimientos'} onClick={() => setLista('movimientos')}>Movimientos</button>
+            <button className={lista === 'facturas' ? 'on' : ''} aria-pressed={lista === 'facturas'} onClick={() => setLista('facturas')}>Facturas</button>
+          </div>
+          {lista === 'movimientos' ? (
+            <>
+              {movimientos.slice(0, verMasMovimientos ? 15 : 5).map((movimiento) => (
+                <TarjetaMovimiento key={movimiento.id} movimiento={movimiento} />
+              ))}
+              {!movimientos.length && <p className="muted">Aún no hay movimientos registrados.</p>}
+            </>
+          ) : (
+            <>
+              {/* Cada factura es un botón: al tocarla se abre para verla o reimprimirla. */}
+              {facturas.slice(0, verMasMovimientos ? 15 : 5).map((venta) => (
+                <button className="venta-hoy" key={venta.id} onClick={() => abrirFactura(venta.id)} title="Ver o reimprimir la factura">
+                  <div>
+                    <b><Icono nombre="factura" tamano={15} className="antes" />Factura {formato.factura(venta.id)}</b>
+                    <span>{venta.cliente} · {Number(venta.productos)} producto{Number(venta.productos) === 1 ? '' : 's'} · {venta.vendedor}</span>
+                  </div>
+                  <div className="plus"><b>{formato.dinero(venta.total)}</b><span>{formato.fecha(venta.fecha)}</span></div>
+                </button>
+              ))}
+              {!facturas.length && <p className="muted">Aún no hay facturas.</p>}
+              <button className="ver-todas-facturas" onClick={() => irA('facturas')}>Ver todas las facturas<Icono nombre="flechaDiagonal" tamano={14} className="despues" /></button>
+            </>
+          )}
         </section>
       </div>
+
+      {factura && (
+        <Ventana alCerrar={() => setFactura(null)}>
+          <VerFactura venta={factura} alCerrar={() => setFactura(null)} />
+        </Ventana>
+      )}
 
       {/* 4. Resumen por categoría. Al hacer clic se abre el Catálogo filtrado. */}
       <section className="cats">

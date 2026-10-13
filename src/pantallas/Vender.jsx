@@ -40,7 +40,7 @@ import FormularioNegocio from '../ventanas/FormularioNegocio.jsx'
 import VerFactura from '../ventanas/VerFactura.jsx'
 import Icono from '../componentes/Icono.jsx'
 
-export default function Vender({ productos, esAdmin, recargar, avisar }) {
+export default function Vender({ productos, esAdmin, recargar, avisar, irA }) {
   const [buscado, setBuscado] = useState('')
   const [area, setArea] = useState('') //         categoría elegida en los botones de áreas ('' = todas)
   const [carrito, setCarrito] = useState([]) //   [{ productoId, cantidad }]  (cantidad como texto, como se escribe)
@@ -298,6 +298,7 @@ export default function Vender({ productos, esAdmin, recargar, avisar }) {
             </button>
           ))}
           {!ventasDeHoy.ventas.length && <p className="muted">Todavía no hay ventas hoy.</p>}
+          <button className="ver-todas-facturas" onClick={() => irA('facturas')}>Ver todas las facturas<Icono nombre="flechaDiagonal" tamano={14} className="despues" /></button>
         </section>
       </aside>
 

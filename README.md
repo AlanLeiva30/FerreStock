@@ -42,7 +42,7 @@ Una ferretería maneja cientos de productos, entradas y salidas todos los días.
 - Agrega productos con un clic o escribiendo el código.
 - Cálculo automático del total y del cambio.
 - Factura lista para **imprimir o guardar en PDF**, con los datos de tu negocio.
-- Reimpresión de las facturas del día.
+- **Historial de facturas:** busca por fecha, cliente o número y reimprime cualquier factura anterior.
 - Consumidor final o cliente con DUI/NIT.
 
 ### 📦 Inventario

@@ -27,7 +27,7 @@ import { ADMINISTRADOR, TRABAJADOR, VENDEDOR } from './acceso/roles.js'
 import { cerrarSesion, configurarPrimerAdministrador, estadoDeSesion, huellaDeLaSesion, iniciarSesion, usuarioDeLaPeticion } from './acceso/sesiones.js'
 import { cambiarFotoDeUsuario, cambiarMiClave, guardarPerfil } from './acceso/perfil.js'
 import { crearUsuario, editarUsuario, eliminarUsuario, listarRoles, listarUsuarios } from './acceso/usuarios.js'
-import { cobrarVenta, ventasDeHoy, ventasPorDia, verFactura } from './ventas/ventas.js'
+import { cobrarVenta, listarVentas, ventasDeHoy, ventasPorDia, verFactura } from './ventas/ventas.js'
 import { listarTablasYVistas, verContenido } from './basedatos/visorDeBase.js'
 
 const PUBLICO = 'publico'
@@ -52,6 +52,7 @@ const RUTAS = [
 
   // Vendedor y administrador: cobrar y ver o reimprimir facturas
   ['POST',   '/ventas',                   VENDEDOR_Y_ADMIN,  ({ datos, usuario }) => cobrarVenta(datos, usuario)],
+  ['GET',    '/ventas',                   VENDEDOR_Y_ADMIN,  ({ parametros, usuario }) => listarVentas(parametros, usuario)],
   ['GET',    '/ventas/hoy',               VENDEDOR_Y_ADMIN,  ({ usuario }) => ventasDeHoy(usuario)],
   ['GET',    '/ventas/:id',               VENDEDOR_Y_ADMIN,  ({ id, usuario }) => verFactura(id, usuario)],
 

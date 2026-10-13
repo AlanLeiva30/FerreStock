@@ -169,10 +169,18 @@ footer { padding: 17px 20px; color: #8fa0ba; font-size: 12px; display: flex; jus
 .moves article div:last-child, .moves .venta-hoy div:last-child { text-align: right; }
 .moves > .venta-hoy { width: calc(100% - 40px); color: #f5f7fb; text-align: left; } /* venta de hoy: al tocarla se abre su factura */
 .moves > .venta-hoy:hover { border-color: #4a5a78; }
+.moves .venta-hoy div:last-child { flex-shrink: 0; }
 .moves b, .moves span, .moves small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
 .moves span { color: #b7c2d3; }
 .moves small { color: #647895; font-size: 11px; }
 .moves > .muted { margin: 14px 20px 0; }
+/* Pestañas "Movimientos | Facturas" del panel principal, y el enlace "Ver todas las facturas" */
+.pestanas { display: flex; gap: 4px; margin: 12px 20px 0; padding: 3px; border: 1px solid #273249; border-radius: 9px; background: #081023; }
+.pestanas button { flex: 1; padding: 6px 8px; border: 0; border-radius: 7px; background: transparent; color: #b7c2d3; font-size: 12px; font-weight: 800; }
+.pestanas button.on { background: #ffb000; color: #14100a; }
+.moves > .ver-todas-facturas { display: flex; align-items: center; gap: 4px; margin: 12px 20px 0; padding: 4px 0; border: 0; background: transparent; color: #ffb000; font-size: 12px; font-weight: 700; }
+.filtros-facturas label { display: flex; align-items: center; gap: 6px; color: #b7c2d3; font-size: 12px; font-weight: 700; }
+.filtros-facturas input[type="date"] { padding: 6px 8px; border: 1px solid #35435c; border-radius: 8px; outline: 0; background: #071022; color: #edf3fb; font-size: 12px; color-scheme: dark; }
 .plus b { color: #20d1aa; } /*  entradas en verde */
 .minus b { color: #ff5d77; } /* salidas en rojo */
 
@@ -616,6 +624,12 @@ tr.fila-area:hover { background: color-mix(in srgb, var(--color-area) 9%, transp
 [data-theme="light"] .carrito-total strong { color: #b36b00; }
 [data-theme="light"] .ventas-hoy-resumen { color: #6f6352; }
 [data-theme="light"] .ventas-hoy-resumen strong, [data-theme="light"] .green { color: #0d8a6c; }
+[data-theme="light"] .pestanas { background: #f8f3ea; border-color: #e6dccb; }
+[data-theme="light"] .pestanas button { color: #6f6352; }
+[data-theme="light"] .pestanas button.on { background: #b36b00; color: #fff; }
+[data-theme="light"] .moves > .ver-todas-facturas { color: #b36b00; }
+[data-theme="light"] .filtros-facturas label { color: #6f6352; }
+[data-theme="light"] .filtros-facturas input[type="date"] { color: #2b2318; background: #f7f2e9; border-color: #d9ceb9; color-scheme: light; }
 [data-theme="light"] .moves > .venta-hoy { color: #2b2318; background: #f8f3ea; border-color: #e6dccb; }
 [data-theme="light"] .carrito-pago input::placeholder { color: #9a8e7d; }
 /* Contraseña 👁, Almacén, Usuarios y Factura */
