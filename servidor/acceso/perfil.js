@@ -5,7 +5,7 @@
 // y SU contraseña. Nadie puede tocar el perfil de otro desde aquí: siempre se usa
 // el usuario de la sesión, nunca un número que llegue desde la pantalla.
 //
-// Se guardan en dos columnas de la tabla "usuarios":
+// Se guardan en columnas de la tabla "usuarios" (el sexo, que decide si el rol se muestra en femenino, se pide al crear o editar):
 //   foto          → la imagen ya reducida, como texto (data:image/jpeg;base64,…)
 //   preferencias  → los ajustes, en formato JSON: {"tema":"light","saludo":false,…}
 //
@@ -13,6 +13,7 @@
 
 import { bd, consultar } from '../basedatos/baseDeDatos.js'
 import { CODIGOS, ErrorParaElUsuario } from '../comun/http.js'
+import { conNombreDeRol } from './roles.js'
 import { claveCorrecta, protegerClave } from './seguridad.js'
 import { claveValida } from './usuarios.js'
 
@@ -27,16 +28,16 @@ export const columnasListas = asegurarColumnas().catch((error) => {
 
 async function asegurarColumnas() {
   const { rows } = await consultar(`SELECT column_name FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'usuarios' AND column_name IN ('foto', 'preferencias')`)
-  if (rows.length === 2) return
-  await consultar('ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS foto text, ADD COLUMN IF NOT EXISTS preferencias text')
+    WHERE table_schema = 'public' AND table_name = 'usuarios' AND column_name IN ('foto', 'preferencias', 'sexo')`)
+  if (rows.length === 3) return
+  // sexo: 'F' (femenino) o 'M' (masculino); vacío en las personas que aún no lo han indicado
+  await consultar('ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS foto text, ADD COLUMN IF NOT EXISTS preferencias text, ADD COLUMN IF NOT EXISTS sexo text')
 }
 
 // Deja solo los ajustes conocidos y con valores válidos; lo demás se descarta.
 //   tema         → 'dark' o 'light'
 //   saludo       → true/false: mostrar la bienvenida al entrar
 //   menuCompacto → true/false: menú lateral sin las descripciones
-//   avisoStock   → true/false: mostrar el aviso de poco stock y agotados al entrar (por defecto sí)
 //   inicio       → id de la pantalla con la que se abre (null = la primera de su menú)
 export function normalizarPreferencias(entrada) {
   const salida = {}
@@ -44,7 +45,6 @@ export function normalizarPreferencias(entrada) {
   if (TEMAS.includes(entrada.tema)) salida.tema = entrada.tema
   if (typeof entrada.saludo === 'boolean') salida.saludo = entrada.saludo
   if (typeof entrada.menuCompacto === 'boolean') salida.menuCompacto = entrada.menuCompacto
-  if (typeof entrada.avisoStock === 'boolean') salida.avisoStock = entrada.avisoStock
   if (entrada.inicio === null || entrada.inicio === '') salida.inicio = null
   else if (typeof entrada.inicio === 'string' && /^[a-z]{1,20}$/.test(entrada.inicio)) salida.inicio = entrada.inicio
   return salida
@@ -59,7 +59,7 @@ export function conPreferencias(fila) {
   } catch {
     // Texto dañado: se ignora y se usan los valores por defecto.
   }
-  return { ...fila, preferencias: normalizarPreferencias(guardadas) }
+  return conNombreDeRol({ ...fila, preferencias: normalizarPreferencias(guardadas) })
 }
 
 const consultas = {
@@ -67,9 +67,10 @@ const consultas = {
   cambiarFoto: bd.prepare('UPDATE usuarios SET foto = ? WHERE id = ?'),
   cambiarPreferencias: bd.prepare('UPDATE usuarios SET preferencias = ? WHERE id = ?'),
   claves: bd.prepare('SELECT clave_hash, clave_sal FROM usuarios WHERE id = ?'),
+  existe: bd.prepare('SELECT id FROM usuarios WHERE id = ? AND eliminado IS NULL'),
   cambiarClave: bd.prepare('UPDATE usuarios SET clave_hash = ?, clave_sal = ? WHERE id = ?'),
   cerrarLasOtrasSesiones: bd.prepare('DELETE FROM sesiones WHERE usuario_id = ? AND token_hash != ?'),
-  datos: bd.prepare(`SELECT u.id, u.usuario, u.nombre, u.rol, r.nombre AS rol_nombre, r.descripcion AS rol_descripcion, u.foto, u.preferencias
+  datos: bd.prepare(`SELECT u.id, u.usuario, u.nombre, u.rol, u.sexo, r.nombre AS rol_nombre, r.descripcion AS rol_descripcion, u.foto, u.preferencias
     FROM usuarios u JOIN roles r ON r.clave = u.rol WHERE u.id = ?`),
 }
 
@@ -100,6 +101,17 @@ export async function guardarPerfil(usuario, datos) {
     await consultas.cambiarPreferencias.run(JSON.stringify(mezcladas), usuario.id)
   }
   return await datosCompletosDelUsuario(usuario.id)
+}
+
+// SOLO ADMINISTRADOR: cambia o quita la foto de OTRA persona (la ruta exige ese rol en servidor/api.js).
+//   datos = { foto: 'data:image/jpeg;base64,…' | null }   (null = quitar la foto)
+export async function cambiarFotoDeUsuario(id, datos) {
+  await columnasListas
+  if (datos?.foto === undefined) throw new ErrorParaElUsuario(CODIGOS.DATOS_INCORRECTOS, 'Falta la foto (o null para quitarla)')
+  const foto = validarFoto(datos.foto)
+  if (!await consultas.existe.get(id)) throw new ErrorParaElUsuario(CODIGOS.NO_EXISTE, 'Usuario no encontrado')
+  await consultas.cambiarFoto.run(foto, id)
+  return { id, foto }
 }
 
 // Cambia la contraseña de quien tiene la sesión abierta. Pide la actual para confirmar que es esa persona.

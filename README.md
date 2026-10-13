@@ -58,7 +58,7 @@ Una ferretería maneja cientos de productos, entradas y salidas todos los días.
 - Panel principal con los indicadores clave.
 
 ### 👥 Equipo y permisos
-Cada persona personaliza su cuenta: **foto de perfil**, tema claro u oscuro, menú compacto, pantalla de inicio y su propia contraseña, desde el menú de su nombre.
+Al crear cada usuario se indica su sexo y el rol se muestra en femenino o masculino (*Vendedora*, *Vendedor*…). Cada persona personaliza su cuenta: **foto de perfil**, tema claro u oscuro, menú compacto, pantalla de inicio y su propia contraseña, desde el menú de su nombre.
 
 Tres roles, cada uno con su propia vista:
 
@@ -67,11 +67,12 @@ Tres roles, cada uno con su propia vista:
 | Ver existencias | ✅ | ✅ | ✅ |
 | Ver precios | ❌ | ✅ | ✅ |
 | Consultar el inventario y ver las alertas de poco stock | ✅ | ✅ (solo lectura) | ✅ |
-| Notificación al entrar cuando hay productos acabándose | ❌ | ✅ | ✅ |
+| Campanita con las notificaciones de poco stock y agotados | ❌ | ✅ | ✅ |
 | Ver costos | ❌ | ❌ | ✅ |
 | Cobrar y facturar | ❌ | ✅ | ✅ |
 | Inventario, reportes y alertas | ❌ | ❌ | ✅ |
 | Gestionar usuarios y roles | ❌ | ❌ | ✅ |
+| Ver, cambiar o quitar la foto de perfil de otros usuarios | ❌ | ❌ | ✅ |
 
 ---
 

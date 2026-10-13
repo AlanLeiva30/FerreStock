@@ -248,7 +248,7 @@ La base tiene **8 tablas**. Las relaciones se indican con `→`.
 | `productos` | Catálogo con stock, costo y precio. | `id`, `codigo`, `nombre`, `categoria_id → categorias`, `unidad`, `stock`, `minimo`, `costo`, `precio`, `activo` |
 | `movimientos` | Cada entrada o salida de mercadería. | `id`, `producto_id → productos`, `tipo`, `motivo`, `cantidad`, `usuario`, `nota`, `fecha`, `venta_id → ventas`, `precio_unitario` |
 | `ventas` | Una fila por cobro (cada una es una factura). | `id`, `usuario_id → usuarios`, `total`, `recibido`, `cambio`, `fecha`, `cliente`, `cliente_documento` |
-| `usuarios` | Personas que pueden entrar al sistema. | `id`, `usuario`, `nombre`, `rol → roles`, `clave_hash`, `clave_sal`, `activo`, `creado`, `eliminado`, `foto`, `preferencias` |
+| `usuarios` | Personas que pueden entrar al sistema. | `id`, `usuario`, `nombre`, `rol → roles`, `clave_hash`, `clave_sal`, `activo`, `creado`, `eliminado`, `foto`, `preferencias`, `sexo` |
 | `roles` | Tipos de usuario y su descripción. | `clave`, `nombre`, `descripcion`, `orden` |
 | `sesiones` | Sesiones abiertas; guarda solo el *hash* de la llave. | `token_hash`, `usuario_id → usuarios`, `expira` |
 | `negocio` | Datos de la ferretería para la factura (una sola fila). | `nombre`, `direccion`, `telefono`, `documento`, `mensaje` |
@@ -287,7 +287,8 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | POST · PUT | `/productos` · `/productos/:id` | Admin | Crear o editar un producto. |
 | PATCH | `/productos/:id/activo` | Admin | Activar o desactivar un producto. |
 | GET · POST | `/movimientos` | Admin | Listar o registrar entradas y salidas. |
-| GET · POST · PUT · DELETE | `/usuarios` · `/usuarios/:id` | Admin | Gestión de usuarios. |
+| GET · POST · PUT · DELETE | `/usuarios` · `/usuarios/:id` | Admin | Gestión de usuarios (la lista incluye la foto de cada uno). |
+| PUT | `/usuarios/:id/foto` | Admin | Cambiar la foto de otro usuario, o quitarla enviando `null`. |
 | GET | `/roles` | Admin | Lista de roles y descripciones. |
 | GET | `/reportes/ventas-por-dia?dias=7` | Admin | Ventas agrupadas por día. |
 | GET · PUT | `/negocio` | Admin | Datos de la factura. |
@@ -302,21 +303,24 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | Ver stock de cada producto | ✅ (*Stock del Almacén*) | ✅ (en *Vender*) | ✅ |
 | Ver precio de venta | ❌ | ✅ | ✅ |
 | Consultar el inventario con avisos de poco stock y agotados | ✅ (*Stock del Almacén*) | ✅ (*Consulta* y *Alertas*, solo lectura) | ✅ (*Alertas*) |
-| Recibir la notificación de stock al entrar y el aviso cuando algo se agota | ❌ | ✅ | ✅ |
+| Ver las notificaciones de stock en la campanita y recibir el aviso cuando algo se agota | ❌ | ✅ | ✅ |
 | Ver costo de los productos | ❌ | ❌ | ✅ |
 | Cobrar e imprimir facturas | ❌ | ✅ | ✅ |
 | Ver o reimprimir facturas del día | ❌ | ✅ (las suyas) | ✅ (todas) |
 | Crear/editar productos, categorías y entradas de stock | ❌ | ❌ | ✅ |
 | Alertas, reportes, historial y base de datos | ❌ | ❌ | ✅ |
 | Crear usuarios, asignar roles, cambiar contraseñas, desactivar o eliminar | ❌ | ❌ | ✅ |
+| Ver, cambiar o quitar la foto de perfil de otros usuarios | ❌ | ❌ | ✅ |
 | Cambiar los datos de la factura | ❌ | ❌ | ✅ |
 
 **Perfil y ajustes personales (todos los roles)**
 - Al pulsar el nombre arriba a la derecha se abre un menú con **Cambiar foto de perfil**, **Ajustes de mi cuenta** y **Cerrar sesión**.
 - La foto se recorta y se reduce en el navegador (256 × 256 px) y se guarda en la columna `usuarios.foto`.
-- Los ajustes se guardan en `usuarios.preferencias` y acompañan a la persona en cualquier computadora: **tema** claro u oscuro, **menú compacto**, **pantalla de inicio**, **mostrar la bienvenida** y (administrador y vendedor) **avisarme del stock al entrar**.
+- Los ajustes se guardan en `usuarios.preferencias` y acompañan a la persona en cualquier computadora: **tema** claro u oscuro, **menú compacto**, **pantalla de inicio**, y **mostrar la bienvenida**.
 - Cada persona puede cambiar **su propia contraseña** (pide la actual y cierra sus otras sesiones).
 - Nadie puede modificar el perfil de otra persona desde ahí: el servidor siempre usa el usuario de la sesión.
+- **El administrador sí puede ver, cambiar o quitar la foto de cualquier usuario**: la ve en la lista de *Usuarios y Roles* y la gestiona en la ventana **Editar** (panel de foto al costado del formulario; también se abre al pulsar la foto). Quitarla pide una confirmación. El servidor solo acepta ese cambio de un administrador: un vendedor recibe 403.
+- **El sexo de cada persona** (femenino o masculino) se pide al crear o editar un usuario, y decide cómo se llama su rol: *Administradora*, *Vendedora* o *Trabajadora de almacén* si es mujer; *Administrador*, *Vendedor* o *Trabajador de almacén* si es hombre. Se ve en el menú de usuario, la bienvenida, la lista de usuarios y los ajustes. Las personas que aún no tienen el dato siguen en masculino hasta que se les edite.
 
 **Gestión de usuarios**
 - La primera vez que se abre el programa no hay usuarios: aparece *Configuración inicial* para crear al administrador.
@@ -572,6 +576,44 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 - La cookie de sesión lleva la marca `Secure` cuando el programa corre en producción (HTTPS).
 - El script de publicación quita las comillas de los valores de `.env.local`, igual que el programa.
 - **Publicación automática:** al subir cambios a la rama `main` de GitHub, la página en internet se actualiza sola (GitHub Actions + Google Cloud Run, sin claves guardadas). Ver la Parte 3.
+- **Campanita de notificaciones:** al pulsarla se despliega un panel con los productos agotados o con poco stock, los más urgentes primero, y un botón *Ver todas las alertas*. La ven el administrador y el vendedor (solo consulta). La campana se agita cuando un producto acaba de bajar de nivel.
+
+- **Fotos de perfil en Usuarios y Roles:** el administrador ve la foto de cada persona en la lista y, al **Editar**, la gestiona en un panel **al costado del formulario**: **Cambiar foto** o **Quitar foto** (con confirmación). Se guarda al instante; lo demás, al pulsar *Guardar cambios*. Si alguien no tiene foto se muestra la inicial de su nombre. Solo el administrador puede; nueva ruta `PUT /api/usuarios/:id/foto`.
+- **Sexo y nombre del rol:** al crear o editar un usuario (y al crear el primer administrador) se pregunta el **sexo**. Según eso el rol se llama *Administradora / Vendedora / Trabajadora de almacén* o *Administrador / Vendedor / Trabajador de almacén*; el desplegable de rol cambia al elegir el sexo. Nueva columna `usuarios.sexo`.
+
+**Lista de usuarios con fotos (tema oscuro)**
+
+<img src="versiones/proxima/usuarios-fotos-lista-dark.jpg" width="80%">
+
+**Lista de usuarios con fotos (tema claro)**
+
+<img src="versiones/proxima/usuarios-fotos-lista-light.jpg" width="80%">
+
+**Ventana Editar usuario, con la foto al costado y el sexo (tema oscuro)**
+
+<img src="versiones/proxima/usuarios-editar-con-foto-dark.jpg" width="80%">
+
+**Ventana Editar usuario (tema claro)**
+
+<img src="versiones/proxima/usuarios-editar-con-foto-light.jpg" width="80%">
+
+En pantallas angostas el panel de foto pasa arriba del formulario. Al crear un usuario nuevo no aparece el panel de foto (aún no existe la persona); se le pone después, al editarlo.
+
+#### Cambiado
+- **Se quitó el botón *Foto* de la lista de usuarios:** la foto se gestiona desde *Editar*.
+- **Ya no sale una ventana de stock al iniciar sesión.** Esa notificación pasó a la campanita. Por eso se eliminó el ajuste *Avisarme del stock al entrar*.
+
+**Campanita de notificaciones (administrador, tema oscuro)**
+
+<img src="versiones/proxima/campana-notificaciones-oscuro.jpg" width="80%">
+
+**Campanita de notificaciones (administrador, tema claro)**
+
+<img src="versiones/proxima/campana-notificaciones-claro.jpg" width="80%">
+
+**Campanita de notificaciones (vendedor)**
+
+<img src="versiones/proxima/campana-notificaciones-vendedor.jpg" width="80%">
 
 ---
 

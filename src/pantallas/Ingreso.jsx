@@ -39,6 +39,7 @@ const ICONO_DEL_SALUDO = { 'Buenos días': 'sol', 'Buenas tardes': 'solYNube', '
 
 export default function Ingreso({ necesitaConfiguracion, errorDeConexion, alEntrar, alReintentar, tema, cambiarTema }) {
   const [nombre, setNombre] = useState('')
+  const [sexo, setSexo] = useState('') // 'F' o 'M' (solo se pregunta al crear el primer administrador)
   const [usuario, setUsuario] = useState('')
   const [clave, setClave] = useState('')
   const [repetirClave, setRepetirClave] = useState('')
@@ -59,7 +60,7 @@ export default function Ingreso({ necesitaConfiguracion, errorDeConexion, alEntr
     setError('')
     try {
       const usuarioQueEntra = necesitaConfiguracion
-        ? await servidor.crearPrimerAdministrador({ nombre, usuario, clave })
+        ? await servidor.crearPrimerAdministrador({ nombre, usuario, clave, sexo })
         : await servidor.iniciarSesion(usuario, clave)
       alEntrar(usuarioQueEntra)
     } catch (problema) {
@@ -139,6 +140,15 @@ export default function Ingreso({ necesitaConfiguracion, errorDeConexion, alEntr
                     <span className="icono-campo" aria-hidden="true"><Icono nombre="tarjetaDeNombre" tamano={17} /></span>
                     <input value={nombre} onChange={(evento) => setNombre(evento.target.value)} placeholder="Ej. Carlos Medrano" required autoFocus maxLength="60" />
                   </span>
+                </label>
+              )}
+              {necesitaConfiguracion && (
+                <label>Sexo
+                  <select value={sexo} onChange={(evento) => setSexo(evento.target.value)} required>
+                    <option value="" disabled>Elige…</option>
+                    <option value="F">Femenino</option>
+                    <option value="M">Masculino</option>
+                  </select>
                 </label>
               )}
               <label>Usuario

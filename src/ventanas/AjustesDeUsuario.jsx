@@ -15,7 +15,7 @@ import Icono from '../componentes/Icono.jsx'
 import { reducirFoto } from '../utilidades/foto.js'
 import { servidor } from '../utilidades/servidor.js'
 
-export default function AjustesDeUsuario({ usuario, tema, fijarTema, menu, actualizarSesion, avisar, recibeAvisosDeStock = false }) {
+export default function AjustesDeUsuario({ usuario, tema, fijarTema, menu, actualizarSesion, avisar }) {
   const preferencias = usuario.preferencias ?? {}
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState('')
@@ -98,12 +98,6 @@ export default function AjustesDeUsuario({ usuario, tema, fijarTema, menu, actua
           <span><b>Mostrar la bienvenida</b><small>El aviso con tu nombre al entrar</small></span>
           <Interruptor activo={preferencias.saludo !== false} alCambiar={(valor) => cambiarPreferencia({ saludo: valor })} etiqueta="Mostrar la bienvenida" />
         </div>
-        {recibeAvisosDeStock && (
-          <div className="ajuste-fila">
-            <span><b>Avisarme del stock al entrar</b><small>Una notificación con los productos que se están acabando</small></span>
-            <Interruptor activo={preferencias.avisoStock !== false} alCambiar={(valor) => cambiarPreferencia({ avisoStock: valor })} etiqueta="Avisarme del stock al entrar" />
-          </div>
-        )}
       </section>
 
       {error && <p className="form-error" role="alert">{error}</p>}

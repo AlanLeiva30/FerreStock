@@ -49,6 +49,8 @@ export const servidor = {
   crearUsuario: (usuario) => pedir('/usuarios', { metodo: 'POST', datos: usuario }),
   editarUsuario: (id, cambios) => pedir(`/usuarios/${id}`, { metodo: 'PUT', datos: cambios }),
   eliminarUsuario: (id) => pedir(`/usuarios/${id}`, { metodo: 'DELETE' }),
+  // foto = 'data:image/jpeg;base64,…' para cambiarla, o null para quitarla
+  cambiarFotoDeUsuario: (id, foto) => pedir(`/usuarios/${id}/foto`, { metodo: 'PUT', datos: { foto } }),
   listarRoles: () => pedir('/roles'),
 
   // Datos de la ferretería que salen en la factura (solo administrador)

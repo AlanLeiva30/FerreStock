@@ -7,10 +7,14 @@
 // "Desactivar" (o "Eliminar", si ya está desactivado) abre una ventana para
 // elegir entre las dos cosas (ver ventanas/QuitarUsuario.jsx).
 //
+// Cada persona se ve con su foto de perfil. Al pulsar la foto (o "Editar") se abre la ventana de
+// edición, que lleva la foto al costado para cambiarla o quitarla (ver ventanas/FormularioUsuario.jsx).
+//
 // Abajo se muestran los roles y qué puede hacer cada uno (vienen de la tabla
 // "roles" de la base de datos; se definen en servidor/acceso/roles.js).
 
 import { useCallback, useEffect, useState } from 'react'
+import Avatar from '../componentes/Avatar.jsx'
 import FilaVacia from '../componentes/FilaVacia.jsx'
 import Ventana from '../componentes/Ventana.jsx'
 import { formato } from '../utilidades/formato.js'
@@ -78,6 +82,16 @@ export default function Usuarios({ usuario: yo, avisar, actualizarSesion }) {
     avisar(`${persona.nombre} eliminado`)
   }
 
+  // Guarda la foto nueva de una persona (o la quita si llega null) y refresca la lista.
+  const cambiarFoto = async (persona, foto) => {
+    await servidor.cambiarFotoDeUsuario(persona.id, foto)
+    await cargar()
+    if (persona.id === yo.id) await actualizarSesion() // si fue la mía, también cambia la de la barra de arriba
+    avisar(foto ? `Foto de ${persona.nombre} actualizada` : `Foto de ${persona.nombre} quitada`)
+  }
+  // La persona que se está editando, con su foto al día (si se cambió la foto con la ventana abierta).
+  const personaEditada = editando ? usuarios.find((persona) => persona.id === editando.id) ?? editando : editando
+
   return (
     <section className="panel view">
       <div className="panelhead">
@@ -95,7 +109,14 @@ export default function Usuarios({ usuario: yo, avisar, actualizarSesion }) {
           <tbody>
             {usuarios.map((persona) => (
               <tr key={persona.id} className={persona.activo ? '' : 'inactive'}>
-                <td>{persona.nombre}{persona.id === yo.id && <span className="muted"> (tú)</span>}</td>
+                <td>
+                  <div className="persona">
+                    <button className="avatar-boton" onClick={() => setEditando(persona)} title="Editar (aquí se cambia o quita la foto)" aria-label={`Foto de ${persona.nombre}`}>
+                      <Avatar usuario={persona} tamano={38} />
+                    </button>
+                    <span>{persona.nombre}{persona.id === yo.id && <span className="muted"> (tú)</span>}</span>
+                  </div>
+                </td>
                 <td className="yellow">{persona.usuario}</td>
                 <td><b className={COLOR_DEL_ROL[persona.rol] ?? 'status off'}>{persona.rol_nombre.toUpperCase()}</b></td>
                 <td>{persona.activo ? 'Activo' : <b className="status off">INACTIVO</b>}</td>
@@ -135,8 +156,8 @@ export default function Usuarios({ usuario: yo, avisar, actualizarSesion }) {
       </p>
 
       {editando !== undefined && (
-        <Ventana alCerrar={() => setEditando(undefined)}>
-          <FormularioUsuario usuarioAEditar={editando} roles={roles} alGuardar={guardar} />
+        <Ventana alCerrar={() => setEditando(undefined)} ancha={editando ? 'grande' : false}>
+          <FormularioUsuario usuarioAEditar={personaEditada} roles={roles} alGuardar={guardar} alCambiarFoto={(foto) => cambiarFoto(personaEditada, foto)} />
         </Ventana>
       )}
       {quitando && (

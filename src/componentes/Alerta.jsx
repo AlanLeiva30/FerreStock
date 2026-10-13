@@ -6,7 +6,7 @@
 //     <p>Texto que va debajo del título</p>
 //   </Alerta>
 //
-//   icono            → 'pregunta' (signo ? naranja), 'saludo' (martillo que se balancea) o 'stock' (triángulo de alerta)
+//   icono            → 'pregunta' (signo ? naranja), o 'saludo' (martillo que se balancea)
 //   textoCancelar    → si no se pone, solo hay un botón
 //   cerrarEnSegundos → si se pone, se cierra sola (con una barrita que se va acortando)
 //
@@ -18,7 +18,6 @@ import Icono from './Icono.jsx'
 const ICONOS = {
   pregunta: '?',
   saludo: <Icono nombre="martillo" tamano={44} />,
-  stock: <Icono nombre="alerta" tamano={42} />,
 }
 
 export default function Alerta({ icono, titulo, textoAceptar = 'Aceptar', textoCancelar, cerrarEnSegundos, alAceptar, alCancelar, children }) {

@@ -18,6 +18,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Alerta from './componentes/Alerta.jsx'
+import CampanaDeAlertas from './componentes/CampanaDeAlertas.jsx'
 import Icono from './componentes/Icono.jsx'
 import MenuDeUsuario from './componentes/MenuDeUsuario.jsx'
 import Ventana from './componentes/Ventana.jsx'
@@ -81,9 +82,7 @@ export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir
   const [aviso, setAviso] = useState('') //          mensaje verde de abajo a la derecha
   const [preguntandoSalir, setPreguntandoSalir] = useState(false) // aviso "¿Seguro que quieres cerrar sesión?"
   const buscador = useRef(null)
-  const [avisoInicialDeStock, setAvisoInicialDeStock] = useState(false) // notificación al entrar: "hay productos acabándose"
   const [avisoDeStock, setAvisoDeStock] = useState('') //                  aviso ámbar de abajo: "se agotó / quedan pocos"
-  const alertasYaRevisadas = useRef(false)
   const estadoAnteriorDelStock = useRef(null)
 
   // El aviso verde desaparece solo después de 3 segundos.
@@ -102,14 +101,6 @@ export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir
 
   // ── 3. Cálculos a partir de los datos ──
   const alertas = useMemo(() => (pantallaDeAlertas ? listaDeAlertas(productos) : []), [productos, pantallaDeAlertas])
-  const agotados = alertas.filter((producto) => producto.stock <= 0)
-
-  // Al entrar: si hay productos acabándose (y la persona no lo apagó en sus ajustes), mostrar una notificación.
-  useEffect(() => {
-    if (cargando || alertasYaRevisadas.current) return
-    alertasYaRevisadas.current = true
-    if (alertas.length > 0 && usuario.preferencias?.avisoStock !== false) setAvisoInicialDeStock(true)
-  }, [cargando, alertas, usuario.preferencias?.avisoStock])
 
   // Durante el trabajo: si después de una venta o un movimiento un producto pasa a "poco stock" o "agotado", avisar.
   useEffect(() => {
@@ -231,11 +222,7 @@ export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir
             <button className="theme-toggle" onClick={cambiarTema} aria-label="Cambiar modo">
               {tema === 'dark' ? <><Icono nombre="sol" tamano={16} className="antes" />Claro</> : <><Icono nombre="luna" tamano={16} className="antes" />Oscuro</>}
             </button>
-            {pantallaDeAlertas && (
-              <button className="bell" onClick={() => irA(pantallaDeAlertas)} aria-label={`${alertas.length} alertas de stock`}>
-                <Icono nombre="campana" tamano={19} />{alertas.length > 0 && <em>{alertas.length}</em>}
-              </button>
-            )}
+            {pantallaDeAlertas && <CampanaDeAlertas alertas={alertas} alVerTodas={() => irA(pantallaDeAlertas)} sonando={!!avisoDeStock} />}
             {esAdmin && <button className="scope" onClick={() => setVentana({ tipo: 'alcance' })}><Icono nombre="info" tamano={16} className="antes" />Alcance del Proyecto</button>}
             <MenuDeUsuario usuario={usuario} alAjustes={() => setVentana({ tipo: 'ajustes' })} alSalir={() => setPreguntandoSalir(true)}
               avisar={setAviso} actualizarSesion={actualizarSesion} />
@@ -297,24 +284,6 @@ export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir
         </Alerta>
       )}
 
-      {/* Notificación de stock al entrar (aparece después de la bienvenida) */}
-      {avisoInicialDeStock && !darBienvenida && (
-        <Alerta icono="stock" titulo={agotados.length ? 'Hay productos agotados' : 'Hay productos con poco stock'} textoAceptar="Ver alertas" textoCancelar="Ahora no"
-          alAceptar={() => { setAvisoInicialDeStock(false); irA('alertas') }} alCancelar={() => setAvisoInicialDeStock(false)}>
-          <p>
-            {agotados.length > 0 && <><b>{agotados.length}</b> agotado{agotados.length === 1 ? '' : 's'}</>}
-            {agotados.length > 0 && alertas.length > agotados.length && ' y '}
-            {alertas.length > agotados.length && <><b>{alertas.length - agotados.length}</b> con poco stock</>}.
-          </p>
-          <ul className="alerta-lista">
-            {alertas.slice(0, 4).map((producto) => (
-              <li key={producto.id}><b>{producto.nombre}</b><span>{producto.stock <= 0 ? 'agotado' : `quedan ${formato.cantidad(producto.stock, producto.unidad)}`}</span></li>
-            ))}
-            {alertas.length > 4 && <li className="alerta-mas">y {alertas.length - 4} más…</li>}
-          </ul>
-        </Alerta>
-      )}
-
       {/* Confirmación antes de cerrar sesión (menú del usuario → "Cerrar sesión") */}
       {preguntandoSalir && (
         <Alerta icono="pregunta" titulo="¿Seguro que quieres cerrar sesión?" textoAceptar="Sí, cerrar sesión" textoCancelar="Cancelar"
@@ -336,7 +305,7 @@ export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir
             <AdministrarCategorias categorias={configuracion.categorias} acciones={accionesDeCategorias} />
           )}
           {ventana.tipo === 'ajustes' && (
-            <AjustesDeUsuario usuario={usuario} tema={tema} fijarTema={fijarTema} actualizarSesion={actualizarSesion} avisar={setAviso} recibeAvisosDeStock={!!pantallaDeAlertas}
+            <AjustesDeUsuario usuario={usuario} tema={tema} fijarTema={fijarTema} actualizarSesion={actualizarSesion} avisar={setAviso}
               menu={menuDelUsuario.map(({ id, titulo }) => ({ id, titulo }))} />
           )}
           {ventana.tipo === 'alcance' && (

@@ -10,7 +10,7 @@ const INTENTOS_PERMITIDOS = 5;
 const SEGUNDOS_DE_BLOQUEO = 60;
 const RELLENO = protegerClave('relleno');
 const intentosFallidos = new Map();
-const DATOS_DE_LA_SESION = 'u.id, u.usuario, u.nombre, u.rol, r.nombre AS rol_nombre, r.descripcion AS rol_descripcion, u.preferencias';
+const DATOS_DE_LA_SESION = 'u.id, u.usuario, u.nombre, u.rol, u.sexo, r.nombre AS rol_nombre, r.descripcion AS rol_descripcion, u.preferencias';
 const consultas = {
   crear: bd.prepare(`INSERT INTO sesiones (token_hash, usuario_id, expira)
     VALUES (?, ?, now() + interval '${HORAS_DE_SESION} hours')`),
@@ -59,6 +59,7 @@ export async function iniciarSesion(datos, respuesta) {
 }
 export async function configurarPrimerAdministrador(datos, respuesta) {
   if (await hayUsuarios()) throw new ErrorParaElUsuario(CODIGOS.PROHIBIDO, 'El administrador ya fue creado. Inicia sesión.');
+  await columnasListas;
   const usuario = await crearUsuario({
     ...datos,
     rol: ADMINISTRADOR

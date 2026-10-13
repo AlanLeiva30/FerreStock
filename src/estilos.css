@@ -914,15 +914,75 @@ tbody tr:hover { background: #141f34; }
 [data-theme="light"] .aviso-stock b { color: #5c3f00; }
 
 /* ── NOTIFICACIONES DE STOCK ── */
-.alerta-icono.stock { border-color: #ff9d00; background: #473716; color: #ffb000; }
-[data-theme="light"] .alerta-icono.stock { background: #fff4d6; color: #b36b00; }
-.alerta-lista { display: grid; gap: 6px; margin: 12px 0 4px; padding: 0; list-style: none; text-align: left; }
-.alerta-lista li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; border: 1px solid #34425b; border-radius: 9px; background: #0b1426; font-size: 13px; }
-.alerta-lista li span { flex: none; color: #ff9aa9; font-size: 12px; font-weight: 700; }
-.alerta-lista li.alerta-mas { justify-content: center; border-style: dashed; color: #9dacbf; }
-[data-theme="light"] .alerta-lista li { background: #f8f3ea; border-color: #e3d9c6; }
-[data-theme="light"] .alerta-lista li span { color: #c2263f; }
 .toast.toast-stock { bottom: 76px; border-color: #80621c; background: #473716; color: #ffd25a; }
 [data-theme="light"] .toast.toast-stock { border-color: #f0cf8a; background: #fff4d6; color: #7a5600; }
 .aviso-stock button { flex: none; margin-left: auto; padding: 7px 12px; border: 0; border-radius: 8px; background: #ff9d00; color: #211500; font-size: 12px; font-weight: 800; }
 @media (max-width: 720px) { .toast.toast-stock { bottom: 70px; } }
+
+/* ── CAMPANITA DE NOTIFICACIONES: panel desplegable con los productos agotados o con poco stock ── */
+.campana { position: relative; }
+.actions .campana-panel { position: absolute; right: 0; top: calc(100% + 10px); z-index: 30; display: grid; gap: 8px; width: min(390px, calc(100vw - 20px)); max-height: min(72vh, 520px); overflow: auto; padding: 12px; border: 1px solid #34425b; border-radius: 14px; background: #111a2c; box-shadow: 0 18px 50px #000a; animation: menuUsuario .15s ease-out; }
+.campana-cabecera { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 2px 4px 6px; }
+.campana-cabecera b { color: #f5f7fb; font-size: 14px; }
+.campana-cabecera small { color: #ffb000; font-size: 12px; font-weight: 700; }
+.campana-lista { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.campana-lista li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 9px 11px; border: 1px solid #2d3a52; border-left: 3px solid #ffb000; border-radius: 10px; background: #0b1426; }
+.campana-lista li.agotado { border-left-color: #ff6277; }
+.campana-icono { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: #473716; color: #ffb000; }
+.campana-lista li.agotado .campana-icono { background: #3a1420; color: #ff8a9b; }
+.campana-lista li > div { display: grid; gap: 1px; min-width: 0; }
+.campana-lista b { overflow: hidden; color: #f5f7fb; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.campana-lista small { color: #8f9db5; font-size: 11px; }
+.campana-estado { display: grid; justify-items: end; color: #ffd25a; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.campana-lista li.agotado .campana-estado { color: #ff8a9b; }
+.campana-estado small { font-weight: 600; }
+.campana-lista li.campana-mas { display: block; border: 1px dashed #34425b; text-align: center; color: #9dacbf; font-size: 12px; }
+.campana-vacia { display: flex; align-items: center; margin: 4px; padding: 14px 10px; color: #8fd9bf; font-size: 13px; }
+.actions .campana-panel .campana-ver { min-height: 38px; border: 0; background: #ff9d00; color: #211500; font-size: 13px; font-weight: 800; }
+.bell.sonando svg { transform-origin: 50% 10%; animation: sonar 1.1s ease-in-out 2; }
+@keyframes sonar { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(16deg); } 35% { transform: rotate(-14deg); } 55% { transform: rotate(10deg); } 75% { transform: rotate(-6deg); } }
+@media (prefers-reduced-motion: reduce) { .bell.sonando svg, .actions .campana-panel { animation: none; } }
+[data-theme="light"] .actions .campana-panel { background: #fffdf9; border-color: #e3d9c6; box-shadow: 0 18px 50px #4a351426; }
+[data-theme="light"] .campana-cabecera b, [data-theme="light"] .campana-lista b { color: #2b2318; }
+[data-theme="light"] .campana-cabecera small { color: #b36b00; }
+[data-theme="light"] .campana-lista li { background: #f8f3ea; border-color: #e6dccb; border-left-color: #e08a00; }
+[data-theme="light"] .campana-lista li.agotado { border-left-color: #d6334d; }
+[data-theme="light"] .campana-icono { background: #fff1cf; color: #b36b00; }
+[data-theme="light"] .campana-lista li.agotado .campana-icono { background: #fde4e8; color: #c2263f; }
+[data-theme="light"] .campana-lista small { color: #7d705e; }
+[data-theme="light"] .campana-estado { color: #8a5a00; }
+[data-theme="light"] .campana-lista li.agotado .campana-estado { color: #c2263f; }
+[data-theme="light"] .campana-vacia { color: #0d6b54; }
+[data-theme="light"] .campana-lista li.campana-mas { border-color: #d9ceb9; color: #7d705e; }
+[data-theme="light"] .actions .campana-panel button.campana-ver { background: #ff9d00; border: 0; color: #211500; }
+
+/* ── FOTOS DE PERFIL EN LA PANTALLA DE USUARIOS (el administrador las ve, cambia o quita) ── */
+.persona { display: flex; align-items: center; gap: 11px; }
+.avatar-boton { flex: none; padding: 0; border: 0; border-radius: 50%; background: none; line-height: 0; transition: box-shadow .15s ease, transform .15s ease; }
+.avatar-boton:hover { box-shadow: 0 0 0 3px #ffb00088; transform: scale(1.05); }
+.foto-de-usuario { display: grid; justify-items: center; gap: 10px; margin: 6px 0 16px; }
+.foto-de-usuario small { color: #9dacbf; font-size: 12px; }
+.foto-de-usuario .avatar { box-shadow: 0 0 0 4px #29344b; }
+.modal .foto-de-usuario-botones { justify-content: center; margin-top: 0; }
+.modal .ajustes-botones button.peligro { border: 1px solid #a12d41; background: #3a1420; color: #ff9aa9; }
+[data-theme="light"] .avatar-boton:hover { box-shadow: 0 0 0 3px #ff9d0066; }
+[data-theme="light"] .foto-de-usuario small { color: #7d705e; }
+[data-theme="light"] .foto-de-usuario .avatar { box-shadow: 0 0 0 4px #e6dccb; }
+[data-theme="light"] .modal .ajustes-botones button.peligro { border-color: #f0a3b0; background: #fde4e8; color: #a8233a; }
+
+/* ── EDITAR USUARIO: la foto va al costado del formulario ── */
+.modal.ancha.grande { width: min(820px, 100%); }
+.editar-usuario { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 26px; align-items: start; }
+.editar-usuario-foto { display: grid; justify-items: center; gap: 12px; padding: 18px 14px; border: 1px solid #29344b; border-radius: 14px; background: #0b1426; }
+.editar-usuario-foto .controles-de-foto { display: grid; justify-items: center; gap: 12px; width: 100%; }
+.editar-usuario-foto .foto-de-usuario { margin: 0; text-align: center; }
+.modal .editar-usuario-foto .ajustes-botones { flex-direction: column; align-items: stretch; width: 100%; margin: 0; }
+.modal .editar-usuario-foto .ajustes-botones button { display: flex; align-items: center; justify-content: center; width: 100%; }
+.editar-usuario-foto .form-hint { text-align: center; line-height: 1.45; }
+[data-theme="light"] .editar-usuario-foto { background: #f8f3ea; border-color: #e6dccb; }
+@media (max-width: 720px) { .editar-usuario { grid-template-columns: 1fr; } }
+
+/* El campo "Sexo" del primer administrador (pantalla de ingreso) se ve igual que las demás casillas */
+.ingreso select { width: 100%; height: 48px; padding: 0 14px; border: 1px solid #35435c; border-radius: 11px; outline: 0; background: #071022; color: #edf3fb; font-size: 15px; }
+.ingreso select:focus { border-color: #ff9d00; box-shadow: 0 0 0 4px #ff9d0026; }
+[data-theme="light"] .ingreso select { background: #faf6ee; border-color: #ddd1ba; color: #2b2318; }

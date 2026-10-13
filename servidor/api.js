@@ -25,7 +25,7 @@ import { datosDelNegocio, guardarDatosDelNegocio } from './ventas/negocio.js'
 import { activarODesactivarProducto, crearProducto, editarProducto, listarProductos } from './inventario/productos.js'
 import { ADMINISTRADOR, TRABAJADOR, VENDEDOR } from './acceso/roles.js'
 import { cerrarSesion, configurarPrimerAdministrador, estadoDeSesion, huellaDeLaSesion, iniciarSesion, usuarioDeLaPeticion } from './acceso/sesiones.js'
-import { cambiarMiClave, guardarPerfil } from './acceso/perfil.js'
+import { cambiarFotoDeUsuario, cambiarMiClave, guardarPerfil } from './acceso/perfil.js'
 import { crearUsuario, editarUsuario, eliminarUsuario, listarRoles, listarUsuarios } from './acceso/usuarios.js'
 import { cobrarVenta, ventasDeHoy, ventasPorDia, verFactura } from './ventas/ventas.js'
 import { listarTablasYVistas, verContenido } from './basedatos/visorDeBase.js'
@@ -73,6 +73,7 @@ const RUTAS = [
   ['GET',    '/usuarios',                 SOLO_ADMIN,        () => listarUsuarios()],
   ['POST',   '/usuarios',                 SOLO_ADMIN,        ({ datos }) => crearUsuario(datos)],
   ['PUT',    '/usuarios/:id',             SOLO_ADMIN,        ({ id, datos, usuario }) => editarUsuario(id, datos, usuario)],
+  ['PUT',    '/usuarios/:id/foto',        SOLO_ADMIN,        ({ id, datos }) => cambiarFotoDeUsuario(id, datos)],
   ['DELETE', '/usuarios/:id',             SOLO_ADMIN,        ({ id, usuario }) => eliminarUsuario(id, usuario)],
   ['GET',    '/roles',                    SOLO_ADMIN,        () => listarRoles()],
 
