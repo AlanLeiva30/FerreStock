@@ -1,7 +1,10 @@
 node_modules
 dist
 .DS_Store
-.runtime
 data
 
 .env*
+
+# Nunca subir los datos de conexión, con o sin punto al inicio
+env.local
+*.local

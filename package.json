@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "vite --open",
     "build": "vite build",
-    "preview": "vite preview --open"
+    "preview": "vite preview --open",
+    "start": "node servidor/produccion.js"
   },
   "dependencies": {
     "pg": "^8.23.0",

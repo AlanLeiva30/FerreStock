@@ -78,7 +78,9 @@ export function leerCookie(peticion, nombre) {
 }
 
 export function ponerCookie(respuesta, nombre, valor, segundos) {
-  respuesta.setHeader('Set-Cookie', `${nombre}=${encodeURIComponent(valor)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${segundos}`)
+  // En la nube (HTTPS) la cookie solo viaja por conexiones seguras.
+  const segura = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  respuesta.setHeader('Set-Cookie', `${nombre}=${encodeURIComponent(valor)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${segundos}${segura}`)
 }
 
 // Convierte cualquier valor en texto sin espacios al inicio ni al final.

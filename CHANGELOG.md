@@ -14,6 +14,16 @@ Aquí se ve **qué cambió en cada versión**, con capturas del **antes** y el *
 
 ---
 
+## Próxima versión (sin publicar)
+
+### Nuevo
+- **Publicación en Google Cloud Run:** servidor de producción (`npm start`), `Dockerfile`, script `scripts/desplegar-en-cloud-run.sh` y la guía `DESPLIEGUE.md`.
+- La conexión a Supabase ahora puede venir de **variables de entorno** (en la nube), además de `.env.local`.
+- La cookie de sesión lleva la marca `Secure` cuando el programa corre en producción (HTTPS).
+- El script de publicación quita las comillas de los valores de `.env.local`, igual que el programa.
+
+---
+
 ## 1.7.0 · 12 de octubre de 2026
 
 **El vendedor consulta el inventario y recibe avisos de poco stock y de productos agotados.** Todo es de solo lectura: no ve costos ni puede modificar nada.

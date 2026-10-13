@@ -100,7 +100,10 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 | `package.json` · `package-lock.json` | Dependencias, versiones exactas y comandos `npm run …`. |
 | `vite.config.js` | Conecta la interfaz con el servidor: las rutas `/api` se atienden con `servidor/api.js`. |
 | `index.html` | Página vacía donde React dibuja la aplicación. |
-| `README.md` · `GUIA_DEL_CODIGO.md` · `CHANGELOG.md` | Documentación (uso, técnica e historial de versiones). |
+| `README.md` · `GUIA_DEL_CODIGO.md` · `CHANGELOG.md` · `DESPLIEGUE.md` | Documentación (uso, técnica, historial de versiones y cómo publicarlo en Google Cloud Run). |
+| `Dockerfile` · `.dockerignore` · `.gcloudignore` | Empaquetado para la nube. Excluyen siempre `.env.local`. |
+| `scripts/desplegar-en-cloud-run.sh` | Publica FerreStock en Google Cloud Run con un comando. |
+| `docs/versiones/` | Capturas de pantalla (antes y después) que usa el `CHANGELOG.md`. Se tomaron con datos de ejemplo. |
 | `.gitignore` · `.gitattributes` | Reglas de git: qué no se sube y cómo se normalizan los saltos de línea. |
 | `.vscode/tasks.json` | Tarea `FerreStock` para VS Code. |
 | `node_modules/` | Dependencias descargadas; se regenera con `npm install`. No se edita. |
@@ -110,6 +113,7 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 | Carpeta | Archivo | Responsabilidad |
 |---|---|---|
 | (raíz) | `api.js` ★ | Tabla de rutas: qué petición se acepta, **quién** puede hacerla y qué función la atiende. |
+| (raíz) | `produccion.js` | Servidor para la nube (`npm start`): sirve las pantallas compiladas y atiende `/api`. En tu computadora esto lo hace Vite. |
 | `acceso/` | `roles.js` ★ | Define los roles (administrador, vendedor, trabajador) y su descripción. |
 | | `sesiones.js` | Iniciar y cerrar sesión, identificar al usuario de cada petición, primer administrador. |
 | | `usuarios.js` | Crear, editar, desactivar y eliminar usuarios; asignar rol. |

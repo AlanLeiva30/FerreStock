@@ -4,8 +4,18 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import { readFileSync } from 'node:fs'
 import { parseEnv } from 'node:util'
 
-const config = { ...parseEnv(readFileSync(new URL('../../.env.local', import.meta.url), 'utf8')), ...process.env }
-if (!config.PGPASSWORD || config.PGPASSWORD === 'ESCRIBE_AQUI_TU_CONTRASENA') throw new Error('Falta configurar la contraseña de Supabase en .env.local')
+// La conexión sale de .env.local (en tu computadora) o de las variables de entorno (en la nube, p. ej. Google Cloud Run).
+// Si existen las dos, mandan las variables de entorno.
+function leerArchivoDeConfiguracion() {
+  try {
+    return parseEnv(readFileSync(new URL('../../.env.local', import.meta.url), 'utf8'))
+  } catch (error) {
+    if (error.code === 'ENOENT') return {} // en la nube no hay archivo: se usan las variables de entorno
+    throw error
+  }
+}
+const config = { ...leerArchivoDeConfiguracion(), ...process.env }
+if (!config.PGPASSWORD || config.PGPASSWORD === 'ESCRIBE_AQUI_TU_CONTRASENA') throw new Error('Falta configurar la contraseña de Supabase (en .env.local o como variable de entorno PGPASSWORD)')
 const contexto = new AsyncLocalStorage()
 pg.types.setTypeParser(20, value => {
   const n = Number(value)

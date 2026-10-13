@@ -1,0 +1,13 @@
+# Nada de esto debe entrar a la imagen (sobre todo los secretos).
+node_modules
+dist
+.env*
+.git
+.vscode
+.DS_Store
+docs
+scripts
+*.md
+Dockerfile
+.dockerignore
+.gcloudignore

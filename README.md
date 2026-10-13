@@ -115,6 +115,14 @@ PGPASSWORD=
 
 ---
 
+## ☁️ Publicarlo en internet
+
+FerreStock se puede publicar en **Google Cloud Run** y obtener un link para compartir. Sigue la guía [`DESPLIEGUE.md`](DESPLIEGUE.md). El proyecto ya incluye el `Dockerfile`, el servidor de producción (`npm start`) y un script que lo publica con un solo comando.
+
+> El link usa la misma base de datos que tu `.env.local`. Crea un usuario aparte para quien lo vea.
+
+---
+
 ## 🧱 Tecnología
 
 | Capa | Herramienta |
@@ -134,6 +142,8 @@ FerreStock/
 ├── index.html    Página donde se dibuja la aplicación
 └── vite.config.js
 ```
+
+📜 ¿Qué cambió en cada versión? Mira el [**Historial de versiones**](CHANGELOG.md), con capturas del antes y el después.
 
 📖 ¿Quieres entender o modificar el código? Lee la [**Guía técnica**](GUIA_DEL_CODIGO.md): explica cada archivo, el modelo de datos, la API y dónde hacer cada cambio.
 

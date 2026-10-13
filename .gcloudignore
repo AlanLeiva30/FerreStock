@@ -1,0 +1,10 @@
+# Qué NO se envía a Google al desplegar (sobre todo los secretos).
+.gcloudignore
+.git
+.gitignore
+.DS_Store
+.vscode
+node_modules
+dist
+.env*
+docs
