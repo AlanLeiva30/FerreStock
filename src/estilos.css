@@ -338,7 +338,10 @@ footer { padding: 17px 20px; color: #8fa0ba; font-size: 12px; display: flex; jus
 .pos td { padding: 10px 8px; }
 .pos td.yellow { white-space: nowrap; } /* el código en una sola línea */
 .pos-buscar { flex: 1 1 220px; max-width: 340px; padding: 8px 10px; border: 1px solid #35435c; border-radius: 8px; outline: 0; background: #071022; color: #edf3fb; font-size: 13px; }
-.pos-lado { position: sticky; top: 80px; display: grid; gap: 18px; }
+.pos-lado { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 18px; max-height: calc(100vh - 96px); overflow-y: auto; }
+.pos-lado > section { flex-shrink: 0; }
+/* La lista de la venta se desplaza sola; el total y "Cobrar" quedan debajo, siempre visibles. */
+.carrito-lista { max-height: max(150px, calc(100vh - 470px)); overflow-y: auto; padding-bottom: 2px; overscroll-behavior: contain; }
 .carrito-vacio { margin: 18px 20px; color: #8394ae; font-size: 13px; }
 .carrito-item { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 10px; margin: 10px 16px 0; padding: 10px; border: 1px solid #273249; border-radius: 10px; background: #081023; }
 .carrito-item > div:first-child { display: grid; gap: 3px; min-width: 0; }
@@ -699,7 +702,8 @@ tr.fila-area:hover { background: color-mix(in srgb, var(--color-area) 9%, transp
   .actions > .registrar { width: 39px; padding: 9px; font-size: 0; }
   .actions > .registrar .icono { margin-right: 0; }
   .pos { grid-template-columns: 1fr; } /* en celular, la venta actual pasa abajo */
-  .pos-lado { position: static; }
+  .pos-lado { position: static; max-height: none; overflow: visible; }
+  .carrito-lista { max-height: 340px; }
   .areas { flex-wrap: nowrap; overflow-x: auto; padding: 10px 12px 6px; } /* los botones de áreas se deslizan de lado */
   .theme-toggle { width: 39px; padding: 9px; font-size: 0 !important; }
   .theme-toggle .icono { margin-right: 0; }

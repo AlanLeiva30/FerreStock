@@ -231,6 +231,8 @@ export default function Vender({ productos, esAdmin, recargar, avisar }) {
 
           {!lineas.length && <p className="carrito-vacio">Haz clic en un producto para agregarlo a la venta.</p>}
 
+          {/* La lista de productos tiene su propio desplazamiento: así el total y el botón de cobrar siempre quedan a la vista. */}
+          <div className="carrito-lista">
           {lineas.map((linea) => (
             <div className="carrito-item" key={linea.productoId}>
               <div>
@@ -248,6 +250,7 @@ export default function Vender({ productos, esAdmin, recargar, avisar }) {
               {!linea.cantidadValida && <small className="form-error carrito-aviso">Cantidad no válida: hay {formato.cantidad(linea.producto.stock, linea.producto.unidad)}</small>}
             </div>
           ))}
+          </div>
 
           <div className="carrito-total"><span>TOTAL</span><strong>{formato.dinero(total)}</strong></div>
 
