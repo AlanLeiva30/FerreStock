@@ -4,7 +4,7 @@ Todo lo que hay que saber de FerreStock en **un solo archivo**: cómo se abre, c
 
 | | |
 |---|---|
-| **Versión actual** | 1.9.9 |
+| **Versión actual** | 2.2 |
 | **Portada del proyecto** | [`README.md`](../README.md) |
 
 ## Índice
@@ -73,7 +73,7 @@ Sistema de inventario y ventas para ferretería. Esta parte documenta su arquite
 
 | | |
 |---|---|
-| **Versión** | 1.9.9 |
+| **Versión** | 2.2 |
 | **Interfaz** | React 19 + Vite 8 |
 | **Servidor** | Node.js ≥ 22.13 (middleware de Vite, sin framework adicional) |
 | **Base de datos** | PostgreSQL alojado en Supabase (`pg` 8) |
@@ -222,7 +222,8 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 | `Ingreso.jsx` | Público | Usuario y contraseña; creación del primer administrador. |
 | `PanelPrincipal.jsx` | Admin | Resumen general e indicadores. |
 | `Vender.jsx` | Admin · Vendedor | Caja: armar la venta, cobrar y facturar. La lista de la venta se desplaza sola y el total y «Cobrar» siempre quedan a la vista. |
-| `Cotizar.jsx` | Admin · Vendedor | Armar una cotización (productos del catálogo) y sacarla en PDF con vista previa. No afecta el inventario. |
+| `Cotizar.jsx` | Admin · Vendedor | Armar una cotización (productos del catálogo), verla en vista previa, guardarla e imprimirla o bajarla en PDF. No afecta el inventario. |
+| `Cotizaciones.jsx` | Admin · Vendedor | Panel con las cotizaciones guardadas: filtros por fecha, buscador, reimpresión y «Usar como base». El vendedor ve solo las suyas. |
 | `Facturas.jsx` | Admin · Vendedor | Historial de facturas con filtro por fechas y buscador (cliente, DUI/NIT o número). Al tocar una se abre para reimprimirla. |
 | `Almacen.jsx` | Trabajador | Stock por categoría, sin precios ni costos. |
 | `Catalogo.jsx` | Admin | Alta, edición y estado de productos; administración de categorías. |
@@ -250,7 +251,8 @@ La base tiene **8 tablas**. Las relaciones se indican con `→`.
 | `categorias` | Categorías de productos y su orden en pantalla. | `id`, `nombre`, `orden` |
 | `productos` | Catálogo con stock, costo y precio. | `id`, `codigo`, `nombre`, `categoria_id → categorias`, `unidad`, `stock`, `minimo`, `costo`, `precio`, `activo` |
 | `movimientos` | Cada entrada o salida de mercadería. | `id`, `producto_id → productos`, `tipo`, `motivo`, `cantidad`, `usuario`, `nota`, `fecha`, `venta_id → ventas`, `precio_unitario` |
-| `ventas` | Una fila por cobro (cada una es una factura). | `id`, `usuario_id → usuarios`, `total`, `recibido`, `cambio`, `fecha`, `cliente`, `cliente_documento` |
+| `cotizaciones` | Una fila por cotización guardada (no afecta el inventario). El detalle se guarda como una «foto» en formato JSON. | `id`, `usuario_id → usuarios`, `atendio`, `fecha`, `cliente`, `cliente_documento`, `contacto`, `validez` (días), `notas`, `descuento`, `subtotal`, `total`, `detalle` |
+| `ventas` | Una fila por cobro (cada una es una factura). | `id`, `usuario_id → usuarios`, `total`, `descuento` (% rebajado; 0 = sin descuento), `recibido`, `cambio`, `fecha`, `cliente`, `cliente_documento` |
 | `usuarios` | Personas que pueden entrar al sistema. | `id`, `usuario`, `nombre`, `rol → roles`, `clave_hash`, `clave_sal`, `activo`, `creado`, `eliminado`, `foto`, `preferencias`, `sexo` |
 | `roles` | Tipos de usuario y su descripción. | `clave`, `nombre`, `descripcion`, `orden` |
 | `sesiones` | Sesiones abiertas; guarda solo el *hash* de la llave. | `token_hash`, `usuario_id → usuarios`, `expira` |
@@ -282,8 +284,11 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | POST | `/perfil/clave` | Todos | Cambiar la propia contraseña (pide la actual). |
 | GET | `/productos` | Todos | Listar productos; cada rol recibe solo los datos que le corresponden. |
 | GET | `/productos/siguiente-codigo` | Admin | El código que recibirá el próximo producto (por ejemplo `FER-1017`). |
-| POST | `/ventas` | Admin + Vendedor | Cobrar una venta y generar la factura. |
+| POST | `/ventas` | Admin + Vendedor | Cobrar una venta y generar la factura. Acepta un `descuento` opcional (0 a 100 %) que el servidor aplica al total. |
 | GET | `/negocio` | Admin + Vendedor | Datos del negocio (encabezado de facturas y cotizaciones). Modificarlos (`PUT`) es solo del administrador. |
+| POST | `/cotizaciones` | Admin + Vendedor | Guardar una cotización (el servidor calcula precios y totales). |
+| GET | `/cotizaciones` | Admin + Vendedor | Lista de cotizaciones. Filtros: `desde`, `hasta`, `q`, `limite`. El vendedor ve solo las suyas. |
+| GET | `/cotizaciones/:id` | Admin + Vendedor | Una cotización completa para verla o reimprimirla. |
 | GET | `/ventas` | Admin + Vendedor | Historial de facturas. Filtros opcionales: `desde`, `hasta` (AAAA-MM-DD), `q` (cliente, DUI/NIT, vendedor o número) y `limite` (máx. 300). El vendedor ve solo las suyas. |
 | GET | `/ventas/hoy` | Admin + Vendedor | Ventas del día (el vendedor ve solo las suyas). |
 | GET | `/ventas/:id` | Admin + Vendedor | Ver o reimprimir una factura. |
@@ -569,17 +574,48 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 
 | Versión | Fecha | Resumen |
 |---|---|---|
-| Próxima | — | Pantalla *Cotizar*: cotizaciones en PDF con vista previa, sin tocar el inventario |
-| [1.9.9](#199--14-de-octubre-de-2026) | 14-oct-2026 | Historial de facturas, filtros por fecha, informe PDF en Reportes, cobro con lista desplazable e ícono del sitio |
-| [1.9](#19--13-de-octubre-de-2026) | 13-oct-2026 | Código automático al crear un producto (FER-1017, FER-1018…) |
-| [1.8](#18--13-de-octubre-de-2026) | 13-oct-2026 | Campanita de notificaciones, fotos y sexo de cada usuario, y publicación en Google Cloud Run |
-| [1.7](#17--12-de-octubre-de-2026) | 12-oct-2026 | El vendedor consulta el inventario y recibe avisos de poco stock |
-| [1.6](#16--12-de-octubre-de-2026) | 12-oct-2026 | Menú de usuario con foto y ajustes, íconos nuevos, temas rediseñados y diseño fluido |
-| [1.5](#15--versión-base) | — | Versión base con Supabase |
+| [2.2](#22--14-de-octubre-de-2026) | 14-oct-2026 | Panel *Cotizaciones*: las cotizaciones se guardan con su número y se pueden consultar e imprimir otra vez |
+| [2.1](#21--13-de-octubre-de-2026) | 13-oct-2026 | Descuento al cobrar y lista de productos con 3 visibles |
+| [2.0](#20--12-de-octubre-de-2026) | 12-oct-2026 | Pantalla *Cotizar*: cotizaciones en PDF con vista previa, sin tocar el inventario |
+| [1.9.9](#199--11-de-octubre-de-2026) | 11-oct-2026 | Historial de facturas, filtros por fecha, informe PDF en Reportes, cobro con lista desplazable e ícono del sitio |
+| [1.9](#19--9-de-octubre-de-2026) | 9-oct-2026 | Código automático al crear un producto (FER-1017, FER-1018…) |
+| [1.8](#18--6-de-octubre-de-2026) | 6-oct-2026 | Campanita de notificaciones, fotos y sexo de cada usuario, y publicación en Google Cloud Run |
+| [1.7](#17--2-de-octubre-de-2026) | 2-oct-2026 | El vendedor consulta el inventario y recibe avisos de poco stock |
+| [1.6](#16--29-de-septiembre-de-2026) | 29-sep-2026 | Menú de usuario con foto y ajustes, íconos nuevos, temas rediseñados y diseño fluido |
+| [1.5](#15--versión-base) | 24-sep-2026 | Versión base con Supabase |
 
 ---
 
-### Próxima versión (sin publicar)
+### 2.2 · 14 de octubre de 2026
+
+#### Nuevo
+- **Panel «Cotizaciones»** (administrador y vendedor): la lista de todas las cotizaciones hechas, de la más reciente a la más antigua, con su número (`COT-00012`), fecha, cliente, cantidad de productos, quién la atendió, estado (**vigente** o **vencida**, según los días de vigencia) y total. Se filtra por rango de fechas y se busca por cliente, DUI/NIT o número.
+- **Las cotizaciones ahora se guardan:** en la vista previa de *Cotizar* hay tres botones: *Guardar e imprimir*, *Solo guardar* y *Volver a editar*. Al guardar, la cotización recibe su número consecutivo y la pantalla queda limpia para la siguiente.
+- **Ver o reimprimir:** al tocar una cotización del panel se abre tal como se hizo y se puede imprimir o guardar como PDF. Los precios y nombres quedan fijos tal como se ofrecieron, aunque después cambie el catálogo.
+- **Usar como base:** copia una cotización a la pantalla *Cotizar* para armar otra parecida con los precios de hoy (los productos que ya no existan en el catálogo se omiten y se avisa).
+- El administrador ve todas las cotizaciones; el vendedor, solo las suyas (lo valida el servidor).
+- Siguen sin afectar el inventario ni crear ventas.
+
+#### Detalle técnico
+- Nuevos: `servidor/ventas/cotizaciones.js` (la tabla `cotizaciones` se crea sola al arrancar el servidor, con la seguridad por filas activada como las demás), `src/pantallas/Cotizaciones.jsx` y `src/utilidades/borradorDeCotizacion.js`.
+- Modificados: `servidor/api.js` (3 rutas), `src/utilidades/servidor.js`, `src/utilidades/formato.js` (`formato.cotizacion`), `src/Sistema.jsx` (menú), `src/componentes/Icono.jsx` (ícono `carpeta`), `src/componentes/CotizacionDocumento.jsx`, `src/ventanas/VerCotizacion.jsx`, `src/pantallas/Cotizar.jsx` y `src/estilos.css`.
+- El servidor vuelve a calcular precios, descuento y total desde el catálogo; nunca usa los precios que manda la pantalla. El número es el `id` de la tabla (consecutivo, con `COT-` y 5 dígitos).
+
+---
+
+### 2.1 · 13 de octubre de 2026
+
+#### Nuevo
+- **Descuento al cobrar:** en *Vender* hay un campo «Descuento (%)». El total, el cambio y el botón de cobrar se ajustan al momento; la factura muestra el subtotal, el descuento y el total, y la lista de *Facturas* marca las ventas con descuento. El servidor valida que sea de 0 a 100 % y calcula el total él mismo (el efectivo se compara con el total ya rebajado). El stock baja igual que siempre.
+- **La lista de productos se ve mejor:** en *Vender* y en *Cotizar*, el recuadro donde van los productos muestra siempre al menos 3 productos completos (y más si la pantalla es alta); si hay más, se desplaza dentro del recuadro.
+
+#### Detalle técnico
+- Descuento: `servidor/ventas/ventas.js` (columna `descuento` en `ventas`, que se crea sola al arrancar el servidor; las ventas anteriores quedan en 0), `src/pantallas/Vender.jsx`, `src/componentes/Factura.jsx` y `src/pantallas/Facturas.jsx`.
+- Lista de productos: `src/estilos.css` (`.carrito-lista` y `.cotizar-lista`).
+
+---
+
+### 2.0 · 12 de octubre de 2026
 
 #### Nuevo
 - **Pantalla «Cotizar»** (administrador y vendedor): sirve para armar una cotización para un cliente sin tocar el inventario. Se agregan productos del catálogo (con clic o escribiendo el código); se escriben el cliente, su DUI/NIT y contacto, un descuento en %, los días de vigencia y observaciones.
@@ -593,7 +629,7 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 
 ---
 
-### 1.9.9 · 14 de octubre de 2026
+### 1.9.9 · 11 de octubre de 2026
 
 #### Nuevo
 - **Pantalla «Facturas»:** el administrador y el vendedor pueden ver las facturas anteriores, filtrarlas por fechas, buscarlas por cliente, DUI/NIT o número y reimprimirlas. El vendedor solo ve las suyas (lo valida el servidor).
@@ -617,7 +653,7 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 
 ---
 
-### 1.9 · 13 de octubre de 2026
+### 1.9 · 9 de octubre de 2026
 
 **Al crear un producto, el código se genera solo y sigue la numeración.**
 
@@ -645,7 +681,7 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 
 ---
 
-### 1.8 · 13 de octubre de 2026
+### 1.8 · 6 de octubre de 2026
 
 #### Nuevo
 - **Publicación en Google Cloud Run:** servidor de producción (`npm start`), `Dockerfile`, script `scripts/desplegar-en-cloud-run.sh` y la guía de publicación (Parte 3).
@@ -694,7 +730,7 @@ En pantallas angostas el panel de foto pasa arriba del formulario. Al crear un u
 
 ---
 
-### 1.7 · 12 de octubre de 2026
+### 1.7 · 2 de octubre de 2026
 
 **El vendedor consulta el inventario y recibe avisos de poco stock y de productos agotados.** Todo es de solo lectura: no ve costos ni puede modificar nada.
 
@@ -733,7 +769,7 @@ Antes, el vendedor no tenía ninguna de estas pantallas.
 
 ---
 
-### 1.6 · 12 de octubre de 2026
+### 1.6 · 29 de septiembre de 2026
 
 **Menú de usuario con foto y ajustes personales, íconos nuevos, temas rediseñados y diseño que se adapta a la pantalla.**
 
@@ -863,6 +899,8 @@ El número de alertas quedaba encima del texto "reabastecer". Ahora está centra
 ---
 
 ### 1.5 · Versión base
+
+**Fecha:** 24 de septiembre de 2026.
 
 Sistema de inventario y ventas para ferretería con React, Vite y Supabase (PostgreSQL): roles (administrador, vendedor y trabajador), ventas con factura imprimible, inventario por categorías, entradas y salidas, alertas de stock mínimo, reportes y administración de usuarios.
 

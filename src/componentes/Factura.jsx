@@ -53,6 +53,12 @@ export default function Factura({ venta }) {
       </table>
 
       <dl className="factura-totales">
+        {Number(venta.descuento) > 0 && (
+          <>
+            <div><dt>Subtotal</dt><dd>{formato.dinero(venta.subtotal)}</dd></div>
+            <div><dt>Descuento ({formato.numero(Number(venta.descuento))}%)</dt><dd>−{formato.dinero(venta.descuento_monto)}</dd></div>
+          </>
+        )}
         <div className="factura-total"><dt>TOTAL</dt><dd>{formato.dinero(venta.total)}</dd></div>
         {venta.recibido != null && (
           <>

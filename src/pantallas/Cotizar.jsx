@@ -2,7 +2,8 @@
 // PANTALLA: COTIZAR
 // ─────────────────────────────────────────────────────────────
 // Sirve para armar una cotización (presupuesto) para un cliente y sacarla en PDF o en papel.
-// NO afecta el inventario, NO crea ventas y NO se guarda en la base de datos: es solo un documento.
+// NO afecta el inventario ni crea ventas: es solo un documento. Se guarda (con su número) cuando se pulsa
+// "Guardar" en la vista previa, y desde ahí queda en la pantalla Cotizaciones.
 //
 //   ┌─────────────────────────────┬──────────────────────┐
 //   │ PRODUCTOS                   │ COTIZACIÓN ACTUAL    │
@@ -12,7 +13,7 @@
 //   │  …                          │ [VISTA PREVIA]       │
 //   └─────────────────────────────┴──────────────────────┘
 //
-// "Vista previa" abre la cotización tal como saldrá; desde ahí se imprime o se guarda como PDF.
+// "Vista previa" abre la cotización tal como saldrá; desde ahí se guarda, se imprime o se baja como PDF.
 // Lo que se va escribiendo se recuerda mientras la pestaña siga abierta (así no se pierde al cambiar de pantalla).
 
 import { useEffect, useState } from 'react'
@@ -25,18 +26,8 @@ import Ventana from '../componentes/Ventana.jsx'
 import { areaDeLaCategoria } from '../utilidades/areas.js'
 import { agruparPorCategoria, coincideConBusqueda, estadoDelProducto } from '../utilidades/calculos.js'
 import { formato } from '../utilidades/formato.js'
+import { BORRADOR_VACIO, guardarBorrador, leerBorrador } from '../utilidades/borradorDeCotizacion.js'
 import VerCotizacion from '../ventanas/VerCotizacion.jsx'
-
-const GUARDADO = 'ferrestock-cotizacion'
-const VACIA = { lineas: [], cliente: '', documento: '', contacto: '', descuento: '', validez: '15', notas: '' }
-
-// Lo escrito antes en esta pestaña (si el navegador no deja leerlo, se empieza en blanco).
-function leerBorrador() {
-  try {
-    const guardado = { ...VACIA, ...JSON.parse(sessionStorage.getItem(GUARDADO) ?? '{}') }
-    return { ...guardado, lineas: guardado.lineas.filter((linea) => linea.productoId) } // (una versión anterior permitía conceptos libres)
-  } catch { return VACIA }
-}
 
 export default function Cotizar({ productos, usuario, avisar }) {
   const [buscado, setBuscado] = useState('')
@@ -46,9 +37,7 @@ export default function Cotizar({ productos, usuario, avisar }) {
   const { lineas, cliente, documento, contacto, descuento, validez, notas } = borrador
   const poner = (campo, valor) => setBorrador((actual) => ({ ...actual, [campo]: valor }))
 
-  useEffect(() => {
-    try { sessionStorage.setItem(GUARDADO, JSON.stringify(borrador)) } catch { /* sin guardado, sigue funcionando */ }
-  }, [borrador])
+  useEffect(() => { guardarBorrador(borrador) }, [borrador])
 
   // ── Productos para elegir ──
   const activos = productos.filter((producto) => producto.activo)
@@ -90,7 +79,7 @@ export default function Cotizar({ productos, usuario, avisar }) {
   const quitar = (clave) => setBorrador((actual) => ({ ...actual, lineas: actual.lineas.filter((linea) => linea.clave !== clave) }))
   const vaciar = () => {
     if (lineas.length && !window.confirm('¿Vaciar la cotización y empezar otra?')) return
-    setBorrador(VACIA)
+    setBorrador(BORRADOR_VACIO)
   }
 
   // Enter en el buscador: si hay un solo producto (o uno con ese código exacto), se agrega.
@@ -104,7 +93,14 @@ export default function Cotizar({ productos, usuario, avisar }) {
     }
   }
 
-  const cotizacion = { cliente: cliente.trim(), documento: documento.trim(), contacto: contacto.trim(), validez: Math.max(Math.trunc(Number(validez)) || 15, 1), notas: notas.trim(), detalle, subtotal, porcentaje, montoDescuento, total, atendio: usuario.nombre }
+  // Lo que se muestra en la vista previa (con la misma forma que una cotización guardada)...
+  const vista = {
+    cliente: cliente.trim(), cliente_documento: documento.trim(), contacto: contacto.trim(), validez: Math.max(Math.trunc(Number(validez)) || 15, 1), notas: notas.trim(),
+    descuento: porcentaje, subtotal, total, atendio: usuario.nombre,
+    detalle: detalle.map((linea) => ({ codigo: linea.codigo, descripcion: linea.descripcion, unidad: linea.unidad, cantidad: linea.cantidad, precio: linea.precio, subtotal: linea.subtotal })),
+  }
+  // ...y lo que se manda al servidor para guardarla (él vuelve a calcular los precios y los totales).
+  const envio = { productos: lineas.map((linea) => ({ productoId: linea.productoId, cantidad: Number(linea.cantidad) })), cliente: vista.cliente, documento: vista.cliente_documento, contacto: vista.contacto, descuento: porcentaje, validez: vista.validez, notas: vista.notas }
 
   return (
     <div className="pos">
@@ -156,7 +152,7 @@ export default function Cotizar({ productos, usuario, avisar }) {
               <button className="primary" onClick={() => setVistaPrevia(true)} disabled={!lista}>Vista previa</button>
             </div>
           </div>
-          <p className="cotizar-aviso">Solo un documento: no descuenta existencias ni registra ventas.</p>
+          <p className="cotizar-aviso">Solo un documento: no descuenta existencias ni registra ventas. Se guarda en «Cotizaciones».</p>
 
           <div className="cotizar-lista">
             {!detalle.length && <p className="carrito-vacio">Haz clic en un producto para agregarlo, </p>}
@@ -179,7 +175,7 @@ export default function Cotizar({ productos, usuario, avisar }) {
           </div>
 
           <div className="carrito-total"><span>TOTAL</span><strong>{formato.dinero(total)}</strong></div>
-          {montoDescuento > 0 && <p className="cotizar-detalle-total">Subtotal {formato.dinero(subtotal)} · descuento {porcentaje}% (−{formato.dinero(montoDescuento)})</p>}
+          {montoDescuento > 0 && <p className="detalle-descuento">Subtotal {formato.dinero(subtotal)} · descuento {porcentaje}% (−{formato.dinero(montoDescuento)})</p>}
 
           <div className="carrito-pago">
             <div className="form-row">
@@ -211,7 +207,7 @@ export default function Cotizar({ productos, usuario, avisar }) {
 
       {vistaPrevia && (
         <Ventana alCerrar={() => setVistaPrevia(false)} ancha="grande">
-          <VerCotizacion cotizacion={cotizacion} alCerrar={() => setVistaPrevia(false)} avisar={avisar} />
+          <VerCotizacion vista={vista} envio={envio} alGuardada={(guardada) => { setBorrador(BORRADOR_VACIO); avisar(`Cotización ${formato.cotizacion(guardada.id)} guardada`) }} alCerrar={() => setVistaPrevia(false)} />
         </Ventana>
       )}
     </div>

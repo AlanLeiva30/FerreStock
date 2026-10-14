@@ -20,6 +20,7 @@ export const formato = {
   hora: (fechaGuardada) => soloHora.format(new Date(fechaGuardada)), //   → 06:23 p. m.
   referencia: (id) => `MOV-${String(id).padStart(5, '0')}`, //        12 → MOV-00012
   factura: (id) => String(id).padStart(6, '0'), //                     12 → 000012
+  cotizacion: (id) => `COT-${String(id).padStart(5, '0')}`, //        12 → COT-00012
   hoy: () => diaDeHoy.format(new Date()), //                           → miércoles, 24 de septiembre
   // Para las gráficas: reciben un día escrito como '2026-09-24'.
   diaDeLaSemana: (dia) => diaCorto.format(leerDia(dia)), //           → jue

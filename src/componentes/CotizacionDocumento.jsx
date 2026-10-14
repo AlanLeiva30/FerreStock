@@ -1,7 +1,7 @@
 // La hoja de la COTIZACIÓN, tal como se imprime o se guarda en PDF:
 //
 //   FERRETERÍA MEDRANO                         COTIZACIÓN
-//   Dirección · Tel. · NIT                     N.º COT-261014-0613
+//   Dirección · Tel. · NIT                     N.º COT-00012
 //   ───────────────────────────────────────────────────────────
 //   Cliente · DUI/NIT · Contacto       Fecha · Válida hasta · Atendió
 //   ───────────────────────────────────────────────────────────
@@ -10,12 +10,14 @@
 //                                Subtotal / Descuento / TOTAL
 //   Observaciones · Condiciones
 //
+// "cotizacion" tiene la forma de una cotización guardada (ver servidor/ventas/cotizaciones.js).
 // Usa los mismos estilos de hoja blanca que el informe de Reportes (clase "informe").
 
 import { formato } from '../utilidades/formato.js'
 
 export default function CotizacionDocumento({ cotizacion, negocio, numero, fecha }) {
-  const { cliente, documento, contacto, validez, notas, detalle, subtotal, porcentaje, montoDescuento, total, atendio } = cotizacion
+  const { cliente, cliente_documento: documento, contacto, validez, notas, detalle, subtotal, descuento, total, atendio } = cotizacion
+  const montoDescuento = Math.round((subtotal - total) * 100) / 100
   const vence = new Date(fecha)
   vence.setDate(vence.getDate() + validez)
   const contactoDelNegocio = [negocio.telefono && `Tel. ${negocio.telefono}`, negocio.documento].filter(Boolean).join(' · ')
@@ -53,7 +55,7 @@ export default function CotizacionDocumento({ cotizacion, negocio, numero, fecha
         <thead><tr><th>#</th><th>Código</th><th>Descripción</th><th className="der">Cant.</th><th className="der">P. unit.</th><th className="der">Total</th></tr></thead>
         <tbody>
           {detalle.map((linea, posicion) => (
-            <tr key={linea.clave}>
+            <tr key={posicion}>
               <td>{posicion + 1}</td>
               <td>{linea.codigo || '—'}</td>
               <td>{linea.descripcion}</td>
@@ -69,7 +71,7 @@ export default function CotizacionDocumento({ cotizacion, negocio, numero, fecha
         {montoDescuento > 0 && (
           <>
             <p><span>Subtotal</span><b>{formato.dinero(subtotal)}</b></p>
-            <p><span>Descuento ({porcentaje}%)</span><b>−{formato.dinero(montoDescuento)}</b></p>
+            <p><span>Descuento ({formato.numero(descuento)}%)</span><b>−{formato.dinero(montoDescuento)}</b></p>
           </>
         )}
         <p className="cotizacion-total"><span>TOTAL</span><b>{formato.dinero(total)}</b></p>

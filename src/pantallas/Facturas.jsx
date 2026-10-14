@@ -78,7 +78,7 @@ export default function Facturas({ esAdmin, avisar }) {
                 <td>{venta.cliente}{venta.cliente_documento && <small className="muted"> · {venta.cliente_documento}</small>}</td>
                 <td>{Number(venta.productos)}</td>
                 {esAdmin && <td className="muted">{venta.vendedor}</td>}
-                <td className="green"><b>{formato.dinero(venta.total)}</b></td>
+                <td className="green"><b>{formato.dinero(venta.total)}</b>{Number(venta.descuento) > 0 && <small className="muted"> −{formato.numero(Number(venta.descuento))}%</small>}</td>
               </tr>
             ))}
             {!lista.ventas.length && <FilaVacia columnas={String(columnas)}>{cargando ? 'Cargando facturas…' : 'No hay facturas con esos filtros.'}</FilaVacia>}

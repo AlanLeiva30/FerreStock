@@ -46,6 +46,13 @@ export const servidor = {
   listaDeVentas: (filtros = {}) => pedir(`/ventas?${new URLSearchParams(Object.entries(filtros).filter(([, valor]) => valor !== '' && valor != null))}`),
   verFactura: (id) => pedir(`/ventas/${id}`),
 
+  // Cotizaciones (vendedor y administrador). No afectan el inventario.
+  // datos = { productos: [{ productoId, cantidad }], cliente, documento, contacto, descuento, validez, notas }
+  guardarCotizacion: (datos) => pedir('/cotizaciones', { metodo: 'POST', datos }), // devuelve la cotización guardada
+  // filtros = { desde: 'AAAA-MM-DD', hasta: 'AAAA-MM-DD', q: 'texto', limite: 100 } (todos opcionales)
+  listaDeCotizaciones: (filtros = {}) => pedir(`/cotizaciones?${new URLSearchParams(Object.entries(filtros).filter(([, valor]) => valor !== '' && valor != null))}`),
+  verCotizacion: (id) => pedir(`/cotizaciones/${id}`),
+
   // Usuarios y roles (solo administrador)
   listarUsuarios: () => pedir('/usuarios'),
   crearUsuario: (usuario) => pedir('/usuarios', { metodo: 'POST', datos: usuario }),

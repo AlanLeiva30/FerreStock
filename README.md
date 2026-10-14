@@ -10,7 +10,7 @@ Sistema de gestión para ferreterías: factura en segundos, sabe cuándo reponer
 ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.13-339933?logo=nodedotjs&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase&logoColor=white)
-![Versión](https://img.shields.io/badge/versi%C3%B3n-1.9.9-orange)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-2.2-orange)
 
 ### 🌐 [Abrir FerreStock en línea](https://ferrestock-pgyocehooa-nn.a.run.app)
 
@@ -40,7 +40,7 @@ Una ferretería maneja cientos de productos, entradas y salidas todos los días.
 
 ### 🛒 Caja y facturación
 - Agrega productos con un clic o escribiendo el código.
-- Cálculo automático del total y del cambio.
+- Cálculo automático del total y del cambio, con **descuento en %** opcional.
 - Factura lista para **imprimir o guardar en PDF**, con los datos de tu negocio.
 - **Historial de facturas:** busca por fecha, cliente o número y reimprime cualquier factura anterior.
 - Consumidor final o cliente con DUI/NIT.
@@ -48,6 +48,7 @@ Una ferretería maneja cientos de productos, entradas y salidas todos los días.
 ### 📝 Cotizaciones
 - Arma una cotización con productos del catálogo, descuento y vigencia.
 - **Vista previa** antes de imprimir y descarga en PDF. No toca el inventario ni registra ventas.
+- **Panel de cotizaciones:** cada una se guarda con su número; consúltalas, filtra por fecha o cliente, reimprímelas o úsalas como base de una nueva.
 
 ### 📦 Inventario
 - Catálogo por categorías, con íconos y colores para ubicar todo de un vistazo.
@@ -136,10 +137,48 @@ FerreStock está publicado en **Google Cloud Run**: **https://ferrestock-pgyoceh
 
 ---
 
-## 🧱 Tecnología
+## 🧱 Tecnologías y servicios
 
-| Capa | Herramienta |
+FerreStock usa herramientas estándar de la industria; casi todo el código es propio, con muy pocas librerías externas (solo React, el paquete `pg` y Vite).
+
+### Lo que ves y lo que corre
+
+| Capa | Tecnología | Para qué se usa |
+|---|---|---|
+| Interfaz | **React 19** + **JSX** | Todas las pantallas, tablas, ventanas y formularios |
+| Compilador | **Vite 8** | Abre el programa mientras se desarrolla y lo compila para publicar |
+| Estilos | **CSS propio** (sin librerías) | Tema oscuro y claro, diseño adaptable a la pantalla |
+| Íconos y gráficas | **SVG** dibujado a mano | Íconos de ferretería y las gráficas de barras y de círculo (también las del informe impreso) |
+| Servidor | **Node.js 22** (`node:http`, sin Express) | La API: ventas, inventario, usuarios, cotizaciones y reportes |
+| Base de datos | **PostgreSQL** con el paquete **`pg`** | Productos, movimientos, ventas, cotizaciones, usuarios y sesiones |
+| Instalable | **PWA** (manifiesto web e íconos) | Se puede instalar como aplicación desde el navegador |
+
+### Servicios en la nube
+
+| Servicio | Para qué se usa |
 |---|---|
+| **Supabase** | Aloja la base PostgreSQL, con conexión cifrada y verificación del certificado |
+| **Google Cloud Run** | Ejecuta FerreStock en internet y da el link público |
+| **Google Cloud Build** y **Artifact Registry** | Compilan el programa y guardan su imagen |
+| **Google Secret Manager** | Guarda la contraseña de la base fuera del código |
+| **GitHub** | Guarda el código y su historial |
+| **GitHub Actions** + **Workload Identity Federation** | Publican la nueva versión solos al subir cambios, sin guardar claves de Google en GitHub |
+| **Docker** | Empaqueta el programa para que funcione igual en cualquier lugar |
+
+### Seguridad
+
+- Contraseñas guardadas con **scrypt** (cifrado de una sola vía) y bloqueo temporal tras intentos fallidos.
+- Sesión en una **cookie** `HttpOnly`, `SameSite=Strict` y `Secure`.
+- Permisos por rol validados **en el servidor**, más cabeceras de seguridad (`Content-Security-Policy` y otras).
+- **Transacciones** y bloqueos en la base para que dos cajas no vendan la misma pieza.
+
+### Herramientas de desarrollo
+
+**Visual Studio Code**, **Node.js / npm**, **Git y GitHub Desktop**, la consola de **Google Cloud (`gcloud`)** y **Chrome** para probar y tomar las capturas de la documentación. Parte del código y de la documentación se escribió con la ayuda de **Claude Code** (asistente de IA de Anthropic), siguiendo las indicaciones del autor.
+
+📚 El detalle de cada pieza está en la [Guía técnica](docs/DOCUMENTACION.md#parte-2-guía-técnica-del-código).
+
+---|---|
 | Interfaz | React 19 + Vite 8 |
 | Servidor | Node.js (integrado en Vite) |
 | Base de datos | PostgreSQL en Supabase |
@@ -173,6 +212,6 @@ FerreStock/
 
 <div align="center">
 
-**FerreStock** · Hecho para ferreterías · v1.9.9
+**FerreStock** · Hecho para ferreterías · v2.2
 
 </div>

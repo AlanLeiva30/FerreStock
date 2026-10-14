@@ -21,6 +21,7 @@ import { borrarCategoria, crearCategoria, listarCategorias, moverCategoria, reno
 import { CODIGOS, ErrorParaElUsuario, leerDatosEnviados, responder, responderError } from './comun/http.js'
 import { MOTIVOS } from './inventario/motivos.js'
 import { listarMovimientos, registrarMovimiento } from './inventario/movimientos.js'
+import { guardarCotizacion, listarCotizaciones, verCotizacion } from './ventas/cotizaciones.js'
 import { datosDelNegocio, guardarDatosDelNegocio } from './ventas/negocio.js'
 import { activarODesactivarProducto, crearProducto, editarProducto, listarProductos, siguienteCodigo } from './inventario/productos.js'
 import { ADMINISTRADOR, TRABAJADOR, VENDEDOR } from './acceso/roles.js'
@@ -55,6 +56,10 @@ const RUTAS = [
   ['GET',    '/ventas',                   VENDEDOR_Y_ADMIN,  ({ parametros, usuario }) => listarVentas(parametros, usuario)],
   ['GET',    '/ventas/hoy',               VENDEDOR_Y_ADMIN,  ({ usuario }) => ventasDeHoy(usuario)],
   ['GET',    '/ventas/:id',               VENDEDOR_Y_ADMIN,  ({ id, usuario }) => verFactura(id, usuario)],
+  // Cotizaciones (presupuestos guardados): no afectan el inventario ni crean ventas
+  ['POST',   '/cotizaciones',             VENDEDOR_Y_ADMIN,  ({ datos, usuario }) => guardarCotizacion(datos, usuario)],
+  ['GET',    '/cotizaciones',             VENDEDOR_Y_ADMIN,  ({ parametros, usuario }) => listarCotizaciones(parametros, usuario)],
+  ['GET',    '/cotizaciones/:id',         VENDEDOR_Y_ADMIN,  ({ id, usuario }) => verCotizacion(id, usuario)],
 
   // Solo el administrador
   ['GET',    '/configuracion',            SOLO_ADMIN,        async () => ({ categorias: await listarCategorias(), motivos: MOTIVOS })],

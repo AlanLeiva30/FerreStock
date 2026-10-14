@@ -46,6 +46,7 @@ export default function Vender({ productos, esAdmin, recargar, avisar, irA }) {
   const [carrito, setCarrito] = useState([]) //   [{ productoId, cantidad }]  (cantidad como texto, como se escribe)
   const [cliente, setCliente] = useState('') //   nombre del cliente para la factura (vacío = Consumidor Final)
   const [clienteDocumento, setClienteDocumento] = useState('') // DUI o NIT del cliente
+  const [descuento, setDescuento] = useState('') // porcentaje de descuento sobre el total (vacío = sin descuento)
   const [recibido, setRecibido] = useState('') // efectivo que entrega el cliente
   const [cobrando, setCobrando] = useState(false)
   const [error, setError] = useState('')
@@ -80,7 +81,10 @@ export default function Vender({ productos, esAdmin, recargar, avisar, irA }) {
       return producto && { ...item, producto, cantidadValida: cantidad > 0 && cantidad <= producto.stock, subtotal: redondear((cantidad || 0) * producto.precio) }
     })
     .filter(Boolean)
-  const total = redondear(lineas.reduce((suma, linea) => suma + linea.subtotal, 0))
+  const subtotal = redondear(lineas.reduce((suma, linea) => suma + linea.subtotal, 0))
+  const porcentaje = Math.min(Math.max(Number(descuento) || 0, 0), 100)
+  const montoDescuento = redondear(subtotal * porcentaje / 100)
+  const total = redondear(subtotal - montoDescuento) // lo que paga el cliente (el servidor lo vuelve a calcular)
   const efectivo = recibido === '' ? null : Number(recibido)
   const cambio = efectivo === null ? null : redondear(efectivo - total)
   const puedeCobrar = lineas.length > 0 && lineas.every((linea) => linea.cantidadValida) && (cambio === null || cambio >= 0) && !cobrando
@@ -108,6 +112,7 @@ export default function Vender({ productos, esAdmin, recargar, avisar, irA }) {
     setCarrito([])
     setCliente('')
     setClienteDocumento('')
+    setDescuento('')
     setRecibido('')
     setError('')
   }
@@ -129,6 +134,7 @@ export default function Vender({ productos, esAdmin, recargar, avisar, irA }) {
     try {
       const venta = await servidor.cobrarVenta({
         productos: lineas.map((linea) => ({ productoId: linea.productoId, cantidad: Number(linea.cantidad) })),
+        descuento: porcentaje,
         recibido: efectivo,
         cliente,
         clienteDocumento,
@@ -253,6 +259,7 @@ export default function Vender({ productos, esAdmin, recargar, avisar, irA }) {
           </div>
 
           <div className="carrito-total"><span>TOTAL</span><strong>{formato.dinero(total)}</strong></div>
+          {montoDescuento > 0 && <p className="detalle-descuento">Subtotal {formato.dinero(subtotal)} · descuento {porcentaje}% (−{formato.dinero(montoDescuento)})</p>}
 
           <div className="carrito-pago">
             <div className="form-row">
@@ -263,6 +270,9 @@ export default function Vender({ productos, esAdmin, recargar, avisar, irA }) {
                 <input value={clienteDocumento} onChange={(evento) => setClienteDocumento(evento.target.value)} placeholder="Ej. 01234567-8" maxLength="30" />
               </label>
             </div>
+            <label>Descuento (%) (opcional)
+              <input type="number" min="0" max="100" step="any" value={descuento} onChange={(evento) => setDescuento(evento.target.value)} placeholder="0" disabled={!lineas.length} />
+            </label>
             <label>Efectivo recibido (opcional)
               <input type="number" min="0" step="0.01" value={recibido} onChange={(evento) => setRecibido(evento.target.value)} placeholder="$0.00" disabled={!lineas.length} />
             </label>
