@@ -17,6 +17,7 @@
 // Lo que se va escribiendo se recuerda mientras la pestaña siga abierta (así no se pierde al cambiar de pantalla).
 
 import { useEffect, useState } from 'react'
+import Alerta from '../componentes/Alerta.jsx'
 import EtiquetaEstado from '../componentes/EtiquetaEstado.jsx'
 import FilaVacia from '../componentes/FilaVacia.jsx'
 import FilasPorCategoria from '../componentes/FilasPorCategoria.jsx'
@@ -34,6 +35,7 @@ export default function Cotizar({ productos, usuario, avisar }) {
   const [area, setArea] = useState('')
   const [borrador, setBorrador] = useState(leerBorrador) // lo que lleva la cotización
   const [vistaPrevia, setVistaPrevia] = useState(false)
+  const [preguntandoVaciar, setPreguntandoVaciar] = useState(false) // aviso «¿Vaciar la cotización?»
   const { lineas, cliente, documento, contacto, descuento, validez, notas } = borrador
   const poner = (campo, valor) => setBorrador((actual) => ({ ...actual, [campo]: valor }))
 
@@ -77,9 +79,11 @@ export default function Cotizar({ productos, usuario, avisar }) {
   const cambiarCantidad = (clave, cantidad) => setBorrador((actual) => ({ ...actual, lineas: actual.lineas.map((linea) => linea.clave === clave ? { ...linea, cantidad } : linea) }))
   const sumar = (linea, paso) => cambiarCantidad(linea.clave, String(Math.max((linea.cantidad || 0) + paso, 1)))
   const quitar = (clave) => setBorrador((actual) => ({ ...actual, lineas: actual.lineas.filter((linea) => linea.clave !== clave) }))
+  // «Vaciar» primero pregunta (aviso grande al centro); solo al confirmar se borra todo.
   const vaciar = () => {
-    if (lineas.length && !window.confirm('¿Vaciar la cotización y empezar otra?')) return
     setBorrador(BORRADOR_VACIO)
+    setPreguntandoVaciar(false)
+    avisar('Cotización vaciada')
   }
 
   // Enter en el buscador: si hay un solo producto (o uno con ese código exacto), se agrega.
@@ -148,7 +152,7 @@ export default function Cotizar({ productos, usuario, avisar }) {
           <div className="panelhead">
             <h2><Icono nombre="cotizar" className="antes" />Cotización actual</h2>
             <div className="toolbar">
-              {(lineas.length > 0 || cliente) && <button onClick={vaciar}>Vaciar</button>}
+              {(lineas.length > 0 || cliente) && <button onClick={() => setPreguntandoVaciar(true)}>Vaciar</button>}
               <button className="primary" onClick={() => setVistaPrevia(true)} disabled={!lista}>Vista previa</button>
             </div>
           </div>
@@ -204,6 +208,13 @@ export default function Cotizar({ productos, usuario, avisar }) {
           </div>
         </section>
       </aside>
+
+      {preguntandoVaciar && (
+        <Alerta icono="pregunta" titulo="¿Vaciar la cotización?" textoAceptar="Sí, vaciar" textoCancelar="Cancelar"
+          alAceptar={vaciar} alCancelar={() => setPreguntandoVaciar(false)}>
+          <p>Se borrarán los productos y los datos del cliente que escribiste. Esto no se puede deshacer.</p>
+        </Alerta>
+      )}
 
       {vistaPrevia && (
         <Ventana alCerrar={() => setVistaPrevia(false)} ancha="grande">
