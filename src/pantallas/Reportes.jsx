@@ -18,8 +18,11 @@ import IconoDeArea from '../componentes/IconoDeArea.jsx'
 import { areaDeLaCategoria } from '../utilidades/areas.js'
 import { actividadReciente, resumenDelInventario, resumenPorCategoria } from '../utilidades/calculos.js'
 import { formato } from '../utilidades/formato.js'
+import { conMayuscula, porcionesDelInventario } from '../utilidades/graficas.js'
 import { servidor } from '../utilidades/servidor.js'
 import Icono from '../componentes/Icono.jsx'
+import Ventana from '../componentes/Ventana.jsx'
+import VerInforme from '../ventanas/VerInforme.jsx'
 
 // Botones para elegir cuántos días muestra la gráfica de barras.
 const PERIODOS = [
@@ -27,10 +30,7 @@ const PERIODOS = [
   { dias: 30, texto: '30 días' },
 ]
 
-// En el círculo caben bien unas 8 porciones: si hay más categorías, las más pequeñas se juntan en "Otras".
-const MAXIMO_DE_PORCIONES = 8
-
-export default function Reportes({ productos, movimientos, configuracion }) {
+export default function Reportes({ productos, movimientos, configuracion, usuario }) {
   const totales = useMemo(() => resumenDelInventario(productos), [productos])
   const categorias = useMemo(() => resumenPorCategoria(productos, configuracion.categorias), [productos, configuracion.categorias])
   const actividad = useMemo(() => actividadReciente(movimientos, 30), [movimientos])
@@ -40,6 +40,7 @@ export default function Reportes({ productos, movimientos, configuracion }) {
   // Ventas de cada día (vienen del servidor). "dias" es el período que se está mostrando.
   const [periodo, setPeriodo] = useState(PERIODOS[0].dias)
   const [ventas, setVentas] = useState({ dias: periodo, lista: null, error: '' })
+  const [verInforme, setVerInforme] = useState(false) // ventana del informe para imprimir o guardar en PDF
 
   // Se piden otra vez al cambiar de período o cuando se registra un movimiento nuevo.
   useEffect(() => {
@@ -59,6 +60,12 @@ export default function Reportes({ productos, movimientos, configuracion }) {
 
   return (
     <>
+      {/* Informe en PDF: abre la vista previa con las gráficas y las tablas, lista para imprimir */}
+      <div className="reportes-barra">
+        <p>Resumen de ventas, inventario y alertas. ¿Lo necesitas en papel o en archivo?</p>
+        <button className="primary" onClick={() => setVerInforme(true)}><Icono nombre="impresora" tamano={16} className="antes" />Informe PDF / Imprimir</button>
+      </div>
+
       {/* Números principales */}
       <section className="metrics">
         <div className="metric"><p>VALOR A COSTO</p><strong>{formato.dinero(totales.valorCosto)}</strong><small>{totales.activos.length} productos activos</small></div>
@@ -143,6 +150,13 @@ export default function Reportes({ productos, movimientos, configuracion }) {
           {!actividad.masVendidos.length && <p className="muted">Sin ventas registradas en los últimos 30 días.</p>}
         </section>
       </div>
+
+      {verInforme && (
+        <Ventana alCerrar={() => setVerInforme(false)} ancha="grande">
+          <VerInforme productos={productos} movimientos={movimientos} configuracion={configuracion} usuario={usuario}
+            diasIniciales={periodo === 7 ? 7 : 30} alCerrar={() => setVerInforme(false)} />
+        </Ventana>
+      )}
     </>
   )
 }
@@ -170,27 +184,4 @@ function barrasDeVentas({ dias, lista }) {
       detalle: `${conMayuscula(formato.dia(dia.fecha))}${esHoy ? ' (hoy)' : ''}: ${cuanto}`,
     }
   })
-}
-
-// Las porciones del círculo: categorías con stock, de mayor a menor valor, cada una con el color de su área.
-// Si son más de MAXIMO_DE_PORCIONES, las más pequeñas se juntan en una porción gris "Otras".
-function porcionesDelInventario(categorias) {
-  const porciones = categorias
-    .filter((categoria) => categoria.valorCosto > 0)
-    .sort((a, b) => b.valorCosto - a.valorCosto)
-    .map((categoria) => {
-      const { color } = areaDeLaCategoria(categoria.nombre) // el mismo color que en Vender
-      return { clave: categoria.nombre, etiqueta: categoria.nombre, valor: categoria.valorCosto, color }
-    })
-  if (porciones.length <= MAXIMO_DE_PORCIONES) return porciones
-
-  const grandes = porciones.slice(0, MAXIMO_DE_PORCIONES - 1)
-  const pequenas = porciones.slice(MAXIMO_DE_PORCIONES - 1)
-  const valorDeLasPequenas = pequenas.reduce((suma, porcion) => suma + porcion.valor, 0)
-  return [...grandes, { clave: '(otras)', etiqueta: `Otras (${pequenas.length})`, valor: valorDeLasPequenas, color: '#8c9ab0' }]
-}
-
-// "jueves, 24 de septiembre" → "Jueves, 24 de septiembre"
-function conMayuscula(texto) {
-  return texto.charAt(0).toUpperCase() + texto.slice(1)
 }

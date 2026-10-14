@@ -4,7 +4,7 @@ Todo lo que hay que saber de FerreStock en **un solo archivo**: cómo se abre, c
 
 | | |
 |---|---|
-| **Versión actual** | 1.9 |
+| **Versión actual** | 1.9.9 |
 | **Portada del proyecto** | [`README.md`](../README.md) |
 
 ## Índice
@@ -73,7 +73,7 @@ Sistema de inventario y ventas para ferretería. Esta parte documenta su arquite
 
 | | |
 |---|---|
-| **Versión** | 1.9 |
+| **Versión** | 1.9.9 |
 | **Interfaz** | React 19 + Vite 8 |
 | **Servidor** | Node.js ≥ 22.13 (middleware de Vite, sin framework adicional) |
 | **Base de datos** | PostgreSQL alojado en Supabase (`pg` 8) |
@@ -222,6 +222,7 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 | `Ingreso.jsx` | Público | Usuario y contraseña; creación del primer administrador. |
 | `PanelPrincipal.jsx` | Admin | Resumen general e indicadores. |
 | `Vender.jsx` | Admin · Vendedor | Caja: armar la venta, cobrar y facturar. La lista de la venta se desplaza sola y el total y «Cobrar» siempre quedan a la vista. |
+| `Cotizar.jsx` | Admin · Vendedor | Armar una cotización (productos del catálogo) y sacarla en PDF con vista previa. No afecta el inventario. |
 | `Facturas.jsx` | Admin · Vendedor | Historial de facturas con filtro por fechas y buscador (cliente, DUI/NIT o número). Al tocar una se abre para reimprimirla. |
 | `Almacen.jsx` | Trabajador | Stock por categoría, sin precios ni costos. |
 | `Catalogo.jsx` | Admin | Alta, edición y estado de productos; administración de categorías. |
@@ -282,6 +283,7 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | GET | `/productos` | Todos | Listar productos; cada rol recibe solo los datos que le corresponden. |
 | GET | `/productos/siguiente-codigo` | Admin | El código que recibirá el próximo producto (por ejemplo `FER-1017`). |
 | POST | `/ventas` | Admin + Vendedor | Cobrar una venta y generar la factura. |
+| GET | `/negocio` | Admin + Vendedor | Datos del negocio (encabezado de facturas y cotizaciones). Modificarlos (`PUT`) es solo del administrador. |
 | GET | `/ventas` | Admin + Vendedor | Historial de facturas. Filtros opcionales: `desde`, `hasta` (AAAA-MM-DD), `q` (cliente, DUI/NIT, vendedor o número) y `limite` (máx. 300). El vendedor ve solo las suyas. |
 | GET | `/ventas/hoy` | Admin + Vendedor | Ventas del día (el vendedor ve solo las suyas). |
 | GET | `/ventas/:id` | Admin + Vendedor | Ver o reimprimir una factura. |
@@ -295,7 +297,7 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | PUT | `/usuarios/:id/foto` | Admin | Cambiar la foto de otro usuario, o quitarla enviando `null`. |
 | GET | `/roles` | Admin | Lista de roles y descripciones. |
 | GET | `/reportes/ventas-por-dia?dias=7` | Admin | Ventas agrupadas por día. |
-| GET · PUT | `/negocio` | Admin | Datos de la factura. |
+| PUT | `/negocio` | Admin | Cambiar los datos de la factura. |
 | GET | `/base-de-datos` · `/base-de-datos/contenido?nombre=…` | Admin | Visor de solo lectura. |
 
 ---
@@ -567,6 +569,8 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 
 | Versión | Fecha | Resumen |
 |---|---|---|
+| Próxima | — | Pantalla *Cotizar*: cotizaciones en PDF con vista previa, sin tocar el inventario |
+| [1.9.9](#199--14-de-octubre-de-2026) | 14-oct-2026 | Historial de facturas, filtros por fecha, informe PDF en Reportes, cobro con lista desplazable e ícono del sitio |
 | [1.9](#19--13-de-octubre-de-2026) | 13-oct-2026 | Código automático al crear un producto (FER-1017, FER-1018…) |
 | [1.8](#18--13-de-octubre-de-2026) | 13-oct-2026 | Campanita de notificaciones, fotos y sexo de cada usuario, y publicación en Google Cloud Run |
 | [1.7](#17--12-de-octubre-de-2026) | 12-oct-2026 | El vendedor consulta el inventario y recibe avisos de poco stock |
@@ -578,8 +582,23 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 ### Próxima versión (sin publicar)
 
 #### Nuevo
+- **Pantalla «Cotizar»** (administrador y vendedor): sirve para armar una cotización para un cliente sin tocar el inventario. Se agregan productos del catálogo (con clic o escribiendo el código); se escriben el cliente, su DUI/NIT y contacto, un descuento en %, los días de vigencia y observaciones.
+- **Vista previa antes de imprimir:** el botón *Vista previa* muestra la cotización tal como saldrá; desde ahí se pulsa *Imprimir / Guardar PDF* y se elige la impresora o «Guardar como PDF».
+- **No afecta nada:** la cotización no descuenta existencias, no crea ventas ni facturas y no se guarda en la base de datos. Lo que se escribe se recuerda mientras la pestaña siga abierta.
+- El vendedor ya puede leer los datos del negocio (nombre, dirección, teléfono, NIT) para el encabezado; modificarlos sigue siendo solo del administrador.
+
+#### Detalle técnico
+- Nuevos: `src/pantallas/Cotizar.jsx`, `src/componentes/CotizacionDocumento.jsx`, `src/ventanas/VerCotizacion.jsx`. Modificados: `src/Sistema.jsx` (opción del menú), `src/componentes/Icono.jsx` (ícono `cotizar`), `servidor/api.js` (`GET /negocio` ahora lo puede usar el vendedor) y `src/estilos.css`.
+- El número de la cotización se arma con la fecha y la hora (`COT-AAMMDD-HHMM`); como no se guarda, no hay un consecutivo.
+
+---
+
+### 1.9.9 · 14 de octubre de 2026
+
+#### Nuevo
 - **Pantalla «Facturas»:** el administrador y el vendedor pueden ver las facturas anteriores, filtrarlas por fechas, buscarlas por cliente, DUI/NIT o número y reimprimirlas. El vendedor solo ve las suyas (lo valida el servidor).
 - **Panel principal → «Últimas Facturas»:** el recuadro de «Últimos Movimientos» ahora tiene dos pestañas, *Movimientos* y *Facturas*; al tocar una factura se abre.
+- **Informe PDF en «Reportes»:** el botón *Informe PDF / Imprimir* abre una vista previa del informe (resumen del inventario, gráfica de ventas por día, reparto del inventario por categoría, más vendidos y productos con poco stock). Se elige si incluye 7, 30 o 90 días de ventas y se pulsa *Imprimir / Guardar PDF*; en la ventana de impresión se elige «Guardar como PDF» o la impresora. Las gráficas salen con colores de papel, aunque el programa esté en modo oscuro.
 - **Ver por fecha en «Entradas y Salidas»:** la misma barra (*Todos*, *Hoy*, *Ayer* y selector de fecha) filtra el historial por día, y se combina con el filtro de tipo y el buscador.
 - **Ver por fecha en el panel principal:** el recuadro de movimientos y facturas tiene los botones *Todos*, *Hoy*, *Ayer* y un selector de fecha; al elegir un día solo aparecen las facturas y los movimientos de ese día.
 - **Cobrar sin límite de productos:** en *Vender*, la lista de la venta se desplaza sola cuando hay muchos productos, y el total y el botón *Cobrar y facturar* quedan siempre visibles.
@@ -589,12 +608,12 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 
 **El ícono en una pestaña oscura, una clara y en el celular**
 
-<img src="versiones/proxima/icono-del-sitio.jpg" width="90%">
+<img src="versiones/1.9.9/icono-del-sitio.jpg" width="90%">
 
 #### Detalle técnico
 - Archivos nuevos en la carpeta `public/`, que Vite copia tal cual a la raíz del sitio: `favicon.svg` (vectorial), `favicon-32.png`, `apple-touch-icon.png`, `icono-192.png`, `icono-512.png` y `manifest.webmanifest`.
 - Modificados: `index.html` (enlaces al ícono y al manifiesto) y `servidor/produccion.js` (tipo de archivo del manifiesto).
-- Facturas: `servidor/ventas/ventas.js` (`listarVentas`), `servidor/api.js` (`GET /ventas`), `src/utilidades/servidor.js`, `servidor/inventario/movimientos.js` (parámetro `dia`), `src/utilidades/fechas.js` (nuevo), `src/pantallas/EntradasYSalidas.jsx`, `src/pantallas/Facturas.jsx` (nuevo), `src/pantallas/PanelPrincipal.jsx`, `src/pantallas/Vender.jsx`, `src/Sistema.jsx` y `src/estilos.css`.
+- Facturas: `servidor/ventas/ventas.js` (`listarVentas`), `servidor/api.js` (`GET /ventas`), `src/utilidades/servidor.js`, `servidor/inventario/movimientos.js` (parámetro `dia`), `src/componentes/InformeDeReportes.jsx` y `src/ventanas/VerInforme.jsx` (nuevos), `src/utilidades/graficas.js` (nuevo; lo comparten Reportes y el informe), `src/pantallas/Reportes.jsx`, `src/utilidades/fechas.js` (nuevo), `src/pantallas/EntradasYSalidas.jsx`, `src/pantallas/Facturas.jsx` (nuevo), `src/pantallas/PanelPrincipal.jsx`, `src/pantallas/Vender.jsx`, `src/Sistema.jsx` y `src/estilos.css`.
 
 ---
 

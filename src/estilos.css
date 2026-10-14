@@ -774,11 +774,14 @@ tr.fila-area:hover { background: color-mix(in srgb, var(--color-area) 9%, transp
    Se esconde todo el programa (#root) y se muestra la copia de la factura que
    VerFactura.jsx pone al final de la página (.zona-de-impresion). */
 @media print {
-  @page { margin: 8mm; }
+  @page { margin: 10mm; }
   :root, body { background: #fff !important; color: #000; }
   #root { display: none !important; }
   .zona-de-impresion { display: block; }
   .zona-de-impresion .factura { margin: 0; padding: 0; border: 0; box-shadow: none; }
+  .zona-de-impresion .informe { margin: 0; padding: 0; border: 0; box-shadow: none; max-width: none; }
+  .informe section, .informe table, .informe-grafica, .informe-circulo { break-inside: avoid; }
+  .informe h2 { break-after: avoid; }
 }
 
 /* ── ÍCONOS (SVG de src/componentes/Icono.jsx) ──
@@ -1017,3 +1020,71 @@ tbody tr:hover { background: #141f34; }
 /* Código automático del producto nuevo: se ve, pero no se escribe */
 .modal input.campo-automatico { border-style: dashed; background: #0b1426; color: #ffb000; font-weight: 800; letter-spacing: .03em; cursor: default; }
 [data-theme="light"] .modal input.campo-automatico { background: #fff4d6; border-color: #e0b95e; color: #8a5a00; }
+
+/* ── INFORME DE REPORTES (hoja blanca que se imprime o se guarda en PDF; ver InformeDeReportes.jsx) ── */
+.reportes-barra { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 16px; padding: 12px 18px; border: 1px solid #29344b; border-radius: 14px; background: #111a2c; }
+.reportes-barra p { margin: 0; color: #9dacbf; font-size: 13px; }
+.reportes-barra button { padding: 9px 16px; border: 0; border-radius: 9px; background: #ff9d00; color: #211500; font-size: 13px; font-weight: 800; }
+[data-theme="light"] .reportes-barra { background: #fffdf9; border-color: #e6dccb; }
+[data-theme="light"] .reportes-barra p { color: #6f6352; }
+.modal.ancha.grande:has(.informe), .modal.ancha.grande:has(.cotizacion) { width: min(920px, 100%); }
+.informe-controles { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.informe-botones { min-width: min(100%, 420px); }
+.informe-botones button { white-space: nowrap; }
+.informe-controles .grafica-periodo button { padding: 6px 13px; border: 0; border-radius: 6px; background: transparent; color: #9dacbf; font-size: 12px; font-weight: 700; }
+.informe-controles .grafica-periodo button.on { background: #ff9d00; color: #211500; }
+[data-theme="light"] .informe-controles .grafica-periodo button { color: #6f6352; }
+[data-theme="light"] .informe-controles .grafica-periodo button.on { background: #b36b00; color: #fff; }
+.informe { padding: 26px 28px; border-radius: 6px; background: #fff; color: #1b2333; box-shadow: 0 6px 18px #0006; font-size: 12px; line-height: 1.45; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.informe * { box-sizing: border-box; }
+.informe-cabecera { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding-bottom: 12px; border-bottom: 3px solid #e08a00; }
+.informe h1 { margin: 0; font-size: 22px; color: #1b2333; }
+.informe-cabecera p { margin: 2px 0 0; color: #6b7689; font-size: 13px; }
+.informe-fecha { display: grid; text-align: right; gap: 2px; }
+.informe-fecha span { color: #6b7689; font-size: 11px; }
+.informe h2 { margin: 20px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #d9dee8; color: #1b2333; font-size: 14px; }
+.informe-tarjetas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.informe-tarjetas.tres { grid-template-columns: repeat(3, 1fr); }
+.informe-tarjetas > div { display: grid; gap: 2px; padding: 9px 11px; border: 1px solid #d9dee8; border-left: 4px solid #e08a00; border-radius: 6px; background: #fafbfd; }
+.informe-tarjetas small, .informe-tarjetas span { color: #6b7689; font-size: 10.5px; }
+.informe-tarjetas b { font-size: 16px; color: #1b2333; }
+.informe-grafica { display: block; width: 100%; height: auto; margin: 10px 0 6px; }
+.informe-circulo { display: grid; grid-template-columns: 190px 1fr; gap: 18px; align-items: center; }
+.informe-dona { width: 190px; height: 190px; transform: none; }
+.informe table { width: 100%; min-width: 0; margin-top: 8px; border-collapse: collapse; }
+.informe th { height: auto; padding: 5px 8px; border-bottom: 1.5px solid #1b2333; background: none; color: #1b2333; font-size: 10.5px; font-weight: 800; text-align: left; text-transform: none; }
+.informe td { padding: 5px 8px; border: 0; border-bottom: 1px solid #e6eaf1; color: #1b2333; font-size: 11.5px; font-weight: 400; }
+.informe tbody tr, .informe tbody tr:hover { background: none; cursor: default; }
+.informe th.der, .informe td.der { text-align: right; white-space: nowrap; }
+.informe-punto { display: inline-block; width: 9px; height: 9px; margin-right: 7px; border-radius: 50%; }
+.informe-vacio { margin: 6px 0 0; color: #6b7689; }
+.informe-agotado { color: #b4233a; }
+.informe-bajo { color: #a86400; }
+.informe-pie { margin-top: 22px; padding-top: 8px; border-top: 1px solid #d9dee8; color: #6b7689; font-size: 10.5px; text-align: center; }
+@media (max-width: 700px) {
+  .informe { padding: 16px 14px; }
+  .informe-tarjetas { grid-template-columns: repeat(2, 1fr); }
+  .informe-circulo { grid-template-columns: 1fr; justify-items: center; }
+}
+
+/* ── COTIZAR (pantalla y hoja de la cotización; ver Cotizar.jsx y CotizacionDocumento.jsx) ── */
+.cotizar-aviso { margin: 4px 20px 0; color: #8fb8a9; font-size: 12px; }
+.cotizar-lista { max-height: max(130px, calc(100vh - 640px)); overflow-y: auto; overscroll-behavior: contain; }
+.cotizar-detalle-total { margin: 4px 16px 0; color: #8394ae; font-size: 12px; text-align: right; }
+.carrito-pago textarea { width: 100%; padding: 10px; border: 1px solid #35435c; border-radius: 8px; outline: 0; background: #071022; color: #edf3fb; font: inherit; font-size: 14px; resize: vertical; }
+[data-theme="light"] .cotizar-aviso { color: #0d6b54; }
+[data-theme="light"] .carrito-pago textarea { color: #2b2318; background: #f7f2e9; border-color: #d9ceb9; }
+.cotizacion-titulo { font-size: 20px; letter-spacing: .06em; color: #e08a00; }
+.cotizacion-datos { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin: 14px 0 4px; }
+.cotizacion-datos > div { display: grid; gap: 2px; padding: 9px 12px; border: 1px solid #d9dee8; border-radius: 6px; background: #fafbfd; align-content: start; }
+.cotizacion-datos small { color: #6b7689; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; }
+.cotizacion-totales { display: grid; justify-items: end; gap: 3px; margin-top: 10px; }
+.cotizacion-totales p { display: flex; justify-content: space-between; gap: 30px; min-width: 250px; margin: 0; padding: 2px 8px; }
+.cotizacion-totales span { color: #6b7689; }
+.cotizacion-total { margin-top: 4px !important; padding: 7px 8px !important; border-top: 2px solid #1b2333; font-size: 15px; }
+.cotizacion-total span, .cotizacion-total b { color: #1b2333 !important; }
+.cotizacion-notas { margin: 0; white-space: pre-line; }
+.cotizacion-condiciones { margin: 0; padding-left: 18px; color: #6b7689; }
+.cotizacion table { break-inside: auto; }
+.cotizacion tr { break-inside: avoid; }
+@media (max-width: 700px) { .cotizacion-datos { grid-template-columns: 1fr; } }

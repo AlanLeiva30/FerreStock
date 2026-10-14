@@ -338,6 +338,14 @@ const ICONOS = {
       <path d="M10 9H8" />
     </>
   ),
+  cotizar: (
+    <>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6" />
+      <path d="m9 15 2 2 4-4" />
+      <path d="M8 11h3" />
+    </>
+  ),
   campana: (
     <>
       <path d="M10.268 21a2 2 0 0 0 3.464 0" />

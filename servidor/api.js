@@ -83,7 +83,7 @@ const RUTAS = [
   ['GET',    '/reportes/ventas-por-dia',  SOLO_ADMIN,        ({ parametros }) => ventasPorDia(parametros.get('dias'))],
 
   // Datos de la ferretería que salen en la factura
-  ['GET',    '/negocio',                  SOLO_ADMIN,        () => datosDelNegocio()],
+  ['GET',    '/negocio',                  VENDEDOR_Y_ADMIN,  () => datosDelNegocio()], // el vendedor lo necesita para el encabezado de las cotizaciones
   ['PUT',    '/negocio',                  SOLO_ADMIN,        ({ datos }) => guardarDatosDelNegocio(datos)],
 
   // Pantalla "Base de Datos" (solo lectura). Ejemplo: /base-de-datos/contenido?nombre=productos

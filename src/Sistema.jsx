@@ -29,6 +29,7 @@ import { useInventario } from './utilidades/useInventario.js'
 import PanelPrincipal from './pantallas/PanelPrincipal.jsx'
 import Vender from './pantallas/Vender.jsx'
 import Facturas from './pantallas/Facturas.jsx'
+import Cotizar from './pantallas/Cotizar.jsx'
 import Almacen from './pantallas/Almacen.jsx'
 import Catalogo from './pantallas/Catalogo.jsx'
 import EntradasYSalidas from './pantallas/EntradasYSalidas.jsx'
@@ -54,6 +55,7 @@ const TRABAJADOR = 'trabajador'
 const MENU = [
   { id: 'panel', icono: 'panel', titulo: 'Panel Principal', descripcion: 'Resumen e indicadores clave', roles: [ADMINISTRADOR], buscador: true, Pantalla: PanelPrincipal },
   { id: 'vender', icono: 'vender', titulo: 'Vender', descripcion: 'Agregar productos, cobrar y facturar', roles: [ADMINISTRADOR, VENDEDOR], buscador: false, Pantalla: Vender },
+  { id: 'cotizar', icono: 'cotizar', titulo: 'Cotizar', descripcion: 'Armar una cotización para imprimir o guardar en PDF', roles: [ADMINISTRADOR, VENDEDOR], buscador: false, Pantalla: Cotizar },
   { id: 'facturas', icono: 'factura', titulo: 'Facturas', descripcion: 'Ver y reimprimir facturas anteriores', roles: [ADMINISTRADOR, VENDEDOR], buscador: false, Pantalla: Facturas },
   { id: 'almacen', icono: 'almacen', titulo: 'Stock del Almacén', descripcion: 'Cuánto hay de cada producto', roles: [TRABAJADOR], buscador: true, Pantalla: Almacen },
   { id: 'catalogo', icono: 'catalogo', titulo: 'Catálogo de Productos', descripcion: 'Alta, modificación y estados', roles: [ADMINISTRADOR], buscador: true, Pantalla: Catalogo },
@@ -217,7 +219,7 @@ export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir
         <div className="topin">
           <div className="logo"><Icono nombre="llaveInglesa" tamano={22} /></div>
           <div className="brand"><b>FerreStock</b><small>Ferretería Medrano • Control de Inventarios</small></div>
-          <i>v1.9</i>
+          <i>v1.9.9</i>
           <div className="actions">
             {esAdmin && <button className="registrar" onClick={() => abrirMovimiento()} aria-label="Registrar movimiento"><Icono nombre="mas" tamano={16} className="antes" />Registrar Movimiento</button>}
             <button className="theme-toggle" onClick={cambiarTema} aria-label="Cambiar modo">

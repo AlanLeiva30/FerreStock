@@ -10,7 +10,7 @@ Sistema de gestión para ferreterías: factura en segundos, sabe cuándo reponer
 ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.13-339933?logo=nodedotjs&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase&logoColor=white)
-![Versión](https://img.shields.io/badge/versi%C3%B3n-1.9-orange)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-1.9.9-orange)
 
 ### 🌐 [Abrir FerreStock en línea](https://ferrestock-pgyocehooa-nn.a.run.app)
 
@@ -45,6 +45,10 @@ Una ferretería maneja cientos de productos, entradas y salidas todos los días.
 - **Historial de facturas:** busca por fecha, cliente o número y reimprime cualquier factura anterior.
 - Consumidor final o cliente con DUI/NIT.
 
+### 📝 Cotizaciones
+- Arma una cotización con productos del catálogo, descuento y vigencia.
+- **Vista previa** antes de imprimir y descarga en PDF. No toca el inventario ni registra ventas.
+
 ### 📦 Inventario
 - Catálogo por categorías, con íconos y colores para ubicar todo de un vistazo.
 - **Código automático** al crear un producto: sigue la numeración sola (FER-1017, FER-1018…), sin repetir ni saltarse ninguno.
@@ -57,6 +61,7 @@ Una ferretería maneja cientos de productos, entradas y salidas todos los días.
 - Ventas por día en gráficas de 7, 30 o hasta 90 días.
 - Reparto del inventario por categoría y valor del stock.
 - Panel principal con los indicadores clave.
+- **Informe en PDF:** un clic en Reportes y sale el informe con gráficas y tablas, listo para imprimir o guardar como PDF.
 
 ### 👥 Equipo y permisos
 Al crear cada usuario se indica su sexo y el rol se muestra en femenino o masculino (*Vendedora*, *Vendedor*…). Cada persona personaliza su cuenta: **foto de perfil**, tema claro u oscuro, menú compacto, pantalla de inicio y su propia contraseña, desde el menú de su nombre.
@@ -168,6 +173,6 @@ FerreStock/
 
 <div align="center">
 
-**FerreStock** · Hecho para ferreterías · v1.9
+**FerreStock** · Hecho para ferreterías · v1.9.9
 
 </div>
