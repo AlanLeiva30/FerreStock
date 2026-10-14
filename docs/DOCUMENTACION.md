@@ -595,6 +595,7 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 - **Usar como base:** copia una cotización a la pantalla *Cotizar* para armar otra parecida con los precios de hoy (los productos que ya no existan en el catálogo se omiten y se avisa).
 - El administrador ve todas las cotizaciones; el vendedor, solo las suyas (lo valida el servidor).
 - Siguen sin afectar el inventario ni crear ventas.
+- **Corrección: subir o cambiar la foto de perfil** fallaba en el sitio publicado con «No se pudo leer la imagen». La política de seguridad del sitio solo permite imágenes `self` y `data:`, y la foto se leía con una dirección `blob:`, que se bloqueaba. Ahora se lee como `data:` (`src/utilidades/foto.js`). Solo ocurría en el sitio publicado o con `npm start`; con `npm run dev` no hay esa política y funcionaba.
 
 #### Detalle técnico
 - Nuevos: `servidor/ventas/cotizaciones.js` (la tabla `cotizaciones` se crea sola al arrancar el servidor, con la seguridad por filas activada como las demás), `src/pantallas/Cotizaciones.jsx` y `src/utilidades/borradorDeCotizacion.js`.

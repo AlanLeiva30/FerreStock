@@ -30,12 +30,19 @@ export async function reducirFoto(archivo) {
   throw new Error('No se pudo reducir la imagen. Prueba con otra.')
 }
 
+// Lee el archivo como texto 'data:…' y lo carga en una imagen. Se usa "data:" (y no una dirección "blob:")
+// porque la política de seguridad del sitio publicado (Content-Security-Policy, en servidor/produccion.js)
+// solo permite imágenes "self" y "data:": con "blob:" la foto se bloquea y nunca se puede subir.
 function cargarImagen(archivo) {
   return new Promise((listo, fallo) => {
-    const direccion = URL.createObjectURL(archivo)
-    const imagen = new Image()
-    imagen.onload = () => { URL.revokeObjectURL(direccion); listo(imagen) }
-    imagen.onerror = () => { URL.revokeObjectURL(direccion); fallo(new Error('No se pudo leer la imagen')) }
-    imagen.src = direccion
+    const lector = new FileReader()
+    lector.onerror = () => fallo(new Error('No se pudo leer la imagen'))
+    lector.onload = () => {
+      const imagen = new Image()
+      imagen.onload = () => listo(imagen)
+      imagen.onerror = () => fallo(new Error('No se pudo leer la imagen. Prueba con otra (JPG, PNG o WebP).'))
+      imagen.src = lector.result
+    }
+    lector.readAsDataURL(archivo)
   })
 }
