@@ -47,6 +47,14 @@ export default function Usuarios({ usuario: yo, avisar, actualizarSesion }) {
 
   useEffect(() => { cargar() }, [cargar])
 
+  // Botón «Actualizar»: vuelve a pedir la lista (así se ve quién está en línea ahora).
+  const [actualizando, setActualizando] = useState(false)
+  const refrescar = async () => {
+    setActualizando(true)
+    await Promise.all([cargar(), new Promise((listo) => setTimeout(listo, 400))])
+    setActualizando(false)
+  }
+
   const guardar = async (datos, id) => {
     if (id) await servidor.editarUsuario(id, datos)
     else await servidor.crearUsuario(datos)
@@ -97,6 +105,9 @@ export default function Usuarios({ usuario: yo, avisar, actualizarSesion }) {
       <div className="panelhead">
         <h2><Icono nombre="usuarios" className="antes" />Usuarios ({usuarios.length})</h2>
         <div className="toolbar">
+          <button onClick={refrescar} disabled={actualizando} title="Volver a pedir la lista (estados de conexión al día)">
+            <Icono nombre="refrescar" tamano={15} className={actualizando ? 'antes girando' : 'antes'} />{actualizando ? 'Actualizando…' : 'Actualizar'}
+          </button>
           <button className="primary" onClick={() => setEditando(null)} disabled={!roles.length}>＋ Nuevo usuario</button>
         </div>
       </div>
@@ -105,7 +116,7 @@ export default function Usuarios({ usuario: yo, avisar, actualizarSesion }) {
 
       <div className="tablewrap">
         <table>
-          <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th>Creado</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th title="«En línea» = usó el programa en los últimos 5 minutos">Última conexión</th><th>Creado</th><th>Acciones</th></tr></thead>
           <tbody>
             {usuarios.map((persona) => (
               <tr key={persona.id} className={persona.activo ? '' : 'inactive'}>
@@ -120,6 +131,14 @@ export default function Usuarios({ usuario: yo, avisar, actualizarSesion }) {
                 <td className="yellow">{persona.usuario}</td>
                 <td><b className={COLOR_DEL_ROL[persona.rol] ?? 'status off'}>{persona.rol_nombre.toUpperCase()}</b></td>
                 <td>{persona.activo ? 'Activo' : <b className="status off">INACTIVO</b>}</td>
+                <td>{(() => {
+                  const conexion = formato.ultimaConexion(persona.ultima_conexion)
+                  return (
+                    <span className={conexion.enLinea ? 'conexion en-linea' : 'conexion'} title={persona.ultima_conexion ? formato.fechaCompleta(persona.ultima_conexion) : 'Todavía no ha entrado desde que se lleva este registro'}>
+                      <i aria-hidden="true" />{conexion.texto}
+                    </span>
+                  )
+                })()}</td>
                 <td className="muted">{formato.fecha(persona.creado)}</td>
                 <td className="row-actions">
                   <button onClick={() => setEditando(persona)}>Editar</button>
@@ -135,7 +154,7 @@ export default function Usuarios({ usuario: yo, avisar, actualizarSesion }) {
                 </td>
               </tr>
             ))}
-            {!usuarios.length && <FilaVacia columnas="6">Cargando usuarios…</FilaVacia>}
+            {!usuarios.length && <FilaVacia columnas="7">Cargando usuarios…</FilaVacia>}
           </tbody>
         </table>
       </div>

@@ -28,9 +28,10 @@ import { areaDeLaCategoria } from '../utilidades/areas.js'
 import { agruparPorCategoria, coincideConBusqueda, estadoDelProducto } from '../utilidades/calculos.js'
 import { formato } from '../utilidades/formato.js'
 import { BORRADOR_VACIO, guardarBorrador, leerBorrador } from '../utilidades/borradorDeCotizacion.js'
+import { prepararVenta } from '../utilidades/ventaDesdeCotizacion.js'
 import VerCotizacion from '../ventanas/VerCotizacion.jsx'
 
-export default function Cotizar({ productos, usuario, avisar }) {
+export default function Cotizar({ productos, usuario, avisar, irA }) {
   const [buscado, setBuscado] = useState('')
   const [area, setArea] = useState('')
   const [borrador, setBorrador] = useState(leerBorrador) // lo que lleva la cotización
@@ -218,7 +219,7 @@ export default function Cotizar({ productos, usuario, avisar }) {
 
       {vistaPrevia && (
         <Ventana alCerrar={() => setVistaPrevia(false)} ancha="grande">
-          <VerCotizacion vista={vista} envio={envio} alGuardada={(guardada) => { setBorrador(BORRADOR_VACIO); avisar(`Cotización ${formato.cotizacion(guardada.id)} guardada`) }} alCerrar={() => setVistaPrevia(false)} />
+          <VerCotizacion vista={vista} envio={envio} alGuardada={(guardada) => { setBorrador(BORRADOR_VACIO); avisar(`Cotización ${formato.cotizacion(guardada.id)} guardada`) }} alPasarAVenta={(guardada) => { prepararVenta(guardada, productos); irA('vender') }} alCerrar={() => setVistaPrevia(false)} />
         </Ventana>
       )}
     </div>

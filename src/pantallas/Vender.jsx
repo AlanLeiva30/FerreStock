@@ -36,6 +36,7 @@ import { areaDeLaCategoria } from '../utilidades/areas.js'
 import { agruparPorCategoria, coincideConBusqueda, estadoDelProducto } from '../utilidades/calculos.js'
 import { formato } from '../utilidades/formato.js'
 import { servidor } from '../utilidades/servidor.js'
+import { leerVentaPendiente, limpiarVentaPendiente } from '../utilidades/ventaDesdeCotizacion.js'
 import FormularioNegocio from '../ventanas/FormularioNegocio.jsx'
 import VerFactura from '../ventanas/VerFactura.jsx'
 import Icono from '../componentes/Icono.jsx'
@@ -43,10 +44,13 @@ import Icono from '../componentes/Icono.jsx'
 export default function Vender({ productos, esAdmin, recargar, avisar, irA }) {
   const [buscado, setBuscado] = useState('')
   const [area, setArea] = useState('') //         categoría elegida en los botones de áreas ('' = todas)
-  const [carrito, setCarrito] = useState([]) //   [{ productoId, cantidad }]  (cantidad como texto, como se escribe)
-  const [cliente, setCliente] = useState('') //   nombre del cliente para la factura (vacío = Consumidor Final)
-  const [clienteDocumento, setClienteDocumento] = useState('') // DUI o NIT del cliente
-  const [descuento, setDescuento] = useState('') // porcentaje de descuento sobre el total (vacío = sin descuento)
+  // Si se llegó desde «Pasar a venta» (en una cotización guardada), la venta empieza con sus productos, cliente y descuento.
+  const [desdeCotizacion] = useState(leerVentaPendiente)
+  const [cotizacionOrigen, setCotizacionOrigen] = useState(desdeCotizacion && { id: desdeCotizacion.cotizacionId, numero: desdeCotizacion.numero })
+  const [carrito, setCarrito] = useState(desdeCotizacion?.lineas ?? []) //   [{ productoId, cantidad }]  (cantidad como texto, como se escribe)
+  const [cliente, setCliente] = useState(desdeCotizacion?.cliente ?? '') //   nombre del cliente para la factura (vacío = Consumidor Final)
+  const [clienteDocumento, setClienteDocumento] = useState(desdeCotizacion?.documento ?? '') // DUI o NIT del cliente
+  const [descuento, setDescuento] = useState(desdeCotizacion?.descuento ?? '') // porcentaje de descuento sobre el total (vacío = sin descuento)
   const [recibido, setRecibido] = useState('') // efectivo que entrega el cliente
   const [cobrando, setCobrando] = useState(false)
   const [error, setError] = useState('')
@@ -64,6 +68,16 @@ export default function Vender({ productos, esAdmin, recargar, avisar, irA }) {
   }, [])
 
   useEffect(() => { cargarVentasDeHoy() }, [cargarVentasDeHoy])
+
+  // Una sola vez al abrir la pantalla: se avisa de lo que pasó con la cotización y se borra lo que quedó guardado.
+  useEffect(() => {
+    if (!desdeCotizacion) return
+    limpiarVentaPendiente()
+    const notas = []
+    if (desdeCotizacion.omitidos) notas.push(`${desdeCotizacion.omitidos} producto${desdeCotizacion.omitidos === 1 ? '' : 's'} ya no está${desdeCotizacion.omitidos === 1 ? '' : 'n'} en el catálogo y se omitió`)
+    if (desdeCotizacion.preciosCambiaron) notas.push('se usan los precios de hoy')
+    avisar(`Cotización ${desdeCotizacion.numero} cargada en la venta${notas.length ? ': ' + notas.join(' · ') : ''}`)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Productos que se pueden vender ──
   const activos = productos.filter((producto) => producto.activo)
@@ -112,6 +126,7 @@ export default function Vender({ productos, esAdmin, recargar, avisar, irA }) {
     setCarrito([])
     setCliente('')
     setClienteDocumento('')
+    setCotizacionOrigen(null)
     setDescuento('')
     setRecibido('')
     setError('')
@@ -135,6 +150,7 @@ export default function Vender({ productos, esAdmin, recargar, avisar, irA }) {
       const venta = await servidor.cobrarVenta({
         productos: lineas.map((linea) => ({ productoId: linea.productoId, cantidad: Number(linea.cantidad) })),
         descuento: porcentaje,
+        cotizacionId: cotizacionOrigen?.id,
         recibido: efectivo,
         cliente,
         clienteDocumento,
@@ -234,6 +250,13 @@ export default function Vender({ productos, esAdmin, recargar, avisar, irA }) {
             <h2>🛒 Venta actual</h2>
             {lineas.length > 0 && <button onClick={vaciar}>Vaciar</button>}
           </div>
+
+          {cotizacionOrigen && (
+            <p className="venta-origen">
+              <span>Venta desde la cotización <b>{cotizacionOrigen.numero}</b>. Al cobrar, quedará marcada como vendida.</span>
+              <button onClick={() => setCotizacionOrigen(null)}>Quitar vínculo</button>
+            </p>
+          )}
 
           {!lineas.length && <p className="carrito-vacio">Haz clic en un producto para agregarlo a la venta.</p>}
 

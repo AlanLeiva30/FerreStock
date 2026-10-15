@@ -1,6 +1,7 @@
 import {bd, consultar} from '../basedatos/baseDeDatos.js';
 import {CODIGOS, ErrorParaElUsuario, texto} from '../comun/http.js';
 import {datosDelNegocio} from './negocio.js';
+import {marcarComoVendida} from './cotizaciones.js';
 import {buscarProducto} from '../inventario/productos.js';
 import {ADMINISTRADOR} from '../acceso/roles.js';
 import {transaccion} from '../basedatos/transaccion.js';
@@ -49,6 +50,11 @@ export async function cobrarVenta(datos, vendedor) {
   if (clienteDocumento.length > 30) throw new ErrorParaElUsuario(CODIGOS.DATOS_INCORRECTOS, 'El DUI/NIT del cliente es muy largo (máximo 30 caracteres)');
   const descuento = datos?.descuento === undefined || datos.descuento === null || datos.descuento === '' ? 0 : Number(datos.descuento);
   if (!(descuento >= 0 && descuento <= 100)) throw new ErrorParaElUsuario(CODIGOS.DATOS_INCORRECTOS, 'El descuento debe estar entre 0 y 100 %');
+  // Si la venta viene de una cotización guardada ("Pasar a venta"), se guarda su número para dejarla marcada como vendida.
+  const cotizacionId = datos?.cotizacionId === undefined || datos.cotizacionId === null || datos.cotizacionId === '' ? null : Number(datos.cotizacionId);
+  if (cotizacionId !== null && (!Number.isInteger(cotizacionId) || cotizacionId < 1)) {
+    throw new ErrorParaElUsuario(CODIGOS.DATOS_INCORRECTOS, 'La cotización indicada no es válida');
+  }
   const cantidades = new Map();
   for (const item of carrito) {
     const productoId = Number(item?.productoId);
@@ -88,6 +94,7 @@ export async function cobrarVenta(datos, vendedor) {
       await consultas.agregarSalida.run(producto.id, MOTIVO_DE_VENTA, cantidad, vendedor.nombre, `Venta #${ventaId}`, ventaId, producto.precio);
       await consultas.restarStock.run(cantidad, producto.id);
     }
+    if (cotizacionId !== null) await marcarComoVendida(cotizacionId, ventaId, vendedor);
     return await facturaCompleta(ventaId);
   });
 }

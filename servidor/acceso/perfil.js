@@ -8,6 +8,7 @@
 // Se guardan en columnas de la tabla "usuarios" (el sexo, que decide si el rol se muestra en femenino, se pide al crear o editar):
 //   foto          → la imagen ya reducida, como texto (data:image/jpeg;base64,…)
 //   preferencias  → los ajustes, en formato JSON: {"tema":"light","saludo":false,…}
+//   ultima_conexion → cuándo fue la última vez que la persona entró o usó el programa (la ve el administrador en Usuarios)
 //
 // Si la base todavía no tiene esas columnas, se crean solas al iniciar el servidor.
 
@@ -18,6 +19,8 @@ import { claveCorrecta, protegerClave } from './seguridad.js'
 import { claveValida } from './usuarios.js'
 
 const TEMAS = ['dark', 'light']
+const ESTILOS_DE_CHEQUES = ['clasico', 'circulos', 'iconos', 'palabras'] // cómo se dibujan los recibos de tus mensajes del chat
+const COLORES_DE_CHEQUES = ['azul', 'verde', 'naranja', 'morado', 'rosa'] //  color de «leído»
 const LARGO_MAXIMO_DE_FOTO = 90_000 // la pantalla la reduce a 256 × 256 px, que pesa unos 20 000
 const FORMATO_DE_FOTO = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/
 
@@ -28,10 +31,10 @@ export const columnasListas = asegurarColumnas().catch((error) => {
 
 async function asegurarColumnas() {
   const { rows } = await consultar(`SELECT column_name FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'usuarios' AND column_name IN ('foto', 'preferencias', 'sexo')`)
-  if (rows.length === 3) return
+    WHERE table_schema = 'public' AND table_name = 'usuarios' AND column_name IN ('foto', 'preferencias', 'sexo', 'ultima_conexion')`)
+  if (rows.length === 4) return
   // sexo: 'F' (femenino) o 'M' (masculino); vacío en las personas que aún no lo han indicado
-  await consultar('ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS foto text, ADD COLUMN IF NOT EXISTS preferencias text, ADD COLUMN IF NOT EXISTS sexo text')
+  await consultar('ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS foto text, ADD COLUMN IF NOT EXISTS preferencias text, ADD COLUMN IF NOT EXISTS sexo text, ADD COLUMN IF NOT EXISTS ultima_conexion timestamptz')
 }
 
 // Deja solo los ajustes conocidos y con valores válidos; lo demás se descarta.
@@ -39,12 +42,17 @@ async function asegurarColumnas() {
 //   saludo       → true/false: mostrar la bienvenida al entrar
 //   menuCompacto → true/false: menú lateral sin las descripciones
 //   inicio       → id de la pantalla con la que se abre (null = la primera de su menú)
+//   chequesEstilo / chequesColor / chequesDetalle → cómo ve esa persona los recibos de SUS mensajes del chat
+//                  (estilo de los chequecitos, color de «leído» y si se muestran las horas debajo de cada mensaje)
 export function normalizarPreferencias(entrada) {
   const salida = {}
   if (!entrada || typeof entrada !== 'object') return salida
   if (TEMAS.includes(entrada.tema)) salida.tema = entrada.tema
   if (typeof entrada.saludo === 'boolean') salida.saludo = entrada.saludo
   if (typeof entrada.menuCompacto === 'boolean') salida.menuCompacto = entrada.menuCompacto
+  if (ESTILOS_DE_CHEQUES.includes(entrada.chequesEstilo)) salida.chequesEstilo = entrada.chequesEstilo
+  if (COLORES_DE_CHEQUES.includes(entrada.chequesColor)) salida.chequesColor = entrada.chequesColor
+  if (typeof entrada.chequesDetalle === 'boolean') salida.chequesDetalle = entrada.chequesDetalle
   if (entrada.inicio === null || entrada.inicio === '') salida.inicio = null
   else if (typeof entrada.inicio === 'string' && /^[a-z]{1,20}$/.test(entrada.inicio)) salida.inicio = entrada.inicio
   return salida

@@ -30,12 +30,14 @@ const tablaLista = (async () => {
     detalle jsonb NOT NULL
   )`);
   await consultar('ALTER TABLE public.cotizaciones ENABLE ROW LEVEL SECURITY');
+  // Cuando una cotización se pasa a venta, aquí queda el número de la factura (vacío = todavía no se vendió).
+  await consultar('ALTER TABLE public.cotizaciones ADD COLUMN IF NOT EXISTS venta_id bigint REFERENCES public.ventas(id)');
 })().catch(error => {
   console.error('[FerreStock] No se pudo preparar la tabla de cotizaciones:', error.code || error.message);
 });
 const SELECCIONAR = `
   SELECT c.id, c.usuario_id, c.atendio, c.fecha, c.cliente, c.cliente_documento, c.contacto, c.validez,
-    c.notas, c.descuento, c.subtotal, c.total, jsonb_array_length(c.detalle) AS productos
+    c.notas, c.descuento, c.subtotal, c.total, c.venta_id, jsonb_array_length(c.detalle) AS productos
   FROM cotizaciones c`;
 const consultas = {
   una: bd.prepare(`SELECT c.*, jsonb_array_length(c.detalle) AS productos FROM cotizaciones c WHERE c.id = ?`)
@@ -86,6 +88,20 @@ export async function guardarCotizacion(datos, usuario) {
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb) RETURNING id`,
     [usuario.id, usuario.nombre, cliente, clienteDocumento, contacto, validez, notas, redondear(descuento), subtotal, total, JSON.stringify(detalle)]);
   return await cotizacionCompleta(Number(rows[0].id));
+}
+// Se llama desde ventas.js, dentro de la transacción de cobrar, cuando la venta viene de una cotización:
+// comprueba que la persona puede usarla y que no se vendió antes, y la marca con el número de factura.
+export async function marcarComoVendida(cotizacionId, ventaId, usuario) {
+  await tablaLista;
+  const {rows} = await consultar('SELECT id, usuario_id, venta_id FROM cotizaciones WHERE id = $1 FOR UPDATE', [cotizacionId]);
+  const cotizacion = rows[0];
+  if (!cotizacion || usuario.rol !== ADMINISTRADOR && Number(cotizacion.usuario_id) !== usuario.id) {
+    throw new ErrorParaElUsuario(CODIGOS.NO_EXISTE, 'Cotización no encontrada');
+  }
+  if (cotizacion.venta_id !== null) {
+    throw new ErrorParaElUsuario(CODIGOS.CONFLICTO, `Esta cotización ya se vendió (factura ${String(cotizacion.venta_id).padStart(6, '0')})`);
+  }
+  await consultar('UPDATE cotizaciones SET venta_id = $1 WHERE id = $2', [ventaId, cotizacionId]);
 }
 export async function verCotizacion(id, usuario) {
   await tablaLista;
@@ -138,6 +154,7 @@ function simplificar(fila) {
     ...fila,
     id: Number(fila.id),
     usuario_id: fila.usuario_id === null ? null : Number(fila.usuario_id),
+    venta_id: fila.venta_id === null || fila.venta_id === undefined ? null : Number(fila.venta_id),
     descuento: Number(fila.descuento),
     subtotal: Number(fila.subtotal),
     total: Number(fila.total),

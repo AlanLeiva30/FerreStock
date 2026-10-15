@@ -12,6 +12,7 @@ import Icono from '../componentes/Icono.jsx'
 import Ventana from '../componentes/Ventana.jsx'
 import { borradorDesde, guardarBorrador } from '../utilidades/borradorDeCotizacion.js'
 import { diaDeHoy } from '../utilidades/fechas.js'
+import { prepararVenta } from '../utilidades/ventaDesdeCotizacion.js'
 import { formato } from '../utilidades/formato.js'
 import { servidor } from '../utilidades/servidor.js'
 import VerCotizacion from '../ventanas/VerCotizacion.jsx'
@@ -60,6 +61,13 @@ export default function Cotizaciones({ esAdmin, productos, irA, avisar }) {
     avisar(omitidos ? `Copiada. ${omitidos} producto${omitidos === 1 ? '' : 's'} ya no está${omitidos === 1 ? '' : 'n'} en el catálogo y se omitió` : 'Copiada: ajusta lo que necesites y guárdala como una cotización nueva')
   }
 
+  // Lleva la cotización a la pantalla Vender para cobrarla (ver utilidades/ventaDesdeCotizacion.js).
+  const pasarAVenta = (cotizacion) => {
+    prepararVenta(cotizacion, productos)
+    setAbierta(null)
+    irA('vender')
+  }
+
   const vigente = (cotizacion) => new Date(cotizacion.fecha).getTime() + cotizacion.validez * DIA_EN_MS >= Date.now()
 
   return (
@@ -91,7 +99,9 @@ export default function Cotizaciones({ esAdmin, productos, irA, avisar }) {
                 <td>{cotizacion.cliente || <span className="muted">Cliente general</span>}{cotizacion.cliente_documento && <small className="muted"> · {cotizacion.cliente_documento}</small>}</td>
                 <td>{cotizacion.productos}</td>
                 {esAdmin && <td className="muted">{cotizacion.atendio}</td>}
-                <td><span className={vigente(cotizacion) ? 'status ok' : 'status off'}>{vigente(cotizacion) ? 'VIGENTE' : 'VENCIDA'}</span></td>
+                <td>{cotizacion.venta_id
+                  ? <span className="status vendida" title={`Factura ${formato.factura(cotizacion.venta_id)}`}>VENDIDA</span>
+                  : <span className={vigente(cotizacion) ? 'status ok' : 'status off'}>{vigente(cotizacion) ? 'VIGENTE' : 'VENCIDA'}</span>}</td>
                 <td className="green"><b>{formato.dinero(cotizacion.total)}</b>{cotizacion.descuento > 0 && <small className="muted"> −{formato.numero(cotizacion.descuento)}%</small>}</td>
               </tr>
             ))}
@@ -102,7 +112,7 @@ export default function Cotizaciones({ esAdmin, productos, irA, avisar }) {
 
       {abierta && (
         <Ventana alCerrar={() => setAbierta(null)} ancha="grande">
-          <VerCotizacion guardada={abierta} alUsarComoBase={usarComoBase} alCerrar={() => setAbierta(null)} />
+          <VerCotizacion guardada={abierta} alPasarAVenta={pasarAVenta} alUsarComoBase={usarComoBase} alCerrar={() => setAbierta(null)} />
         </Ventana>
       )}
     </section>

@@ -10,6 +10,10 @@ const INTENTOS_PERMITIDOS = 5;
 const SEGUNDOS_DE_BLOQUEO = 60;
 const RELLENO = protegerClave('relleno');
 const intentosFallidos = new Map();
+// "Última conexión": se anota al iniciar sesión y se refresca mientras la persona usa el programa,
+// pero como máximo una vez cada 2 minutos por persona (para no escribir en la base en cada petición).
+const MINUTOS_ENTRE_REGISTROS = 2;
+const ultimoRegistro = new Map(); // id de la persona → cuándo se anotó por última vez (en la memoria de este servidor)
 const DATOS_DE_LA_SESION = 'u.id, u.usuario, u.nombre, u.rol, u.sexo, r.nombre AS rol_nombre, r.descripcion AS rol_descripcion, u.preferencias';
 const consultas = {
   crear: bd.prepare(`INSERT INTO sesiones (token_hash, usuario_id, expira)
@@ -19,6 +23,7 @@ const consultas = {
     FROM sesiones s JOIN usuarios u ON u.id = s.usuario_id JOIN roles r ON r.clave = u.rol
     WHERE s.token_hash = ? AND s.expira > now() AND u.activo = 1`),
   borrar: bd.prepare('DELETE FROM sesiones WHERE token_hash = ?'),
+  marcarConexion: bd.prepare('UPDATE usuarios SET ultima_conexion = now() WHERE id = ?'),
   borrarVencidas: bd.prepare("DELETE FROM sesiones WHERE expira <= now()")
 };
 // Quién hace la petición. No incluye la foto (pesa) porque esto se consulta en cada petición.
@@ -26,7 +31,21 @@ export async function usuarioDeLaPeticion(peticion) {
   const llave = leerCookie(peticion, NOMBRE_DE_LA_COOKIE);
   if (!llave) return null;
   await columnasListas;
-  return conPreferencias(await consultas.buscar.get(huellaDeLaLlave(llave)) ?? null);
+  const sesion = await consultas.buscar.get(huellaDeLaLlave(llave)) ?? null;
+  // Las consultas automáticas de fondo (cada tantos segundos, como las del chat) llevan este encabezado y no cuentan como «usó el programa».
+  if (sesion && !peticion.headers['x-segundo-plano']) await anotarConexion(sesion.id, false);
+  return conPreferencias(sesion);
+}
+// Anota que la persona está usando el programa. "siempre" = true al iniciar sesión; si no, se espera 2 minutos entre anotaciones.
+async function anotarConexion(usuarioId, siempre) {
+  const anterior = ultimoRegistro.get(usuarioId) ?? 0;
+  if (!siempre && Date.now() - anterior < MINUTOS_ENTRE_REGISTROS * 60 * 1000) return;
+  ultimoRegistro.set(usuarioId, Date.now());
+  try {
+    await consultas.marcarConexion.run(usuarioId);
+  } catch (error) {
+    console.error('[FerreStock] No se pudo anotar la última conexión:', error.code || error.message);
+  }
 }
 // La "huella" de la sesión actual (para cerrar las demás sesiones al cambiar la contraseña).
 export function huellaDeLaSesion(peticion) {
@@ -79,6 +98,7 @@ async function abrirSesion(usuarioId, respuesta) {
   await consultas.borrarVencidas.run();
   const llave = nuevaLlaveDeSesion();
   await consultas.crear.run(huellaDeLaLlave(llave), usuarioId);
+  await anotarConexion(usuarioId, true);
   ponerCookie(respuesta, NOMBRE_DE_LA_COOKIE, llave, HORAS_DE_SESION * 60 * 60);
 }
 function anotarIntentoFallido(nombreDeUsuario) {

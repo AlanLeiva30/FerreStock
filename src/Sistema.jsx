@@ -16,11 +16,12 @@
 //   - guardar los cambios pidiéndoselo al servidor
 //   - mostrar el aviso verde con una palomita de abajo a la derecha
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Alerta from './componentes/Alerta.jsx'
 import CampanaDeAlertas from './componentes/CampanaDeAlertas.jsx'
 import Icono from './componentes/Icono.jsx'
 import MenuDeUsuario from './componentes/MenuDeUsuario.jsx'
+import MensajeriaFlotante from './componentes/MensajeriaFlotante.jsx'
 import Ventana from './componentes/Ventana.jsx'
 import { coincideConBusqueda, listaDeAlertas } from './utilidades/calculos.js'
 import { formato } from './utilidades/formato.js'
@@ -30,6 +31,8 @@ import PanelPrincipal from './pantallas/PanelPrincipal.jsx'
 import Vender from './pantallas/Vender.jsx'
 import Facturas from './pantallas/Facturas.jsx'
 import Cotizar from './pantallas/Cotizar.jsx'
+import Equipo from './pantallas/Equipo.jsx'
+import Chat from './pantallas/Chat.jsx'
 import Cotizaciones from './pantallas/Cotizaciones.jsx'
 import Almacen from './pantallas/Almacen.jsx'
 import Catalogo from './pantallas/Catalogo.jsx'
@@ -64,6 +67,8 @@ const MENU = [
   { id: 'movimientos', icono: 'movimientos', titulo: 'Entradas y Salidas', descripcion: 'Registro de flujo de mercadería', roles: [ADMINISTRADOR], buscador: true, Pantalla: EntradasYSalidas },
   { id: 'consulta', icono: 'buscar', titulo: 'Consulta de Inventario', descripcion: 'Búsqueda veloz para mostrador', roles: [ADMINISTRADOR, VENDEDOR], buscador: true, Pantalla: Consulta },
   { id: 'alertas', icono: 'alerta', titulo: 'Alertas de Stock Mínimo', descripcion: 'Productos para reabastecer', roles: [ADMINISTRADOR, VENDEDOR], buscador: true, Pantalla: Alertas },
+  { id: 'chat', icono: 'chat', titulo: 'Chat del equipo', descripcion: 'Todas las conversaciones: el equipo y chats privados', roles: [ADMINISTRADOR, VENDEDOR, TRABAJADOR], buscador: false, Pantalla: Chat },
+  { id: 'equipo', icono: 'usuarios', titulo: 'Equipo', descripcion: 'Quién está en línea y cuándo se conectó', roles: [VENDEDOR, TRABAJADOR], buscador: false, Pantalla: Equipo },
   { id: 'reportes', icono: 'reportes', titulo: 'Reportes y Estadísticas', descripcion: 'Informes detallados del estado', roles: [ADMINISTRADOR], buscador: false, Pantalla: Reportes },
   { id: 'usuarios', icono: 'usuarios', titulo: 'Usuarios y Roles', descripcion: 'Crear usuarios y asignar su rol', roles: [ADMINISTRADOR], buscador: false, Pantalla: Usuarios },
   { id: 'base', icono: 'baseDeDatos', titulo: 'Base de Datos', descripcion: 'Ver las tablas guardadas (solo lectura)', roles: [ADMINISTRADOR], buscador: false, Pantalla: BaseDeDatos },
@@ -104,6 +109,20 @@ export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir
     const temporizador = setTimeout(() => setAvisoDeStock(''), 7000)
     return () => clearTimeout(temporizador)
   }, [avisoDeStock])
+
+  // ── Chat: cuántos mensajes sin leer hay (los globos del ícono de mensajes y del menú). Se consulta cada 10 segundos en segundo plano. ──
+  // resumenChat = { noLeidos (sala global), privados: { idPersona: n }, noLeidosPrivados, total }
+  const [resumenChat, setResumenChat] = useState({ noLeidos: 0, privados: {}, noLeidosPrivados: 0, total: 0 })
+  const actualizarResumenChat = useCallback(async () => {
+    try { setResumenChat(await servidor.resumenDelChat()) } catch { /* si falla, se vuelve a intentar en 10 s */ }
+  }, [])
+  useEffect(() => {
+    actualizarResumenChat()
+    const reloj = setInterval(() => document.visibilityState === 'visible' && actualizarResumenChat(), 10_000)
+    return () => clearInterval(reloj)
+  }, [actualizarResumenChat])
+  // En la pestaña del navegador se ve «(2) FerreStock» cuando hay mensajes por leer.
+  useEffect(() => { document.title = resumenChat.total > 0 ? `(${resumenChat.total}) FerreStock` : 'FerreStock' }, [resumenChat.total])
 
   // ── 3. Cálculos a partir de los datos ──
   const alertas = useMemo(() => (pantallaDeAlertas ? listaDeAlertas(productos) : []), [productos, pantallaDeAlertas])
@@ -211,7 +230,7 @@ export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir
   const datosParaLaPantalla = {
     usuario, esAdmin, productos, productosFiltrados, movimientos, alertas, configuracion, busqueda, categoria,
     elegirCategoria: setCategoria, irA, abrirMovimiento, abrirProducto, abrirCategorias, activarODesactivar, verCategoria,
-    recargar, avisar: setAviso, actualizarSesion,
+    recargar, avisar: setAviso, actualizarSesion, actualizarResumenChat,
   }
 
   return (
@@ -221,12 +240,13 @@ export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir
         <div className="topin">
           <div className="logo"><Icono nombre="llaveInglesa" tamano={22} /></div>
           <div className="brand"><b>FerreStock</b><small>Ferretería Medrano • Control de Inventarios</small></div>
-          <i>v2.2</i>
+          <i>v3.0</i>
           <div className="actions">
             {esAdmin && <button className="registrar" onClick={() => abrirMovimiento()} aria-label="Registrar movimiento"><Icono nombre="mas" tamano={16} className="antes" />Registrar Movimiento</button>}
             <button className="theme-toggle" onClick={cambiarTema} aria-label="Cambiar modo">
               {tema === 'dark' ? <><Icono nombre="sol" tamano={16} className="antes" />Claro</> : <><Icono nombre="luna" tamano={16} className="antes" />Oscuro</>}
             </button>
+            <MensajeriaFlotante usuario={usuario} esAdmin={esAdmin} avisar={setAviso} resumen={resumenChat} alActualizarResumen={actualizarResumenChat} irA={irA} />
             {pantallaDeAlertas && <CampanaDeAlertas alertas={alertas} alVerTodas={() => irA(pantallaDeAlertas)} sonando={!!avisoDeStock} />}
             {esAdmin && <button className="scope" onClick={() => setVentana({ tipo: 'alcance' })}><Icono nombre="info" tamano={16} className="antes" />Alcance del Proyecto</button>}
             <MenuDeUsuario usuario={usuario} alAjustes={() => setVentana({ tipo: 'ajustes' })} alSalir={() => setPreguntandoSalir(true)}
@@ -240,11 +260,12 @@ export default function Sistema({ usuario, tema, cambiarTema, fijarTema, alSalir
         <aside className={usuario.preferencias?.menuCompacto ? 'compacto' : undefined}>
           <nav>
             {menuDelUsuario.map((opcion) => (
-              <button key={opcion.id} className={[opcionActual.id === opcion.id && 'active', opcion.id === pantallaDeAlertas && alertas.length > 0 && 'con-aviso'].filter(Boolean).join(' ')} onClick={() => irA(opcion.id)}
+              <button key={opcion.id} className={[opcionActual.id === opcion.id && 'active', (opcion.id === pantallaDeAlertas && alertas.length > 0 || opcion.id === 'chat' && resumenChat.total > 0 && opcionActual.id !== 'chat') && 'con-aviso'].filter(Boolean).join(' ')} onClick={() => irA(opcion.id)}
                 aria-current={opcionActual.id === opcion.id ? 'page' : undefined}>
                 <span><Icono nombre={opcion.icono} tamano={19} /></span>
                 <b>{opcion.titulo}</b>
                 {opcion.id === pantallaDeAlertas && alertas.length > 0 && <em>{alertas.length}</em>}
+                {opcion.id === 'chat' && resumenChat.total > 0 && opcionActual.id !== 'chat' && <em>{resumenChat.total > 99 ? '99+' : resumenChat.total}</em>}
                 <small>{opcion.descripcion}</small>
               </button>
             ))}

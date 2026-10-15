@@ -6,13 +6,17 @@ import {transaccion} from '../basedatos/transaccion.js';
 const LARGO_MINIMO_DE_CLAVE = 4;
 const SEXOS = ['F', 'M']; // F = femenino · M = masculino
 const SELECCIONAR_USUARIOS = `
-  SELECT u.id, u.usuario, u.nombre, u.rol, u.sexo, r.nombre AS rol_nombre, u.activo, u.creado, u.foto,
+  SELECT u.id, u.usuario, u.nombre, u.rol, u.sexo, r.nombre AS rol_nombre, u.activo, u.creado, u.foto, u.ultima_conexion,
     (SELECT COUNT(*) FROM ventas v WHERE v.usuario_id = u.id) AS ventas
   FROM usuarios u JOIN roles r ON r.clave = u.rol
   WHERE u.eliminado IS NULL`;
 const consultas = {
   todos: bd.prepare(`${SELECCIONAR_USUARIOS} ORDER BY u.activo DESC, r.orden, u.nombre`),
   uno: bd.prepare(`${SELECCIONAR_USUARIOS} AND u.id = ?`),
+  equipo: bd.prepare(`
+    SELECT u.id, u.nombre, u.rol, u.sexo, u.foto, u.ultima_conexion
+    FROM usuarios u WHERE u.eliminado IS NULL AND u.activo = 1
+    ORDER BY u.ultima_conexion DESC NULLS LAST, u.nombre`),
   roles: bd.prepare(`
     SELECT r.clave, r.nombre, r.descripcion,
       (SELECT COUNT(*) FROM usuarios u WHERE u.rol = r.clave AND u.activo = 1) AS usuarios_activos
@@ -29,6 +33,12 @@ const consultas = {
     UPDATE usuarios SET activo = 0, eliminado = now(), usuario = usuario || '#' || id
     WHERE id = ?`)
 };
+// El equipo, para que todos vean quién está en línea: solo personas activas y solo lo mínimo
+// (nombre, rol, foto y última conexión). No incluye usuario, ventas ni datos de la cuenta.
+export async function listarEquipo() {
+  const personas = await consultas.equipo.all();
+  return personas.map(conNombreDeRol).map(({sexo, ...resto}) => resto);
+}
 export async function listarUsuarios() {
   return (await consultas.todos.all()).map(conNombreDeRol);
 }

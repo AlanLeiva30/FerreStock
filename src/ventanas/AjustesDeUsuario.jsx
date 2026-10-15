@@ -11,6 +11,7 @@
 import { useRef, useState } from 'react'
 import Avatar from '../componentes/Avatar.jsx'
 import CampoClave from '../componentes/CampoClave.jsx'
+import Cheques, { COLORES_DE_CHEQUES, ESTILOS_DE_CHEQUES } from '../componentes/Cheques.jsx'
 import Icono from '../componentes/Icono.jsx'
 import { reducirFoto } from '../utilidades/foto.js'
 import { servidor } from '../utilidades/servidor.js'
@@ -82,6 +83,35 @@ export default function AjustesDeUsuario({ usuario, tema, fijarTema, menu, actua
         <div className="ajuste-fila">
           <span><b>Menú compacto</b><small>Oculta la descripción de cada opción del menú</small></span>
           <Interruptor activo={!!preferencias.menuCompacto} alCambiar={(valor) => cambiarPreferencia({ menuCompacto: valor })} etiqueta="Menú compacto" />
+        </div>
+      </section>
+
+      <section className="ajustes-bloque">
+        <h3>Chat: los chequecitos de mis mensajes</h3>
+        <div className="ajuste-fila">
+          <span><b>Estilo</b><small>Cómo se ve si un mensaje se envió, llegó o ya se leyó</small></span>
+          <select value={preferencias.chequesEstilo ?? 'clasico'} onChange={(evento) => cambiarPreferencia({ chequesEstilo: evento.target.value })} aria-label="Estilo de los chequecitos">
+            {ESTILOS_DE_CHEQUES.map((estilo) => <option key={estilo.clave} value={estilo.clave}>{estilo.texto}</option>)}
+          </select>
+        </div>
+        <div className="ajuste-fila">
+          <span><b>Color de «leído»</b><small>El color que toman cuando ya lo leyeron</small></span>
+          <div className="colores-cheques" role="group" aria-label="Color de leído">
+            {COLORES_DE_CHEQUES.map((opcion) => (
+              <button key={opcion.clave} type="button" style={{ background: opcion.color }} title={opcion.texto} aria-label={opcion.texto}
+                aria-pressed={(preferencias.chequesColor ?? 'azul') === opcion.clave} onClick={() => cambiarPreferencia({ chequesColor: opcion.clave })} />
+            ))}
+          </div>
+        </div>
+        <div className="ajuste-fila">
+          <span><b>Horas debajo de cada mensaje</b><small>«Entregado 07:01 · Leído 07:05» bajo tus mensajes (siempre puedes tocarlos para ver el detalle)</small></span>
+          <Interruptor activo={preferencias.chequesDetalle !== false} alCambiar={(valor) => cambiarPreferencia({ chequesDetalle: valor })} etiqueta="Mostrar las horas debajo de cada mensaje" />
+        </div>
+        <div className="vista-cheques" aria-label="Así se verán">
+          <span>Así se verán:</span>
+          <span><Cheques estado="enviado" preferencias={preferencias} /> <small>Enviado</small></span>
+          <span><Cheques estado="entregado" preferencias={preferencias} /> <small>Entregado</small></span>
+          <span><Cheques estado="leido" preferencias={preferencias} /> <small>Leído</small></span>
         </div>
       </section>
 

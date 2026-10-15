@@ -10,7 +10,7 @@ Sistema de gestión para ferreterías: factura en segundos, sabe cuándo reponer
 ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.13-339933?logo=nodedotjs&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase&logoColor=white)
-![Versión](https://img.shields.io/badge/versi%C3%B3n-2.2-orange)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-3.0-orange)
 
 ### 🌐 [Abrir FerreStock en línea](https://ferrestock-pgyocehooa-nn.a.run.app)
 
@@ -48,6 +48,7 @@ Una ferretería maneja cientos de productos, entradas y salidas todos los días.
 ### 📝 Cotizaciones
 - Arma una cotización con productos del catálogo, descuento y vigencia.
 - **Vista previa** antes de imprimir y descarga en PDF. No toca el inventario ni registra ventas.
+- **De cotización a venta:** con un clic, una cotización guardada pasa a la caja con sus productos, cliente y descuento, y queda marcada como vendida al cobrar.
 - **Panel de cotizaciones:** cada una se guarda con su número; consúltalas, filtra por fecha o cliente, reimprímelas o úsalas como base de una nueva.
 
 ### 📦 Inventario
@@ -63,6 +64,13 @@ Una ferretería maneja cientos de productos, entradas y salidas todos los días.
 - Reparto del inventario por categoría y valor del stock.
 - Panel principal con los indicadores clave.
 - **Informe en PDF:** un clic en Reportes y sale el informe con gráficas y tablas, listo para imprimir o guardar como PDF.
+
+### 💬 Chat del equipo
+- Un **ícono de mensajes** arriba abre una ventanita flotante (tipo Messenger) con la sala del equipo y **chats privados** uno a uno, con globo de mensajes sin leer, «Visto» y quién está en línea.
+- **Recibos tipo WhatsApp:** ✓ enviado, ✓✓ entregado y ✓✓ de color leído, con la hora de cada uno, la información de cada mensaje y chequecitos que cada persona personaliza (estilo y color).
+- En la sala del equipo, escribe **@** para elegir a quién va dirigido el mensaje (queda resaltado para esa persona).
+- En pantalla completa se ven todas las conversaciones en una lista a la izquierda.
+- Los privados solo los ven las dos personas; también hay una pantalla del chat del equipo y la última conexión de cada persona.
 
 ### 👥 Equipo y permisos
 Al crear cada usuario se indica su sexo y el rol se muestra en femenino o masculino (*Vendedora*, *Vendedor*…). Cada persona personaliza su cuenta: **foto de perfil**, tema claro u oscuro, menú compacto, pantalla de inicio y su propia contraseña, desde el menú de su nombre.
@@ -212,6 +220,6 @@ FerreStock/
 
 <div align="center">
 
-**FerreStock** · Hecho para ferreterías · v2.2
+**FerreStock** · Hecho para ferreterías · v3.0
 
 </div>

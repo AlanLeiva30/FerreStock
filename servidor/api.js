@@ -21,13 +21,14 @@ import { borrarCategoria, crearCategoria, listarCategorias, moverCategoria, reno
 import { CODIGOS, ErrorParaElUsuario, leerDatosEnviados, responder, responderError } from './comun/http.js'
 import { MOTIVOS } from './inventario/motivos.js'
 import { listarMovimientos, registrarMovimiento } from './inventario/movimientos.js'
+import { borrarMensaje, enviarMensaje, infoDelMensaje, listarConversaciones, listarMensajes, marcarChatComoLeido, resumenDelChat } from './chat/chat.js'
 import { guardarCotizacion, listarCotizaciones, verCotizacion } from './ventas/cotizaciones.js'
 import { datosDelNegocio, guardarDatosDelNegocio } from './ventas/negocio.js'
 import { activarODesactivarProducto, crearProducto, editarProducto, listarProductos, siguienteCodigo } from './inventario/productos.js'
 import { ADMINISTRADOR, TRABAJADOR, VENDEDOR } from './acceso/roles.js'
 import { cerrarSesion, configurarPrimerAdministrador, estadoDeSesion, huellaDeLaSesion, iniciarSesion, usuarioDeLaPeticion } from './acceso/sesiones.js'
 import { cambiarFotoDeUsuario, cambiarMiClave, guardarPerfil } from './acceso/perfil.js'
-import { crearUsuario, editarUsuario, eliminarUsuario, listarRoles, listarUsuarios } from './acceso/usuarios.js'
+import { crearUsuario, editarUsuario, eliminarUsuario, listarEquipo, listarRoles, listarUsuarios } from './acceso/usuarios.js'
 import { cobrarVenta, listarVentas, ventasDeHoy, ventasPorDia, verFactura } from './ventas/ventas.js'
 import { listarTablasYVistas, verContenido } from './basedatos/visorDeBase.js'
 
@@ -47,6 +48,18 @@ const RUTAS = [
   // Todos: cada persona cambia su propia foto, sus ajustes y su contraseña
   ['PUT',    '/perfil',                   TODOS,             ({ datos, usuario }) => guardarPerfil(usuario, datos)],
   ['POST',   '/perfil/clave',             TODOS,             ({ datos, usuario, peticion }) => cambiarMiClave(usuario, datos, huellaDeLaSesion(peticion))],
+
+  // Todos: quién del equipo está en línea y cuándo se conectó por última vez (solo nombre, rol, foto y hora)
+  ['GET',    '/equipo',                   TODOS,             () => listarEquipo()],
+
+  // Todos: el chat del equipo (la sala global y las conversaciones privadas entre dos personas). «/chat/resumen» y «/chat/leido» van antes de «/chat/:id».
+  ['GET',    '/chat',                     TODOS,             ({ parametros, usuario }) => listarMensajes(parametros, usuario)],
+  ['POST',   '/chat',                     TODOS,             ({ datos, usuario }) => enviarMensaje(datos, usuario)],
+  ['GET',    '/chat/resumen',             TODOS,             ({ usuario }) => resumenDelChat(usuario)],
+  ['GET',    '/chat/conversaciones',      TODOS,             ({ usuario }) => listarConversaciones(usuario)],
+  ['POST',   '/chat/leido',               TODOS,             ({ datos, usuario }) => marcarChatComoLeido(datos, usuario)],
+  ['GET',    '/chat/:id/info',            TODOS,             ({ id, usuario }) => infoDelMensaje(id, usuario)],
+  ['DELETE', '/chat/:id',                 TODOS,             ({ id, usuario }) => borrarMensaje(id, usuario)],
 
   // Todos: la lista de productos (cada rol recibe solo los datos que le tocan, ver inventario/productos.js)
   ['GET',    '/productos',                TODOS,             ({ usuario }) => listarProductos(usuario)],

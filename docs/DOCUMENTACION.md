@@ -4,7 +4,7 @@ Todo lo que hay que saber de FerreStock en **un solo archivo**: cómo se abre, c
 
 | | |
 |---|---|
-| **Versión actual** | 2.2 |
+| **Versión actual** | 3.0 |
 | **Portada del proyecto** | [`README.md`](../README.md) |
 
 ## Índice
@@ -73,7 +73,7 @@ Sistema de inventario y ventas para ferretería. Esta parte documenta su arquite
 
 | | |
 |---|---|
-| **Versión** | 2.2 |
+| **Versión** | 3.0 |
 | **Interfaz** | React 19 + Vite 8 |
 | **Servidor** | Node.js ≥ 22.13 (middleware de Vite, sin framework adicional) |
 | **Base de datos** | PostgreSQL alojado en Supabase (`pg` 8) |
@@ -224,6 +224,8 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 | `Vender.jsx` | Admin · Vendedor | Caja: armar la venta, cobrar y facturar. La lista de la venta se desplaza sola y el total y «Cobrar» siempre quedan a la vista. |
 | `Cotizar.jsx` | Admin · Vendedor | Armar una cotización (productos del catálogo), verla en vista previa, guardarla e imprimirla o bajarla en PDF. No afecta el inventario. |
 | `Cotizaciones.jsx` | Admin · Vendedor | Panel con las cotizaciones guardadas: filtros por fecha, buscador, reimpresión y «Usar como base». El vendedor ve solo las suyas. |
+| `Chat.jsx` | Todos | Chat en pantalla completa: lista de todas las conversaciones (sala del equipo y chats privados) y la conversación elegida, con menciones «@». La ventanita flotante del ícono de mensajes muestra lo mismo en pequeño. |
+| `Equipo.jsx` | Vendedor · Trabajador | Quién del equipo está en línea y cuándo se conectó por última vez. Solo nombre, rol, foto y hora. |
 | `Facturas.jsx` | Admin · Vendedor | Historial de facturas con filtro por fechas y buscador (cliente, DUI/NIT o número). Al tocar una se abre para reimprimirla. |
 | `Almacen.jsx` | Trabajador | Stock por categoría, sin precios ni costos. |
 | `Catalogo.jsx` | Admin | Alta, edición y estado de productos; administración de categorías. |
@@ -244,18 +246,20 @@ En VS Code también se puede usar **⇧⌘B** (tarea `FerreStock`, definida en `
 
 ### 4. Modelo de datos
 
-La base tiene **8 tablas**. Las relaciones se indican con `→`.
+La base tiene **11 tablas**. Las relaciones se indican con `→`.
 
 | Tabla | Descripción | Columnas principales |
 |---|---|---|
 | `categorias` | Categorías de productos y su orden en pantalla. | `id`, `nombre`, `orden` |
 | `productos` | Catálogo con stock, costo y precio. | `id`, `codigo`, `nombre`, `categoria_id → categorias`, `unidad`, `stock`, `minimo`, `costo`, `precio`, `activo` |
 | `movimientos` | Cada entrada o salida de mercadería. | `id`, `producto_id → productos`, `tipo`, `motivo`, `cantidad`, `usuario`, `nota`, `fecha`, `venta_id → ventas`, `precio_unitario` |
-| `cotizaciones` | Una fila por cotización guardada (no afecta el inventario). El detalle se guarda como una «foto» en formato JSON. | `id`, `usuario_id → usuarios`, `atendio`, `fecha`, `cliente`, `cliente_documento`, `contacto`, `validez` (días), `notas`, `descuento`, `subtotal`, `total`, `detalle` |
+| `cotizaciones` | Una fila por cotización guardada (no afecta el inventario). El detalle se guarda como una «foto» en formato JSON. | `id`, `usuario_id → usuarios`, `venta_id → ventas` (si se pasó a venta), `atendio`, `fecha`, `cliente`, `cliente_documento`, `contacto`, `validez` (días), `notas`, `descuento`, `subtotal`, `total`, `detalle` |
 | `ventas` | Una fila por cobro (cada una es una factura). | `id`, `usuario_id → usuarios`, `total`, `descuento` (% rebajado; 0 = sin descuento), `recibido`, `cambio`, `fecha`, `cliente`, `cliente_documento` |
-| `usuarios` | Personas que pueden entrar al sistema. | `id`, `usuario`, `nombre`, `rol → roles`, `clave_hash`, `clave_sal`, `activo`, `creado`, `eliminado`, `foto`, `preferencias`, `sexo` |
+| `usuarios` | Personas que pueden entrar al sistema. | `id`, `usuario`, `nombre`, `rol → roles`, `clave_hash`, `clave_sal`, `activo`, `creado`, `eliminado`, `foto`, `preferencias`, `sexo`, `ultima_conexion`, `chat_visto` |
 | `roles` | Tipos de usuario y su descripción. | `clave`, `nombre`, `descripcion`, `orden` |
 | `sesiones` | Sesiones abiertas; guarda solo el *hash* de la llave. | `token_hash`, `usuario_id → usuarios`, `expira` |
+| `mensajes_lecturas` | Quién recibió y quién leyó cada mensaje de la sala del equipo (con la hora de cada cosa). | `mensaje_id → mensajes`, `usuario_id → usuarios`, `entregado_en`, `leido_en` |
+| `mensajes` | Mensajes del chat: sala global (`para_id` vacío) y conversaciones privadas entre dos personas (`para_id`). | `id`, `usuario_id → usuarios`, `para_id → usuarios`, `autor`, `texto` (1 a 500), `menciones` (ids mencionados), `fecha`, `entregado_en`, `leido_en`, `recibos`, `eliminado` |
 | `negocio` | Datos de la ferretería para la factura (una sola fila). | `nombre`, `direccion`, `telefono`, `documento`, `mensaje` |
 
 ```
@@ -284,7 +288,13 @@ Todas las rutas empiezan con `/api` y se declaran en `servidor/api.js`. Los mét
 | POST | `/perfil/clave` | Todos | Cambiar la propia contraseña (pide la actual). |
 | GET | `/productos` | Todos | Listar productos; cada rol recibe solo los datos que le corresponden. |
 | GET | `/productos/siguiente-codigo` | Admin | El código que recibirá el próximo producto (por ejemplo `FER-1017`). |
-| POST | `/ventas` | Admin + Vendedor | Cobrar una venta y generar la factura. Acepta un `descuento` opcional (0 a 100 %) que el servidor aplica al total. |
+| POST | `/ventas` | Admin + Vendedor | Cobrar una venta y generar la factura. Acepta un `descuento` opcional (0 a 100 %) que el servidor aplica al total y un `cotizacionId` opcional (la venta viene de esa cotización, que queda marcada como vendida). |
+| GET · POST | `/chat` | Todos | Leer mensajes (`con`, `desde`, `antes`; sin `con`, la sala global) · enviar un mensaje (`para` = chat privado; `menciones` = personas con «@»; máx. 500 caracteres, 20 por minuto). |
+| GET | `/chat/conversaciones` | Todos | La lista de la ventanita: la sala global y cada persona con su último mensaje y no leídos. |
+| GET · POST | `/chat/resumen` · `/chat/leido` | Todos | Cuántos mensajes sin leer hay (global y por persona) · marcarlos como leídos (`con` = chat privado). |
+| GET | `/chat/:id/info` | Todos | Información de un mensaje tuyo: a quién le llegó y quién lo leyó, con hora. |
+| DELETE | `/chat/:id` | Todos | Borrar un mensaje propio (en la sala global, el administrador puede borrar cualquiera; en lo privado, nadie más). |
+| GET | `/equipo` | Todos | Equipo activo: nombre, rol, foto y última conexión (sin datos de la cuenta). |
 | GET | `/negocio` | Admin + Vendedor | Datos del negocio (encabezado de facturas y cotizaciones). Modificarlos (`PUT`) es solo del administrador. |
 | POST | `/cotizaciones` | Admin + Vendedor | Guardar una cotización (el servidor calcula precios y totales). |
 | GET | `/cotizaciones` | Admin + Vendedor | Lista de cotizaciones. Filtros: `desde`, `hasta`, `q`, `limite`. El vendedor ve solo las suyas. |
@@ -574,6 +584,7 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 
 | Versión | Fecha | Resumen |
 |---|---|---|
+| [3.0](#30--15-de-octubre-de-2026) | 15-oct-2026 | Chat del equipo (privados, ventanita flotante, menciones y recibos tipo WhatsApp), pantalla Equipo, última conexión y pasar una cotización a venta |
 | [2.2](#22--14-de-octubre-de-2026) | 14-oct-2026 | Panel *Cotizaciones*: las cotizaciones se guardan con su número y se pueden consultar e imprimir otra vez |
 | [2.1](#21--13-de-octubre-de-2026) | 13-oct-2026 | Descuento al cobrar y lista de productos con 3 visibles |
 | [2.0](#20--12-de-octubre-de-2026) | 12-oct-2026 | Pantalla *Cotizar*: cotizaciones en PDF con vista previa, sin tocar el inventario |
@@ -583,6 +594,36 @@ Esta parte muestra **qué cambió en cada versión**, con capturas del **antes**
 | [1.7](#17--2-de-octubre-de-2026) | 2-oct-2026 | El vendedor consulta el inventario y recibe avisos de poco stock |
 | [1.6](#16--29-de-septiembre-de-2026) | 29-sep-2026 | Menú de usuario con foto y ajustes, íconos nuevos, temas rediseñados y diseño fluido |
 | [1.5](#15--versión-base) | 24-sep-2026 | Versión base con Supabase |
+
+---
+
+### 3.0 · 15 de octubre de 2026
+
+**La versión de la comunicación del equipo:** FerreStock deja de ser solo un sistema de inventario y ventas y pasa a ser también el lugar donde el equipo se habla. Trae un chat completo (sala del equipo, chats privados, ventanita flotante, menciones y recibos), saber quién está en línea, y el paso directo de una cotización a una venta.
+
+#### Chat y equipo
+- **Chat del equipo** (los tres roles): una sala de chat para todas las personas del sistema. Se escribe con Enter (Shift + Enter hace otra línea; máximo 500 caracteres) y los mensajes llegan solos cada 3 segundos. Muestra quién está en línea, agrupa los mensajes por persona y por día, y en el menú aparece un **globo con los mensajes sin leer** (y «(2) FerreStock» en la pestaña del navegador). Cada persona puede borrar sus mensajes y el administrador cualquiera: el texto se borra de la base y queda «Mensaje eliminado». Hay un límite de 20 mensajes por minuto por persona. Los mensajes se guardan sin fecha de vencimiento.
+- **Mensajes privados y ventanita flotante** (los tres roles): arriba, junto a la campana, hay un **ícono de mensajes** con el globo de mensajes sin leer. Al pulsarlo se abre una **ventana pequeña abajo a la derecha**, sobre cualquier pantalla (como Messenger o Instagram web): una lista con el *Chat del equipo* y una fila por cada persona, con su último mensaje, cuántos no has leído y un punto verde si está en línea. Se puede buscar a alguien, abrir su conversación, minimizar o cerrar la ventana. Los chats uno a uno son **privados**: solo los ven esas dos personas (ni el administrador puede leerlos), muestran «✓ Enviado» y «✓✓ Visto», y solo quien escribió un mensaje puede borrarlo.
+- **Chat del equipo en pantalla completa con todas las conversaciones:** la pantalla del menú ahora tiene, a la izquierda, la lista de conversaciones (la sala del equipo y un chat privado con cada persona, con buscador, último mensaje, no leídos y quién está en línea) y, a la derecha, la conversación elegida. En el celular se ve una cosa a la vez, con un botón para volver a la lista.
+- **Menciones con «@»** en la sala global: al escribir **@** se abre una lista de personas (se filtra al seguir escribiendo; se elige con el mouse o con ↑ ↓ y Enter). El mensaje queda dirigido a esa persona: su nombre sale resaltado, a la persona mencionada el mensaje le aparece con un borde verde y la sala muestra una **@** verde en su lista de conversaciones. Se pueden mencionar varias personas en un mismo mensaje y también funciona escribiendo el nombre a mano. En los chats privados no hace falta, así que no se abre el selector. Tanto la pantalla completa como la ventanita flotante lo tienen.
+- **Recibos de los mensajes, como en WhatsApp:** cada mensaje que escribes muestra sus **chequecitos**: ✓ *enviado* (llegó al servidor), ✓✓ *entregado* (a la otra persona le llegó a su pantalla porque tiene el programa abierto) y ✓✓ de color *leído* (abrió esa conversación). Debajo de cada mensaje se lee la hora: «Entregado 07:01 · Leído 07:05» (en la sala del equipo, «Entregado a 6 de 6 · Leído por 2»). En la **sala del equipo**, debajo de cada mensaje tuyo aparece **«Visto por Ana, Mario y 2 más · 4 de 6»** con las fotitos de quienes ya lo leyeron (al pasar el cursor se ven todos los nombres; si todavía nadie lo vio dice «Entregado a 4 de 6 · nadie lo ha visto aún»). Al tocar los chequecitos o esa línea se abre la **Información del mensaje**, que solo ve quien lo escribió: cada persona con la hora en que le llegó y en que lo leyó, o «Sin recibir todavía». Los mensajes anteriores a esta función no tienen recibos.
+- **Chequecitos personalizables por cada persona** (en *Ajustes de mi cuenta → Chat*): el estilo (**Clásico** ✓✓, **Círculos** ●●, **Íconos** —avión, ✓✓ y ojo— o **Palabras** —Enviado, Entregado, Leído—), el color de «leído» (azul, verde, naranja, morado o rosa) y si se muestran las horas debajo de cada mensaje, con una vista previa. Cada quien ve sus propios mensajes a su manera; no cambia lo que ven los demás.
+- **Pantalla «Equipo»** (vendedores y trabajadores de almacén): todas las personas activas con su foto, rol y cuándo se conectaron por última vez («En línea», «hace 12 min», «ayer, …»). Se actualiza sola cada minuto y tiene un botón **Actualizar** (con la hora de la última actualización); *Usuarios y Roles* también tiene su botón «Actualizar». Solo se ve nombre, rol, foto y hora de conexión: no hay usuarios, contraseñas ni ventas de nadie. El administrador ve lo mismo y más en *Usuarios y Roles*.
+- **Última conexión en «Usuarios y Roles»** (solo el administrador la ve): una columna nueva muestra cuándo entró o usó el programa cada persona: **En línea** (punto verde, si lo usó en los últimos 5 minutos), «hace 12 min», «hoy, 03:15 p. m.», «ayer, …» o la fecha. Si alguien aún no ha entrado desde que existe este registro, dice «Aún sin registro». Pasar el cursor por encima muestra la fecha completa.
+
+#### De la cotización a la venta
+- **Pasar una cotización a venta:** en una cotización guardada (al guardarla en *Cotizar* o al abrirla desde *Cotizaciones*) hay un botón **Pasar a venta**. Abre la pantalla *Vender* con sus productos, cantidades, cliente y descuento ya cargados; solo falta cobrar. Se avisa si algún producto ya no está en el catálogo (se omite) y que se usan los **precios y el stock de hoy**.
+- **La cotización queda marcada como vendida:** al cobrar, queda guardado el número de la factura. En *Cotizaciones* aparece el estado **VENDIDA** y el botón pasa a «Vendida · factura 000012» (desactivado), para no venderla dos veces por error. Si no se quiere ese vínculo, en *Vender* hay un botón «Quitar vínculo».
+- Es una venta normal: baja el stock, genera su factura y el servidor vuelve a validar todo. Si la cotización ya se vendió o no es de esa persona, la venta se rechaza completa sin guardar nada.
+
+#### Detalle técnico
+- Base de datos: columna nueva `venta_id` en `cotizaciones` (apunta a `ventas`), que se crea sola al arrancar el servidor.
+- API: `POST /ventas` acepta un `cotizacionId` opcional; `marcarComoVendida()` (`servidor/ventas/cotizaciones.js`) se ejecuta dentro de la misma transacción del cobro.
+- Recibos: columnas `entregado_en` y `recibos` en `mensajes` y tabla `mensajes_lecturas` (quién recibió y leyó cada mensaje de la sala; la lista de mensajes devuelve los `lectores` de tus mensajes), ruta `GET /chat/:id/info`, `src/componentes/Cheques.jsx`, `src/ventanas/InfoDelMensaje.jsx` y los ajustes `chequesEstilo`, `chequesColor` y `chequesDetalle` en `preferencias` (`servidor/acceso/perfil.js`, `src/ventanas/AjustesDeUsuario.jsx`). «Entregado» se anota cuando la pantalla de la otra persona consulta el chat (cada 10 s con la pestaña a la vista).
+- Chat: tabla `mensajes` (con `para_id` y `leido_en` para los privados) y columna `usuarios.chat_visto` (se crean solas al arrancar), `servidor/chat/chat.js` (con la columna `menciones`), 6 rutas `/chat…` en `servidor/api.js`, la ventanita `src/componentes/MensajeriaFlotante.jsx` y la conversación reutilizable `src/componentes/ConversacionDeChat.jsx` (con el selector de «@»), la lista `src/componentes/ListaDeConversaciones.jsx` y `src/utilidades/useConversaciones.js`, `src/pantallas/Chat.jsx`, la opción de menú y el globo en `src/Sistema.jsx`, y llamadas en `src/utilidades/servidor.js`. Las consultas automáticas del chat llevan el encabezado `X-Segundo-Plano` para que no cuenten como «última conexión» (`servidor/acceso/sesiones.js`).
+- Equipo: ruta `GET /equipo` (`servidor/acceso/usuarios.js`, `listarEquipo`), `src/pantallas/Equipo.jsx`, una opción nueva en `MENU` de `src/Sistema.jsx` y el ícono `refrescar` (`src/componentes/Icono.jsx`).
+- Última conexión: columna `ultima_conexion` en `usuarios` (se crea sola, en `servidor/acceso/perfil.js`); se anota al iniciar sesión y se refresca mientras la persona usa el programa, como máximo cada 2 minutos por persona (`servidor/acceso/sesiones.js`); se muestra en `src/pantallas/Usuarios.jsx` con `formato.ultimaConexion()`.
+- Interfaz: `src/utilidades/ventaDesdeCotizacion.js` (lleva los datos a *Vender*), `src/pantallas/Vender.jsx`, `src/pantallas/Cotizar.jsx`, `src/pantallas/Cotizaciones.jsx`, `src/ventanas/VerCotizacion.jsx` y `src/estilos.css`.
 
 ---
 

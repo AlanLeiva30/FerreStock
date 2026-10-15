@@ -18,7 +18,7 @@ import Icono from '../componentes/Icono.jsx'
 import { formato } from '../utilidades/formato.js'
 import { servidor } from '../utilidades/servidor.js'
 
-export default function VerCotizacion({ vista, envio, guardada: yaGuardada = null, alGuardada, alUsarComoBase, alCerrar }) {
+export default function VerCotizacion({ vista, envio, guardada: yaGuardada = null, alGuardada, alUsarComoBase, alPasarAVenta, alCerrar }) {
   const [guardada, setGuardada] = useState(yaGuardada)
   const [negocio, setNegocio] = useState(yaGuardada?.negocio ?? null)
   const [guardando, setGuardando] = useState(false)
@@ -72,6 +72,9 @@ export default function VerCotizacion({ vista, envio, guardada: yaGuardada = nul
           {guardada ? (
             <>
               <button onClick={() => window.print()} disabled={!negocio} autoFocus><Icono nombre="impresora" tamano={16} className="antes" />Imprimir / Guardar PDF</button>
+              {alPasarAVenta && (guardada.venta_id
+                ? <button className="secundario" disabled title="Esta cotización ya se pasó a venta">Vendida · factura {formato.factura(guardada.venta_id)}</button>
+                : <button className="secundario" onClick={() => alPasarAVenta(guardada)}>Pasar a venta</button>)}
               {alUsarComoBase && <button className="secundario" onClick={() => alUsarComoBase(guardada)}>Usar como base</button>}
               <button className="secundario" onClick={alCerrar}>Cerrar</button>
             </>

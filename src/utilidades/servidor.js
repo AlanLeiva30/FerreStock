@@ -13,10 +13,11 @@
 // y vuelve a mostrar la pantalla de ingreso).
 export const SESION_VENCIDA = 'ferrestock:sesion-vencida'
 
-async function pedir(direccion, { metodo = 'GET', datos } = {}) {
+// segundoPlano = true para las consultas automáticas (como las del chat): el servidor no las cuenta como «usó el programa» en la última conexión.
+async function pedir(direccion, { metodo = 'GET', datos, segundoPlano = false } = {}) {
   const respuesta = await fetch(`/api${direccion}`, {
     method: metodo,
-    headers: { 'Content-Type': 'application/json' },
+    headers: segundoPlano ? { 'Content-Type': 'application/json', 'X-Segundo-Plano': '1' } : { 'Content-Type': 'application/json' },
     body: datos && JSON.stringify(datos),
   })
   const contenido = await respuesta.json().catch(() => ({}))
@@ -61,6 +62,17 @@ export const servidor = {
   // foto = 'data:image/jpeg;base64,…' para cambiarla, o null para quitarla
   cambiarFotoDeUsuario: (id, foto) => pedir(`/usuarios/${id}/foto`, { metodo: 'PUT', datos: { foto } }),
   listarRoles: () => pedir('/roles'),
+  // Chat del equipo (todos los roles). filtros = { desde: id } (los nuevos) · { antes: id } (los anteriores) · {} (los últimos 50)
+  // filtros = { con: idPersona (chat privado; sin «con»: la sala global), desde: id, antes: id }
+  chatMensajes: (filtros = {}, segundoPlano = false) => pedir(`/chat?${new URLSearchParams(filtros)}`, { segundoPlano }), // → { mensajes, hayMas }
+  // sin «para»: a la sala global; con «para»: chat privado. «menciones» = ids de las personas a las que se les escribió @Nombre (solo en la sala global)
+  enviarAlChat: (texto, para, menciones) => pedir('/chat', { metodo: 'POST', datos: { texto, para, menciones } }),
+  infoDelMensaje: (id) => pedir(`/chat/${id}/info`), // solo de tus mensajes: quién lo recibió y lo leyó, con la hora
+  borrarDelChat: (id) => pedir(`/chat/${id}`, { metodo: 'DELETE' }),
+  resumenDelChat: () => pedir('/chat/resumen', { segundoPlano: true }), // → { noLeidos (sala global), privados: { idPersona: n }, noLeidosPrivados, total }
+  conversacionesDelChat: (segundoPlano = false) => pedir('/chat/conversaciones', { segundoPlano }), // → { global: { noLeidos, ultimo }, personas: [{ …, noLeidos, ultimo }] }
+  marcarChatLeido: (con) => pedir('/chat/leido', { metodo: 'POST', datos: con ? { con } : undefined, segundoPlano: true }), // sin «con»: la sala global
+  listarEquipo: (segundoPlano = false) => pedir('/equipo', { segundoPlano }), // todos los roles: [{ id, nombre, rol, rol_nombre, foto, ultima_conexion }]
 
   // Datos de la ferretería que salen en la factura (solo administrador)
   datosDelNegocio: () => pedir('/negocio'),
