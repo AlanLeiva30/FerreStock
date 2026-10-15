@@ -1343,3 +1343,37 @@ body.con-mensajeria .toast { right: 390px; }
 .chat-lectores .avatar:first-child { margin-left: 0; }
 [data-theme="light"] .chat-visto-por { color: #6f6352; }
 [data-theme="light"] .chat-lectores .avatar { border-color: #fffdf9; }
+
+/* Botón ⓘ «quién lo vio» debajo de tus mensajes */
+.chat-pie-recibos { display: inline-flex; align-items: center; gap: 6px; align-self: flex-end; margin: 2px 2px 0 0; }
+.chat-pie-recibos .chat-visto-por, .chat-pie-recibos .chat-detalle { margin: 0; }
+.chat-info { display: inline-grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 1px solid #35435c; border-radius: 50%; background: transparent; color: #9aa7bb; cursor: pointer; }
+.chat-info:hover, .chat-info:focus-visible { border-color: #ffb000; background: #ffb00022; color: #ffb000; }
+[data-theme="light"] .chat-info { border-color: #d9ceb9; color: #6f6352; }
+[data-theme="light"] .chat-info:hover, [data-theme="light"] .chat-info:focus-visible { border-color: #b36b00; background: #b36b0018; color: #b36b00; }
+
+/* Sala del equipo: botón ⓘ a un lado del mensaje que despliega «quién lo vio» */
+.chat-acciones { display: flex; align-items: center; align-self: flex-end; gap: 2px; margin-bottom: 4px; }
+.chat-fila.propio.con-acciones .chat-cuerpo { max-width: min(560px, calc(78% - 56px)); }
+.chat-conv.compacto .chat-fila.propio.con-acciones .chat-cuerpo { max-width: calc(86% - 52px); }
+.chat-borrar-lado { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #ff7084; opacity: 0; cursor: pointer; }
+.chat-fila:hover .chat-borrar-lado, .chat-borrar-lado:focus-visible { opacity: 1; }
+@media (hover: none) { .chat-borrar-lado { opacity: .75; } }
+.chat-info.abierto { border-color: #ffb000; background: #ffb00033; color: #ffb000; }
+.chat-desplegable { width: min(330px, 100%); margin-top: 6px; padding: 8px 12px 6px; border: 1px solid #34425b; border-radius: 12px; background: #111a2c; box-shadow: 0 8px 26px #0008; text-align: left; animation: mensajeriaSube .15s ease-out; }
+.chat-desplegable > header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+.chat-desplegable > header b { font-size: 12px; color: #ffb000; }
+.chat-desplegable > header button { padding: 0 6px; border: 0; background: transparent; color: #9aa7bb; font-size: 14px; }
+.chat-desplegable .info-mensaje { max-height: 230px; overflow-y: auto; }
+.chat-desplegable .info-mensaje h3 { margin: 8px 0 2px; font-size: 11.5px; }
+.chat-desplegable .info-mensaje li { gap: 8px; padding: 5px 0; }
+.chat-desplegable .info-mensaje li b { font-size: 12px; }
+.chat-desplegable .info-hora { font-size: 10.5px; }
+.chat-desplegable .info-aviso { margin: 4px 0; font-size: 11.5px; }
+[data-theme="light"] .chat-borrar-lado { color: #c0334a; }
+[data-theme="light"] .chat-info.abierto { border-color: #b36b00; background: #b36b0022; color: #b36b00; }
+[data-theme="light"] .chat-desplegable { background: #fffdf9; border-color: #e3d9c6; box-shadow: 0 8px 26px #4a32002e; }
+[data-theme="light"] .chat-desplegable > header b { color: #b36b00; }
+
+.chat-desplegable-fila { display: flex; justify-content: flex-end; margin-top: 6px; }
+.chat-desplegable-fila .chat-desplegable { margin-top: 0; }

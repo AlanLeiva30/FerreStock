@@ -26,6 +26,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import Alerta from './Alerta.jsx'
 import Avatar from './Avatar.jsx'
 import Cheques from './Cheques.jsx'
+import InfoDesplegable from './InfoDesplegable.jsx'
 import Icono from './Icono.jsx'
 import { formato } from '../utilidades/formato.js'
 import { servidor } from '../utilidades/servidor.js'
@@ -85,6 +86,7 @@ export default function ConversacionDeChat({ con = null, usuario, esAdmin, perso
   const [errorAlEnviar, setErrorAlEnviar] = useState('')
   const [borrando, setBorrando] = useState(null) // mensaje que se va a borrar (pregunta de confirmación)
   const [hayNuevosAbajo, setHayNuevosAbajo] = useState(false)
+  const [desplegado, setDesplegado] = useState(null) // mensaje de la sala con su información abierta (botón ⓘ)
   const [infoDe, setInfoDe] = useState(null) //   mensaje del que se ve la «Información del mensaje» (null = cerrada)
   const [menu, setMenu] = useState(null) //  selector de «@»: null = cerrado · { desde, consulta, indice }
 
@@ -259,16 +261,6 @@ export default function ConversacionDeChat({ con = null, usuario, esAdmin, perso
     if (recibos.total > 0 && recibos.entregados >= recibos.total) return 'entregado'
     return 'enviado'
   }
-  // «Visto por Ana, Mario y 2 más» (sala del equipo, en tus mensajes): quiénes ya lo leyeron, con sus fotitos.
-  const vistoPorDe = (mensaje) => {
-    const { total, entregados, lectores = [] } = mensaje.recibos
-    const quienes = lectores.map((id) => equipoCompleto.find((persona) => persona.id === id)).filter(Boolean)
-    const nombres = quienes.map((persona) => persona.nombre.split(' ')[0])
-    const texto = quienes.length
-      ? `Visto por ${nombres.slice(0, 2).join(', ')}${quienes.length > 2 ? ` y ${quienes.length - 2} más` : ''}${quienes.length >= total ? ' · todos' : ` · ${quienes.length} de ${total}`}`
-      : entregados ? `Entregado a ${entregados} de ${total} · nadie lo ha visto aún` : 'Enviado'
-    return { quienes, texto, completo: quienes.map((persona) => persona.nombre).join(', ') }
-  }
   // La línea de abajo con las horas: «Entregado 07:01 · Leído 07:05» (o cuántas personas, en la sala global).
   const detalleDe = (mensaje) => {
     if (mensaje.para_id) {
@@ -298,10 +290,19 @@ export default function ConversacionDeChat({ con = null, usuario, esAdmin, perso
           const persona = personaDe(mensaje)
           const meMencionan = !privado && mensaje.menciones?.includes(usuario.id)
           const mostrarAvatar = !propio && !privado && !compacto
+          const conAcciones = propio && !privado && !mensaje.eliminado
           return (
             <div key={mensaje.id}>
               {nuevoDia && <div className="chat-dia"><span>{etiquetaDelDia(mensaje.fecha)}</span></div>}
-              <div className={['chat-fila', propio && 'propio', continuacion && 'seguido', meMencionan && 'me-mencionan'].filter(Boolean).join(' ')}>
+              <div className={['chat-fila', propio && 'propio', continuacion && 'seguido', meMencionan && 'me-mencionan', conAcciones && 'con-acciones'].filter(Boolean).join(' ')}>
+                {conAcciones && (
+                  // Sala del equipo, a un lado de tus mensajes: ⓘ (siempre visible) despliega quién lo vio; el bote de basura aparece al pasar el mouse.
+                  <div className="chat-acciones">
+                    <button className={desplegado === mensaje.id ? 'chat-info abierto' : 'chat-info'} onClick={() => setDesplegado(desplegado === mensaje.id ? null : mensaje.id)}
+                      aria-label="Ver quién lo vio" aria-expanded={desplegado === mensaje.id} title="Ver quién lo vio"><Icono nombre="info" tamano={15} /></button>
+                    <button className="chat-borrar-lado" onClick={() => setBorrando(mensaje)} aria-label="Borrar mensaje" title="Borrar mensaje"><Icono nombre="basura" tamano={14} /></button>
+                  </div>
+                )}
                 {mostrarAvatar && (continuacion ? <span className="chat-sin-avatar" /> : <Avatar usuario={persona} tamano={34} />)}
                 <div className="chat-cuerpo">
                   {!propio && !privado && !continuacion && <b className="chat-autor">{persona.nombre}{persona.rol_nombre && !compacto && <small> · {persona.rol_nombre}</small>}</b>}
@@ -310,29 +311,27 @@ export default function ConversacionDeChat({ con = null, usuario, esAdmin, perso
                     <small className="chat-hora" title={formato.fechaCompleta(mensaje.fecha)}>
                       {formato.hora(mensaje.fecha)}
                       {propio && !mensaje.eliminado && estadoDe(mensaje) && (
-                        <button className="chat-cheques" onClick={() => setInfoDe(mensaje)} aria-label="Ver la información del mensaje" title="Ver quién lo recibió y lo leyó">
+                        <button className="chat-cheques" onClick={() => (privado ? setInfoDe(mensaje) : setDesplegado(desplegado === mensaje.id ? null : mensaje.id))} aria-label="Ver la información del mensaje" title="Ver quién lo recibió y lo leyó">
                           <Cheques estado={estadoDe(mensaje)} preferencias={preferencias} />
                         </button>
                       )}
                     </small>
-                    {!mensaje.eliminado && (propio || (esAdmin && !privado)) && (
+                    {!mensaje.eliminado && !conAcciones && (propio || (esAdmin && !privado)) && (
                       <button className="chat-borrar" onClick={() => setBorrando(mensaje)} aria-label="Borrar mensaje" title="Borrar mensaje"><Icono nombre="basura" tamano={14} /></button>
                     )}
                   </div>
-                  {propio && !mensaje.eliminado && !privado && mensaje.recibos && (() => {
-                    const visto = vistoPorDe(mensaje)
-                    return (
-                      <button className="chat-visto-por" onClick={() => setInfoDe(mensaje)} title={visto.completo ? `Lo vieron: ${visto.completo}` : 'Toca para ver la información del mensaje'}>
-                        {visto.quienes.length > 0 && <span className="chat-lectores">{visto.quienes.slice(0, 5).map((persona) => <Avatar key={persona.id} usuario={persona} tamano={16} />)}</span>}
-                        {visto.texto}
-                      </button>
-                    )
-                  })()}
+                  {/* Chats privados: la línea «Entregado 07:01 · Leído 07:05» (se puede tocar para ver el detalle). */}
                   {propio && !mensaje.eliminado && privado && estadoDe(mensaje) && preferencias.chequesDetalle !== false && (
                     <button className="chat-detalle" onClick={() => setInfoDe(mensaje)} title="Ver la información del mensaje">{detalleDe(mensaje)}</button>
                   )}
                 </div>
               </div>
+              {/* El desplegable va debajo de la fila (no dentro), para que el botón ⓘ se quede junto al mensaje. */}
+              {desplegado === mensaje.id && conAcciones && (
+                <div className="chat-desplegable-fila">
+                  <InfoDesplegable mensaje={mensaje} personas={equipoCompleto} preferencias={preferencias} alCerrar={() => setDesplegado(null)} />
+                </div>
+              )}
             </div>
           )
         })}
