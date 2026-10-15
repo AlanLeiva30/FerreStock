@@ -295,14 +295,6 @@ export default function ConversacionDeChat({ con = null, usuario, esAdmin, perso
             <div key={mensaje.id}>
               {nuevoDia && <div className="chat-dia"><span>{etiquetaDelDia(mensaje.fecha)}</span></div>}
               <div className={['chat-fila', propio && 'propio', continuacion && 'seguido', meMencionan && 'me-mencionan', conAcciones && 'con-acciones'].filter(Boolean).join(' ')}>
-                {conAcciones && (
-                  // Sala del equipo, a un lado de tus mensajes: ⓘ (siempre visible) despliega quién lo vio; el bote de basura aparece al pasar el mouse.
-                  <div className="chat-acciones">
-                    <button className={desplegado === mensaje.id ? 'chat-info abierto' : 'chat-info'} onClick={() => setDesplegado(desplegado === mensaje.id ? null : mensaje.id)}
-                      aria-label="Ver quién lo vio" aria-expanded={desplegado === mensaje.id} title="Ver quién lo vio"><Icono nombre="info" tamano={15} /></button>
-                    <button className="chat-borrar-lado" onClick={() => setBorrando(mensaje)} aria-label="Borrar mensaje" title="Borrar mensaje"><Icono nombre="basura" tamano={14} /></button>
-                  </div>
-                )}
                 {mostrarAvatar && (continuacion ? <span className="chat-sin-avatar" /> : <Avatar usuario={persona} tamano={34} />)}
                 <div className="chat-cuerpo">
                   {!propio && !privado && !continuacion && <b className="chat-autor">{persona.nombre}{persona.rol_nombre && !compacto && <small> · {persona.rol_nombre}</small>}</b>}
@@ -325,6 +317,14 @@ export default function ConversacionDeChat({ con = null, usuario, esAdmin, perso
                     <button className="chat-detalle" onClick={() => setInfoDe(mensaje)} title="Ver la información del mensaje">{detalleDe(mensaje)}</button>
                   )}
                 </div>
+                {conAcciones && (
+                  // Sala del equipo, detrás (a la derecha) de tus mensajes: ⓘ (siempre visible) despliega quién lo vio; el bote de basura aparece al pasar el mouse.
+                  <div className="chat-acciones">
+                    <button className={desplegado === mensaje.id ? 'chat-info abierto' : 'chat-info'} onClick={() => setDesplegado(desplegado === mensaje.id ? null : mensaje.id)}
+                      aria-label="Ver quién lo vio" aria-expanded={desplegado === mensaje.id} title="Ver quién lo vio"><Icono nombre="info" tamano={15} /></button>
+                    <button className="chat-borrar-lado" onClick={() => setBorrando(mensaje)} aria-label="Borrar mensaje" title="Borrar mensaje"><Icono nombre="basura" tamano={14} /></button>
+                  </div>
+                )}
               </div>
               {/* El desplegable va debajo de la fila (no dentro), para que el botón ⓘ se quede junto al mensaje. */}
               {desplegado === mensaje.id && conAcciones && (

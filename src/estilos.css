@@ -1377,3 +1377,6 @@ body.con-mensajeria .toast { right: 390px; }
 
 .chat-desplegable-fila { display: flex; justify-content: flex-end; margin-top: 6px; }
 .chat-desplegable-fila .chat-desplegable { margin-top: 0; }
+
+/* el botón ⓘ va detrás del mensaje (a su derecha), no delante */
+.chat-acciones { margin-left: 2px; }
